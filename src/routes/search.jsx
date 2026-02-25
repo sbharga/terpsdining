@@ -1,28 +1,32 @@
+import { useRef } from 'react';
 import { useLoaderData, Form, useNavigation } from 'react-router';
 import { searchFoods } from '../api/queries';
 import FoodCard from '../components/food/FoodCard';
-import { ALLERGEN_LABELS } from '../components/food/AllergenIcons';
+import { ALLERGEN_LABELS, DIETARY_LABELS } from '../components/food/AllergenIcons';
 
 const ALL_ALLERGENS = Object.keys(ALLERGEN_LABELS);
+const ALL_DIETARY   = Object.keys(DIETARY_LABELS);
 
 export async function loader({ request }) {
-  const url             = new URL(request.url);
-  const query           = url.searchParams.get('q') ?? '';
+  const url              = new URL(request.url);
+  const query            = url.searchParams.get('q') ?? '';
   const excludeAllergens = url.searchParams.getAll('exclude');
-  const foods           = await searchFoods(query, excludeAllergens);
-  return { foods, query, excludeAllergens };
+  const dietFilters      = url.searchParams.getAll('diet');
+  const foods            = await searchFoods(query, excludeAllergens, dietFilters);
+  return { foods, query, excludeAllergens, dietFilters };
 }
 
 export default function SearchPage() {
-  const { foods, query, excludeAllergens } = useLoaderData();
+  const { foods, query, excludeAllergens, dietFilters } = useLoaderData();
   const navigation  = useNavigation();
   const isSearching = navigation.state === 'loading';
+  const formRef     = useRef(null);
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Search Foods</h1>
 
-      <Form method="get" className="space-y-4">
+      <Form method="get" ref={formRef} className="space-y-4">
         {/* Text search bar */}
         <div className="flex gap-2">
           <input
@@ -40,10 +44,44 @@ export default function SearchPage() {
           </button>
         </div>
 
+        {/* Dietary preferences */}
+        <fieldset>
+          <legend className="text-sm font-medium text-gray-700 mb-2">
+            Dietary Preferences
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {ALL_DIETARY.map((d) => {
+              const { label, emoji } = DIETARY_LABELS[d];
+              const checked = dietFilters.includes(d);
+              return (
+                <label key={d + checked} className="cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    name="diet"
+                    value={d}
+                    defaultChecked={checked}
+                    className="sr-only peer"
+                    onChange={() => formRef.current?.requestSubmit()}
+                  />
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors
+                      ${checked
+                        ? 'bg-green-600 text-white border-green-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                      }`}
+                  >
+                    {emoji} {label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
         {/* Allergen exclusion — pill chip toggles */}
         <fieldset>
           <legend className="text-sm font-medium text-gray-700 mb-2">
-            Exclude allergens
+            Exclude Allergens
           </legend>
           <div className="flex flex-wrap gap-2">
             {ALL_ALLERGENS.map((a) => {
@@ -57,6 +95,7 @@ export default function SearchPage() {
                     value={a}
                     defaultChecked={checked}
                     className="sr-only peer"
+                    onChange={() => formRef.current?.requestSubmit()}
                   />
                   <span
                     className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors
@@ -95,6 +134,11 @@ export default function SearchPage() {
               {foods.length} result{foods.length !== 1 ? 's' : ''}
               {query && (
                 <span className="font-medium text-gray-700"> for &ldquo;{query}&rdquo;</span>
+              )}
+              {dietFilters.length > 0 && (
+                <span className="text-gray-400">
+                  {' '}· {dietFilters.join(', ')}
+                </span>
               )}
               {excludeAllergens.length > 0 && (
                 <span className="text-gray-400">

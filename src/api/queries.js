@@ -89,7 +89,7 @@ export async function getFoodMenuHistory(foodId) {
 export async function getFoodRatings(foodId) {
   const { data, error } = await supabase
     .from('ratings')
-    .select('rating_overall, rating_taste, rating_health, created_at, profiles(username)')
+    .select('rating_overall, rating_taste, rating_health, created_at')
     .eq('food_id', foodId)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -113,7 +113,7 @@ export async function getAllFoods() {
  * Search foods by name and optionally exclude specific allergens.
  * Allergen filtering is done client-side since Supabase array ops are limited.
  */
-export async function searchFoods(query = '', excludeAllergens = []) {
+export async function searchFoods(query = '', excludeAllergens = [], dietFilters = []) {
   let req = supabase
     .from('foods')
     .select('id, name, allergens, avg_rating, rating_count, image_url')
@@ -125,11 +125,12 @@ export async function searchFoods(query = '', excludeAllergens = []) {
   const { data, error } = await req;
   if (error) throw error;
 
-  const foods = data ?? [];
-  if (excludeAllergens.length === 0) return foods;
-  return foods.filter(
-    (f) => !excludeAllergens.some((a) => f.allergens?.includes(a))
-  );
+  let foods = data ?? [];
+  if (excludeAllergens.length > 0)
+    foods = foods.filter((f) => !excludeAllergens.some((a) => f.allergens?.includes(a)));
+  if (dietFilters.length > 0)
+    foods = foods.filter((f) => dietFilters.every((d) => f.allergens?.includes(d)));
+  return foods;
 }
 
 // ---------------------------------------------------------------------------

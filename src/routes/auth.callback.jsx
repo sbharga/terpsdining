@@ -9,6 +9,25 @@ export default function AuthCallbackPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
+    if (window.location.hash.includes('access_token')) {
+      // Implicit flow — SDK auto-processes hash, wait for SIGNED_IN event
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+        if (session) {
+          subscription.unsubscribe();
+          clearTimeout(timer);
+          setStatus('success');
+          setTimeout(() => navigate('/'), 2000);
+        }
+      });
+      const timer = setTimeout(() => {
+        subscription.unsubscribe();
+        setStatus('error');
+        setErrorMsg('Email verification timed out. Please try signing in.');
+      }, 10_000);
+      return () => { subscription.unsubscribe(); clearTimeout(timer); };
+    }
+
+    // PKCE flow fallback
     const code = searchParams.get('code');
     if (!code) {
       setStatus('error');

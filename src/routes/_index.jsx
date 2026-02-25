@@ -1,4 +1,4 @@
-import { useLoaderData } from 'react-router';
+import { useLoaderData, Link } from 'react-router';
 import {
   getTodayHours,
   getMenusByPeriod,
@@ -9,16 +9,26 @@ import {
 import FoodCard from '../components/food/FoodCard';
 import StatusBadge from '../components/ui/StatusBadge';
 
-export async function loader() {
-  const today      = todayISO();
-  const mealPeriod = getCurrentMealPeriod();
+export async function loader({ request }) {
+  const today  = todayISO();
+  const url    = new URL(request.url);
+  const param  = url.searchParams.get('period');
+  const VALID  = ['Breakfast', 'Lunch', 'Dinner'];
+  const mealPeriod = (param && VALID.includes(param)) ? param : getCurrentMealPeriod();
 
   const [hours, menus] = await Promise.all([
     getTodayHours(),
     getMenusByPeriod(today, mealPeriod),
   ]);
 
-  return { hours, menusByHall: groupMenusByHall(menus), mealPeriod, today };
+  const menusByHall = groupMenusByHall(menus);
+  Object.values(menusByHall).forEach((hall) => {
+    hall.foods.sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0));
+    hall.totalCount = hall.foods.length;
+    hall.foods = hall.foods.slice(0, 5);
+  });
+
+  return { hours, menusByHall, mealPeriod, today };
 }
 
 // ---------------------------------------------------------------------------
@@ -99,19 +109,20 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">{mealPeriod} Menu</h2>
 
-          {/* Meal period indicators */}
+          {/* Meal period pills */}
           <div className="flex gap-1.5 text-xs">
             {MEAL_PERIODS.map((p) => (
-              <span
+              <Link
                 key={p}
+                to={`/?period=${p}`}
                 className={`px-2.5 py-1 rounded-full border font-medium ${
                   p === mealPeriod
                     ? 'bg-[#E21833] text-white border-[#E21833]'
-                    : 'text-gray-400 border-gray-200 bg-white'
+                    : 'text-gray-400 border-gray-200 bg-white hover:border-gray-400 hover:text-gray-600'
                 }`}
               >
                 {p}
-              </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -124,12 +135,19 @@ export default function HomePage() {
           </div>
         ) : (
           hallSlugs.map((slug) => {
-            const { hall, foods } = menusByHall[slug];
+            const { hall, foods, totalCount } = menusByHall[slug];
             return (
               <div key={slug} className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                  {hall.name}
-                </h3>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    {hall.name}
+                  </h3>
+                  {totalCount > 5 && (
+                    <span className="text-xs text-gray-400">
+                      Top 5 of {totalCount} items
+                    </span>
+                  )}
+                </div>
                 <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
                   {foods.map((food) => (
                     <FoodCard key={food.id} food={food} />
