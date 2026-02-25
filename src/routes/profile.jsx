@@ -1,0 +1,131 @@
+import { useLoaderData, Link, useFetcher } from 'react-router';
+import { redirect } from 'react-router';
+import { supabase } from '../api/supabase';
+import { getUserRatings, deleteRating } from '../api/queries';
+import RatingStars from '../components/food/RatingStars';
+
+// ---------------------------------------------------------------------------
+// Loader
+// ---------------------------------------------------------------------------
+
+export async function loader() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw redirect('/');
+
+  const ratings = await getUserRatings(user.id);
+  return { user, ratings };
+}
+
+// ---------------------------------------------------------------------------
+// Action
+// ---------------------------------------------------------------------------
+
+export async function action({ request }) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Response('Unauthorized', { status: 401 });
+
+  const formData = await request.formData();
+  await deleteRating(formData.get('ratingId'));
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+/** Single rating row with optimistic delete. */
+function RatingItem({ r }) {
+  const fetcher = useFetcher();
+
+  // Optimistically hide the row while the delete is in flight
+  if (fetcher.state !== 'idle') return null;
+
+  return (
+    <li className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-3">
+      {r.foods?.image_url ? (
+        <img
+          src={r.foods.image_url}
+          alt={r.foods.name}
+          className="w-14 h-14 rounded-lg object-cover shrink-0"
+        />
+      ) : (
+        <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-2xl shrink-0">
+          🍽️
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <Link
+          to={`/food/${r.foods?.id}`}
+          className="font-medium text-sm hover:underline line-clamp-1"
+        >
+          {r.foods?.name ?? 'Unknown food'}
+        </Link>
+        <RatingStars rating={r.rating_overall} />
+        <p className="text-xs text-gray-400 mt-0.5">
+          {new Date(r.created_at).toLocaleDateString()}
+        </p>
+      </div>
+
+      {/* Delete button */}
+      <fetcher.Form method="post">
+        <input type="hidden" name="ratingId" value={r.id} />
+        <button
+          type="submit"
+          className="text-xs text-gray-400 hover:text-red-500 transition-colors shrink-0"
+          aria-label="Remove rating"
+        >
+          Remove
+        </button>
+      </fetcher.Form>
+    </li>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default function ProfilePage() {
+  const { user, ratings } = useLoaderData();
+
+  return (
+    <div className="space-y-8 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold">Profile</h1>
+        <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+      </div>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">
+          Your Ratings
+          {ratings.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-gray-400">
+              ({ratings.length})
+            </span>
+          )}
+        </h2>
+
+        {ratings.length === 0 ? (
+          <p className="text-gray-400 text-sm">
+            You haven&apos;t rated anything yet.{' '}
+            <Link to="/search" className="underline text-[#E21833]">
+              Find a food to rate.
+            </Link>
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {ratings.map((r) => (
+              <RatingItem key={r.id} r={r} />
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
