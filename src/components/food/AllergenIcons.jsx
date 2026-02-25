@@ -6,7 +6,7 @@ export const DIETARY_LABELS = {
 
 export const ALLERGEN_LABELS = {
   dairy: { label: 'Dairy', emoji: '🥛' },
-  eggs: { label: 'Eggs', emoji: '🥚' },
+  egg: { label: 'Egg', emoji: '🥚' },
   fish: { label: 'Fish', emoji: '🐟' },
   shellfish: { label: 'Shellfish', emoji: '🦐' },
   nuts: { label: 'Nuts', emoji: '🥜' },
