@@ -25,7 +25,7 @@ export async function loader({ request }) {
   Object.values(menusByHall).forEach((hall) => {
     hall.foods.sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0));
     hall.totalCount = hall.foods.length;
-    hall.foods = hall.foods.slice(0, 5);
+    hall.foods = hall.foods.slice(0, 8);
   });
 
   return { hours, menusByHall, mealPeriod, today };
@@ -142,9 +142,9 @@ export default function HomePage() {
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
                     {hall.name}
                   </h3>
-                  {totalCount > 5 && (
+                  {totalCount > 8 && (
                     <span className="text-xs text-gray-400">
-                      Top 5 of {totalCount} items
+                      Top 8 of {totalCount} items
                     </span>
                   )}
                 </div>

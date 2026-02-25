@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useLoaderData, Form, useNavigation } from 'react-router';
-import { searchFoods } from '../api/queries';
+import { searchFoods, getTodayFoodIds } from '../api/queries';
 import FoodCard from '../components/food/FoodCard';
 import { ALLERGEN_LABELS, DIETARY_LABELS } from '../components/food/AllergenIcons';
 
@@ -12,12 +12,19 @@ export async function loader({ request }) {
   const query            = url.searchParams.get('q') ?? '';
   const excludeAllergens = url.searchParams.getAll('exclude');
   const dietFilters      = url.searchParams.getAll('diet');
-  const foods            = await searchFoods(query, excludeAllergens, dietFilters);
-  return { foods, query, excludeAllergens, dietFilters };
+  const availableToday   = url.searchParams.get('today') === '1';
+
+  let foods = await searchFoods(query, excludeAllergens, dietFilters);
+  if (availableToday) {
+    const todayIds = await getTodayFoodIds();
+    foods = foods.filter((f) => todayIds.has(f.id));
+  }
+
+  return { foods, query, excludeAllergens, dietFilters, availableToday };
 }
 
 export default function SearchPage() {
-  const { foods, query, excludeAllergens, dietFilters } = useLoaderData();
+  const { foods, query, excludeAllergens, dietFilters, availableToday } = useLoaderData();
   const navigation  = useNavigation();
   const isSearching = navigation.state === 'loading';
   const formRef     = useRef(null);
@@ -42,6 +49,29 @@ export default function SearchPage() {
           >
             Search
           </button>
+        </div>
+
+        {/* Availability toggle */}
+        <div className="flex items-center gap-3">
+          <label key={'today' + availableToday} className="cursor-pointer select-none">
+            <input
+              type="checkbox"
+              name="today"
+              value="1"
+              defaultChecked={availableToday}
+              className="sr-only peer"
+              onChange={() => formRef.current?.requestSubmit()}
+            />
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors
+                ${availableToday
+                  ? 'bg-[#E21833] text-white border-[#E21833]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                }`}
+            >
+              📅 Available Today
+            </span>
+          </label>
         </div>
 
         {/* Dietary preferences */}
@@ -125,7 +155,7 @@ export default function SearchPage() {
             <p className="text-gray-400 text-sm">
               {query
                 ? `No results for "${query}".`
-                : 'Enter a food name or select allergens to filter.'}
+                : 'Enter a food name or select filters above.'}
             </p>
           </div>
         ) : (
@@ -134,6 +164,9 @@ export default function SearchPage() {
               {foods.length} result{foods.length !== 1 ? 's' : ''}
               {query && (
                 <span className="font-medium text-gray-700"> for &ldquo;{query}&rdquo;</span>
+              )}
+              {availableToday && (
+                <span className="text-gray-400"> · available today</span>
               )}
               {dietFilters.length > 0 && (
                 <span className="text-gray-400">

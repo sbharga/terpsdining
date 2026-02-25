@@ -84,13 +84,13 @@ function StarPicker({ name, defaultValue = 0 }) {
 }
 
 /** useFetcher-based rating form — submits without full navigation. */
-function RatingForm({ userRating }) {
+function RatingForm({ userRating, foodId }) {
   const fetcher = useFetcher();
   const isSubmitting = fetcher.state !== 'idle';
   const hasRating = !!userRating;
 
   return (
-    <fetcher.Form method="post" className="space-y-3">
+    <fetcher.Form method="post" action={`/food/${foodId}`} className="space-y-3">
       {[
         { label: 'Overall', name: 'ratingOverall', default: userRating?.rating_overall },
         { label: 'Taste',   name: 'ratingTaste',   default: userRating?.rating_taste },
@@ -203,7 +203,7 @@ export default function FoodPage() {
         </h2>
         {user ? (
           <div className="rounded-xl border border-gray-200 bg-white p-4 max-w-sm">
-            <RatingForm userRating={userRating} />
+            <RatingForm key={userRating?.id ?? 'none'} userRating={userRating} foodId={food.id} />
           </div>
         ) : (
           <p className="text-sm text-gray-400">

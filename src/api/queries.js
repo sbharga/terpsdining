@@ -59,6 +59,16 @@ export function groupMenusByHall(menus) {
   }, {});
 }
 
+/** Returns a Set of food IDs that appear in any of today's menus. */
+export async function getTodayFoodIds() {
+  const { data, error } = await supabase
+    .from('menus')
+    .select('food_id')
+    .eq('date', todayISO());
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.food_id));
+}
+
 // ---------------------------------------------------------------------------
 // Foods
 // ---------------------------------------------------------------------------
