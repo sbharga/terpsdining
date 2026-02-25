@@ -220,9 +220,11 @@ def sync_menus(
             continue
 
         # Step 1: Upsert foods – update allergens on name conflict
-        food_records = [
-            {"name": item["name"], "allergens": item["allergens"]} for item in items
-        ]
+        # Deduplicate by name; the scraper can return the same item multiple times
+        seen: dict[str, dict] = {}
+        for item in items:
+            seen.setdefault(item["name"], {"name": item["name"], "allergens": item["allergens"]})
+        food_records = list(seen.values())
         for batch in chunks(food_records, BATCH_SIZE):
             supabase.table("foods").upsert(batch, on_conflict="name").execute()
 
