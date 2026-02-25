@@ -1,7 +1,3 @@
-/**
- * Displays a 1-5 star rating with an optional count label.
- * Accepts a numeric `rating` (e.g. 3.7) and optional `count`.
- */
 export default function RatingStars({ rating = 0, count, size = 'sm' }) {
   const filled = Math.round(rating);
   const textSize = size === 'lg' ? 'text-2xl' : 'text-sm';

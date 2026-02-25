@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""
-scripts/sync_menu.py
-
-Daily sync for Terps Dining:
-  Phase A - Fetch today's dining hours from the Google Sheet and upsert into `hours`.
-  Phase B - Scrape nutrition.umd.edu for each (hall, meal period) and upsert into
-            `foods` and `menus`.
-  Cleanup  - Delete `menus` and `hours` rows older than 90 days (free-tier guardrail).
-
-Required env vars:
-  SUPABASE_URL              - e.g. https://xxxx.supabase.co
-  SUPABASE_SERVICE_ROLE_KEY - service role key (bypasses RLS; keep secret)
-"""
-
 import json
 import logging
 import os
@@ -22,10 +7,6 @@ from itertools import product
 import requests
 from bs4 import BeautifulSoup
 from supabase import Client, create_client
-
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
@@ -44,7 +25,6 @@ GOOGLE_SHEET_URL = (
     "/gviz/tq?gid=479022338"
 )
 
-# Maps Google Sheet venue names → dining hall slugs
 VENUE_KEYS = {
     "South Campus": "south",
     "Yahentamitsi": "yahentamitsi",
@@ -55,27 +35,13 @@ NUTRITION_URL = "http://nutrition.umd.edu/longmenu.aspx"
 BATCH_SIZE = 100
 CLEANUP_DAYS = 90
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
-
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Utilities
-# ---------------------------------------------------------------------------
-
 
 def chunks(lst: list, n: int):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
-
-
-# ---------------------------------------------------------------------------
-# Scrapers / Fetchers
-# ---------------------------------------------------------------------------
 
 
 def fetch_dining_hours() -> dict[str, list[str]]:

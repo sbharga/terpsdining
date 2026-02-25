@@ -1,26 +1,20 @@
 export const DIETARY_LABELS = {
-  vegan:         { label: 'Vegan',         emoji: '🌱' },
-  vegetarian:    { label: 'Vegetarian',    emoji: '🥗' },
-  halalfriendly: { label: 'Halal-Friendly', emoji: '☪️' },
+  vegan: { label: 'Vegan', emoji: '🌱' },
+  vegetarian: { label: 'Vegetarian', emoji: '🥗' },
+  halalfriendly: { label: 'Halal-Friendly', emoji: '🌙' },
 };
 
 export const ALLERGEN_LABELS = {
-  milk:        { label: 'Dairy',     emoji: '🥛' },
-  eggs:        { label: 'Eggs',      emoji: '🥚' },
-  fish:        { label: 'Fish',      emoji: '🐟' },
-  shellfish:   { label: 'Shellfish', emoji: '🦐' },
-  'tree nuts': { label: 'Tree Nuts', emoji: '🌰' },
-  peanuts:     { label: 'Peanuts',   emoji: '🥜' },
-  wheat:       { label: 'Wheat',     emoji: '🌾' },
-  soybeans:    { label: 'Soy',       emoji: '⬛' },
-  sesame:      { label: 'Sesame',    emoji: '⬛' },
+  dairy: { label: 'Dairy', emoji: '🥛' },
+  eggs: { label: 'Eggs', emoji: '🥚' },
+  fish: { label: 'Fish', emoji: '🐟' },
+  shellfish: { label: 'Shellfish', emoji: '🦐' },
+  nuts: { label: 'Nuts', emoji: '🥜' },
+  gluten: { label: 'Gluten', emoji: '🌾' },
+  soy: { label: 'Soy', emoji: '🫘' },
+  sesame: { label: 'Sesame', emoji: '🥯' },
 };
 
-/**
- * Renders allergen and dietary badges for a food item.
- * Dietary (vegan/vegetarian) shown in green; allergens in gray.
- * Pass `compact` to show emoji-only badges (for use inside FoodCard).
- */
 export default function AllergenIcons({ allergens = [], compact = false }) {
   if (!allergens?.length) return null;
 
