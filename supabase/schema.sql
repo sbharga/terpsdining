@@ -234,3 +234,42 @@ create policy "User delete own rating"
     on ratings for delete
     to authenticated
     using (user_id = auth.uid());
+
+
+-- ---------------------------------------------------------------------------
+-- 11. Storage Setup
+-- ---------------------------------------------------------------------------
+
+-- Create the bucket
+insert into storage.buckets (id, name, public)
+values ('food-images', 'food-images', true)
+on conflict (id) do nothing;
+
+-- Public read access
+create policy "Public Access"
+    on storage.objects for select
+    using ( bucket_id = 'food-images' );
+
+-- Admin upload access
+create policy "Admin Upload"
+    on storage.objects for insert
+    to authenticated
+    with check (
+        bucket_id = 'food-images' AND
+        exists (
+            select 1 from public.profiles
+            where id = auth.uid() and is_admin = true
+        )
+    );
+
+-- Admin update/upsert access
+create policy "Admin Update"
+    on storage.objects for update
+    to authenticated
+    using (
+        bucket_id = 'food-images' AND
+        exists (
+            select 1 from public.profiles
+            where id = auth.uid() and is_admin = true
+        )
+    );

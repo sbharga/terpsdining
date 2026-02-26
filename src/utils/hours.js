@@ -13,7 +13,7 @@ function parseMinutes(str) {
   if (!match) return null;
 
   let hour = parseInt(match[1], 10);
-  const min  = match[2] ? parseInt(match[2], 10) : 0;
+  const min = match[2] ? parseInt(match[2], 10) : 0;
   const period = match[3].toLowerCase();
 
   if (period === 'pm' && hour !== 12) hour += 12;
@@ -37,7 +37,7 @@ function parseRange(str) {
   if (dash === -1) return null;
 
   const start = parseMinutes(clean.slice(0, dash));
-  const end   = parseMinutes(clean.slice(dash + 1));
+  const end = parseMinutes(clean.slice(dash + 1));
   if (start === null || end === null) return null;
 
   return { start, end };
@@ -46,9 +46,9 @@ function parseRange(str) {
 /** Format minutes-from-midnight as "7am", "12pm", "5:30pm", etc. */
 function formatMinutes(mins) {
   const totalHour = Math.floor(mins / 60);
-  const min       = mins % 60;
-  const ampm      = totalHour >= 12 ? 'pm' : 'am';
-  let   hour12    = totalHour % 12;
+  const min = mins % 60;
+  const ampm = totalHour >= 12 ? 'pm' : 'am';
+  let hour12 = totalHour % 12;
   if (hour12 === 0) hour12 = 12;
 
   return min
@@ -80,8 +80,8 @@ export function getHallStatus(hoursRow) {
 
   const periods = [
     { name: 'Breakfast', value: hoursRow?.breakfast },
-    { name: 'Lunch',     value: hoursRow?.lunch },
-    { name: 'Dinner',    value: hoursRow?.dinner },
+    { name: 'Lunch', value: hoursRow?.lunch },
+    { name: 'Dinner', value: hoursRow?.dinner },
   ];
 
   // Check if we're currently inside any period
@@ -95,7 +95,7 @@ export function getHallStatus(hoursRow) {
       if (minsLeft <= 30) {
         return {
           status: 'closing_soon',
-          label:  `Closing in ${minsLeft}m`,
+          label: `Closing in ${minsLeft}m`,
         };
       }
 
@@ -111,7 +111,7 @@ export function getHallStatus(hoursRow) {
     if (nowMins < range.start) {
       return {
         status: 'closed',
-        label:  `Opens ${name} at ${formatMinutes(range.start)}`,
+        label: `Opens at ${formatMinutes(range.start)}`,
       };
     }
   }
@@ -123,7 +123,7 @@ export function getHallStatus(hoursRow) {
     if (!range) continue;
     return {
       status: 'closed',
-      label:  `Opens ${name} tomorrow at ${formatMinutes(range.start)}`,
+      label: `Opens ${formatMinutes(range.start)} tomorrow`,
     };
   }
 
