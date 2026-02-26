@@ -7,6 +7,7 @@ import AuthModal from '../auth/AuthModal';
 export default function Navbar() {
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   async function handleSignOut() {
@@ -24,7 +25,8 @@ export default function Navbar() {
             TerpsDining
           </Link>
 
-          <div className="flex items-center gap-5 text-sm font-medium">
+          {/* Desktop nav links */}
+          <div className="hidden sm:flex items-center gap-5 text-sm font-medium">
             <NavLink to="/" end className={navLink}>
               Home
             </NavLink>
@@ -59,7 +61,67 @@ export default function Navbar() {
               </button>
             )}
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="sm:hidden text-white text-xl leading-none px-1"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
         </div>
+
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div className="sm:hidden bg-[#E21833] border-t border-white/20 px-4 pb-3 space-y-2 text-sm font-medium text-white">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) => `block py-1.5 ${isActive ? 'underline' : 'hover:underline'}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/search"
+              className={({ isActive }) => `block py-1.5 ${isActive ? 'underline' : 'hover:underline'}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              Search
+            </NavLink>
+            {user && (
+              <NavLink
+                to="/profile"
+                className={({ isActive }) => `block py-1.5 ${isActive ? 'underline' : 'hover:underline'}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                Profile
+              </NavLink>
+            )}
+            <div className="pt-1 border-t border-white/20">
+              {user ? (
+                <>
+                  <p className="text-white/60 text-xs truncate mb-1">{user.email}</p>
+                  <button
+                    onClick={() => { handleSignOut(); setMenuOpen(false); }}
+                    className="rounded-full border border-white/40 px-3 py-1 text-xs hover:bg-white/10 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <button
+                  data-sign-in
+                  onClick={() => { setShowAuth(true); setMenuOpen(false); }}
+                  className="rounded-full border border-white/40 px-3 py-1 text-xs hover:bg-white/10 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}

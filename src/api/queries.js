@@ -5,12 +5,15 @@ import { supabase } from './supabase';
 // ---------------------------------------------------------------------------
 
 export function todayISO() {
-  return new Date().toISOString().split('T')[0];
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 }
 
-/** Returns 'Breakfast', 'Lunch', or 'Dinner' based on local wall-clock time. */
+/** Returns 'Breakfast', 'Lunch', or 'Dinner' based on Eastern Time. */
 export function getCurrentMealPeriod() {
-  const hour = new Date().getHours();
+  const hour = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }).format(new Date()),
+    10
+  );
   if (hour < 10) return 'Breakfast';
   if (hour < 15) return 'Lunch';
   return 'Dinner';
@@ -84,13 +87,13 @@ export async function getFoodById(id) {
 }
 
 export async function getFoodMenuHistory(foodId) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 30);
+  const cutoff = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
+    .format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
   const { data, error } = await supabase
     .from('menus')
     .select('date, meal_period, dining_halls(name, slug)')
     .eq('food_id', foodId)
-    .gte('date', cutoff.toISOString().split('T')[0])
+    .gte('date', cutoff)
     .order('date', { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -122,13 +125,15 @@ export async function getAllFoods() {
 /**
  * Search foods by name and optionally exclude specific allergens.
  * Allergen filtering is done client-side since Supabase array ops are limited.
+ * sort: 'rating' | 'trending' | 'recent'
  */
-export async function searchFoods(query = '', excludeAllergens = [], dietFilters = []) {
+export async function searchFoods(query = '', excludeAllergens = [], dietFilters = [], sort = 'rating') {
+  const orderCol = sort === 'recent' ? 'created_at' : 'avg_rating';
   let req = supabase
     .from('foods')
-    .select('id, name, allergens, avg_rating, rating_count, image_url')
-    .order('avg_rating', { ascending: false })
-    .limit(50);
+    .select('id, name, allergens, avg_rating, rating_count, image_url, created_at')
+    .order(orderCol, { ascending: false })
+    .limit(200);
 
   if (query) req = req.ilike('name', `%${query}%`);
 
@@ -140,7 +145,38 @@ export async function searchFoods(query = '', excludeAllergens = [], dietFilters
     foods = foods.filter((f) => !excludeAllergens.some((a) => f.allergens?.includes(a)));
   if (dietFilters.length > 0)
     foods = foods.filter((f) => dietFilters.every((d) => f.allergens?.includes(d)));
+
+  if (sort === 'trending' && foods.length > 0) {
+    const ids = foods.map((f) => f.id);
+    const { data: recentRatings } = await supabase
+      .from('ratings')
+      .select('food_id, created_at')
+      .in('food_id', ids)
+      .order('created_at', { ascending: false });
+
+    const seen = new Set();
+    const orderedIds = [];
+    for (const r of recentRatings ?? []) {
+      if (!seen.has(r.food_id)) { seen.add(r.food_id); orderedIds.push(r.food_id); }
+    }
+    const ratedSet = new Set(orderedIds);
+    const unrated = foods.filter((f) => !ratedSet.has(f.id));
+    const ratedMap = Object.fromEntries(foods.map((f) => [f.id, f]));
+    foods = [...orderedIds.map((id) => ratedMap[id]).filter(Boolean), ...unrated];
+  }
+
   return foods;
+}
+
+/** Returns a Set of food IDs served at a specific dining hall today. */
+export async function getTodayFoodIdsByHall(hallSlug) {
+  const { data, error } = await supabase
+    .from('menus')
+    .select('food_id, dining_halls!inner(slug)')
+    .eq('date', todayISO())
+    .eq('dining_halls.slug', hallSlug);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.food_id));
 }
 
 // ---------------------------------------------------------------------------

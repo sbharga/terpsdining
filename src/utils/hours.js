@@ -71,8 +71,12 @@ function formatMinutes(mins) {
  * @returns {HallStatus}
  */
 export function getHallStatus(hoursRow) {
-  const now     = new Date();
-  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(new Date());
+  const nowMins =
+    parseInt(etParts.find(p => p.type === 'hour').value, 10) * 60 +
+    parseInt(etParts.find(p => p.type === 'minute').value, 10);
 
   const periods = [
     { name: 'Breakfast', value: hoursRow?.breakfast },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLoaderData, useFetcher } from 'react-router';
+import { useLoaderData, useFetcher, useNavigate } from 'react-router';
 import { supabase } from '../api/supabase';
 import {
   getFoodById,
@@ -158,12 +158,21 @@ function buildWeeklyChart(history) {
 
 export default function FoodPage() {
   const { food, history, ratings, user, userRating } = useLoaderData();
+  const navigate = useNavigate();
   const breakdown = buildBreakdown(ratings);
   const chart = buildWeeklyChart(history);
   const maxCount = Math.max(...chart.map(([, c]) => c), 1);
 
   return (
     <div className="space-y-8 max-w-2xl">
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        ← Back
+      </button>
+
       {/* Header */}
       <div className="flex gap-4 items-start">
         {food.image_url ? (
