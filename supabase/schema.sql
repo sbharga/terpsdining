@@ -234,15 +234,3 @@ create policy "User delete own rating"
     on ratings for delete
     to authenticated
     using (user_id = auth.uid());
-
-
--- ---------------------------------------------------------------------------
--- Migration: Fix allergen normalization (run once in Supabase SQL Editor)
--- Removes dashes and spaces from existing allergen strings so that
--- "halal-friendly" → "halalfriendly", "tree nuts" → "treenuts", etc.
--- ---------------------------------------------------------------------------
--- UPDATE foods
--- SET allergens = (
---   SELECT array_agg(replace(replace(a, '-', ''), ' ', ''))
---   FROM unnest(allergens) AS a
--- );
