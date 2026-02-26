@@ -19,13 +19,13 @@ export default function ErrorPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] text-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface text-center px-4">
       <p className="text-5xl mb-4">🍽️</p>
       <h1 className="text-2xl font-bold mb-2">{title}</h1>
       <p className="text-gray-500 mb-6">{message}</p>
       <Link
         to="/"
-        className="rounded-lg bg-[#E21833] text-white px-6 py-2 text-sm font-medium hover:bg-[#c01028]"
+        className="rounded-lg bg-primary text-white px-6 py-2 text-sm font-medium hover:bg-primary-dark"
       >
         Back to Home
       </Link>

@@ -8,8 +8,12 @@ import {
   getUserRatingForFood,
   upsertRating,
 } from '../api/queries';
+import { formatDateLabel } from '../utils/date';
 import RatingStars from '../components/food/RatingStars';
 import AllergenIcons from '../components/food/AllergenIcons';
+import Button from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import ImageWithFallback from '../components/ui/ImageWithFallback';
 
 // ---------------------------------------------------------------------------
 // Loader
@@ -72,7 +76,7 @@ function StarPicker({ name, defaultValue = 0 }) {
           />
           <span
             className={`text-2xl leading-none select-none transition-colors ${
-              n <= value ? 'text-[#FFD200]' : 'text-gray-300 hover:text-[#FFD200]/60'
+              n <= value ? 'text-accent' : 'text-gray-300 hover:text-accent/60'
             }`}
           >
             ★
@@ -102,13 +106,9 @@ function RatingForm({ userRating, foodId }) {
         </div>
       ))}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-1 rounded-lg bg-[#E21833] text-white px-4 py-2 text-sm font-medium hover:bg-[#c01028] disabled:opacity-50 transition-colors"
-      >
-        {isSubmitting ? 'Saving…' : hasRating ? 'Update Rating' : 'Submit Rating'}
-      </button>
+      <Button type="submit" loading={isSubmitting} className="mt-1">
+        {hasRating ? 'Update Rating' : 'Submit Rating'}
+      </Button>
     </fetcher.Form>
   );
 }
@@ -175,17 +175,12 @@ export default function FoodPage() {
 
       {/* Header */}
       <div className="flex gap-4 items-start">
-        {food.image_url ? (
-          <img
-            src={food.image_url}
-            alt={food.name}
-            className="w-28 h-28 rounded-xl object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-28 h-28 rounded-xl bg-gray-100 flex items-center justify-center text-4xl shrink-0">
-            🍽️
-          </div>
-        )}
+        <ImageWithFallback
+          src={food.image_url}
+          alt={food.name}
+          className="w-28 h-28 rounded-xl shrink-0"
+          iconSize="text-4xl"
+        />
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">{food.name}</h1>
           <RatingStars rating={food.avg_rating} count={food.rating_count} size="lg" />
@@ -197,11 +192,11 @@ export default function FoodPage() {
       {breakdown && (
         <section>
           <h2 className="text-lg font-semibold mb-2">Community Ratings</h2>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 max-w-xs">
+          <Card className="p-4 max-w-xs">
             <BreakdownRow label="Overall" value={breakdown.overall} />
             <BreakdownRow label="Taste"   value={breakdown.taste} />
             <BreakdownRow label="Health"  value={breakdown.health} />
-          </div>
+          </Card>
         </section>
       )}
 
@@ -211,14 +206,14 @@ export default function FoodPage() {
           {userRating ? 'Your Rating' : 'Rate This Food'}
         </h2>
         {user ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 max-w-sm">
+          <Card className="p-4 max-w-sm">
             <RatingForm key={userRating?.id ?? 'none'} userRating={userRating} foodId={food.id} />
-          </div>
+          </Card>
         ) : (
           <p className="text-sm text-gray-400">
             <button
               onClick={() => document.querySelector('[data-sign-in]')?.click()}
-              className="underline text-[#E21833]"
+              className="underline text-primary"
             >
               Sign in
             </button>{' '}
@@ -238,10 +233,10 @@ export default function FoodPage() {
               <div key={week} className="flex flex-col items-center gap-1 flex-1">
                 <span className="text-xs text-gray-500">{count}</span>
                 <div
-                  className="w-full rounded-t bg-[#E21833]"
+                  className="w-full rounded-t bg-primary"
                   style={{ height: `${(count / maxCount) * 72}px` }}
                 />
-                <span className="text-xs text-gray-400">{week.slice(5)}</span>
+                <span className="text-xs text-gray-400">{formatDateLabel(week)}</span>
               </div>
             ))}
           </div>
@@ -255,9 +250,7 @@ export default function FoodPage() {
           <ul className="space-y-1 text-sm text-gray-600">
             {history.slice(0, 10).map((row, i) => (
               <li key={i} className="flex gap-2">
-                <span className="text-gray-400 w-24">
-                  {new Date(row.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
+                <span className="text-gray-400 w-24">{formatDateLabel(row.date)}</span>
                 <span>{row.meal_period}</span>
                 <span className="text-gray-400">@ {row.dining_halls?.name}</span>
               </li>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { supabase } from '../api/supabase';
+import Button from '../components/ui/Button';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -19,11 +20,15 @@ export default function AuthCallbackPage() {
           setTimeout(() => navigate('/'), 2000);
         }
       });
+      // 30 s gives the SDK enough time even on slow connections
       const timer = setTimeout(() => {
         subscription.unsubscribe();
         setStatus('error');
-        setErrorMsg('Email verification timed out. Please try signing in.');
-      }, 10_000);
+        setErrorMsg(
+          'Verification is taking longer than expected. ' +
+          'You may already be verified — try signing in with your credentials.'
+        );
+      }, 30_000);
       return () => { subscription.unsubscribe(); clearTimeout(timer); };
     }
 
@@ -31,7 +36,7 @@ export default function AuthCallbackPage() {
     const code = searchParams.get('code');
     if (!code) {
       setStatus('error');
-      setErrorMsg('No verification code found in the URL.');
+      setErrorMsg('No verification code found in the URL. The link may have expired.');
       return;
     }
 
@@ -58,15 +63,17 @@ export default function AuthCallbackPage() {
         </div>
       )}
       {status === 'error' && (
-        <div className="space-y-3">
+        <div className="space-y-3 max-w-sm">
           <p className="text-lg font-semibold text-red-600">Verification failed</p>
           <p className="text-sm text-gray-500">{errorMsg}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="text-sm underline text-[#E21833]"
-          >
-            Go to home page
-          </button>
+          <div className="flex flex-col items-center gap-2 pt-1">
+            <Button onClick={() => navigate('/')}>
+              Go home &amp; sign in
+            </Button>
+            <p className="text-xs text-gray-400">
+              Click <strong>Sign In</strong> in the top navigation after returning home.
+            </p>
+          </div>
         </div>
       )}
     </div>

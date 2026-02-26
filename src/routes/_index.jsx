@@ -6,8 +6,10 @@ import {
   getCurrentMealPeriod,
   todayISO,
 } from '../api/queries';
+import { formatFullDate } from '../utils/date';
 import FoodCard from '../components/food/FoodCard';
 import StatusBadge from '../components/ui/StatusBadge';
+import { Card } from '../components/ui/Card';
 
 export async function loader({ request }) {
   const today  = todayISO();
@@ -51,7 +53,7 @@ function HoursRow({ label, value }) {
 
 function HoursCard({ row }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 space-y-3">
+    <Card className="p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold leading-tight">
           {row.dining_halls?.name ?? 'Unknown Hall'}
@@ -64,7 +66,7 @@ function HoursCard({ row }) {
         <HoursRow label="Lunch"     value={row.lunch} />
         <HoursRow label="Dinner"    value={row.dinner} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -81,13 +83,7 @@ export default function HomePage() {
       {/* Date header */}
       <div>
         <h1 className="text-2xl font-bold">Today's Dining</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {new Date(today + 'T00:00:00').toLocaleDateString('en-US', {
-            weekday: 'long',
-            month:   'long',
-            day:     'numeric',
-          })}
-        </p>
+        <p className="text-gray-500 text-sm mt-1">{formatFullDate(today)}</p>
       </div>
 
       {/* Hours */}
@@ -117,7 +113,7 @@ export default function HomePage() {
                 to={`/?period=${p}`}
                 className={`px-2.5 py-1 rounded-full border font-medium ${
                   p === mealPeriod
-                    ? 'bg-[#E21833] text-white border-[#E21833]'
+                    ? 'bg-primary text-white border-primary'
                     : 'text-gray-400 border-gray-200 bg-white hover:border-gray-400 hover:text-gray-600'
                 }`}
               >

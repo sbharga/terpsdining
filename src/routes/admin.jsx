@@ -2,6 +2,9 @@ import { useLoaderData, useFetcher } from 'react-router';
 import { redirect } from 'react-router';
 import { supabase } from '../api/supabase';
 import { getAllFoods } from '../api/queries';
+import Button from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import ImageWithFallback from '../components/ui/ImageWithFallback';
 
 export async function loader() {
   const {
@@ -34,15 +37,11 @@ function ImageForm({ food }) {
         name="imageUrl"
         defaultValue={food.image_url ?? ''}
         placeholder="https://…"
-        className="flex-1 text-xs rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#E21833]"
+        className="flex-1 text-xs rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
       />
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="text-xs rounded bg-[#E21833] text-white px-3 py-1 hover:bg-[#c01028] disabled:opacity-50"
-      >
-        {isSubmitting ? 'Saving…' : 'Save'}
-      </button>
+      <Button type="submit" loading={isSubmitting} size="sm">
+        Save
+      </Button>
     </fetcher.Form>
   );
 }
@@ -71,20 +70,15 @@ export default function AdminPage() {
         {foods.length} food item{foods.length !== 1 ? 's' : ''} in the database.
       </p>
 
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+      <Card className="overflow-hidden divide-y divide-gray-100">
         {foods.map((food) => (
           <div key={food.id} className="flex items-center gap-3 px-4 py-3">
-            {food.image_url ? (
-              <img
-                src={food.image_url}
-                alt={food.name}
-                className="w-10 h-10 rounded-lg object-cover shrink-0"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg shrink-0">
-                🍽️
-              </div>
-            )}
+            <ImageWithFallback
+              src={food.image_url}
+              alt={food.name}
+              className="w-10 h-10 rounded-lg shrink-0"
+              iconSize="text-lg"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{food.name}</p>
               <div className="mt-1">
@@ -93,7 +87,7 @@ export default function AdminPage() {
             </div>
           </div>
         ))}
-      </div>
+      </Card>
     </div>
   );
 }

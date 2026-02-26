@@ -3,6 +3,8 @@ import { redirect } from 'react-router';
 import { supabase } from '../api/supabase';
 import { getUserRatings, deleteRating } from '../api/queries';
 import RatingStars from '../components/food/RatingStars';
+import { Card } from '../components/ui/Card';
+import ImageWithFallback from '../components/ui/ImageWithFallback';
 
 // ---------------------------------------------------------------------------
 // Loader
@@ -46,18 +48,13 @@ function RatingItem({ r }) {
   if (fetcher.state !== 'idle') return null;
 
   return (
-    <li className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-3">
-      {r.foods?.image_url ? (
-        <img
-          src={r.foods.image_url}
-          alt={r.foods.name}
-          className="w-14 h-14 rounded-lg object-cover shrink-0"
-        />
-      ) : (
-        <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-2xl shrink-0">
-          🍽️
-        </div>
-      )}
+    <li><Card className="flex items-center gap-4 p-3">
+      <ImageWithFallback
+        src={r.foods?.image_url}
+        alt={r.foods?.name ?? ''}
+        className="w-14 h-14 rounded-lg shrink-0"
+        iconSize="text-2xl"
+      />
 
       <div className="flex-1 min-w-0">
         <Link
@@ -83,7 +80,7 @@ function RatingItem({ r }) {
           Remove
         </button>
       </fetcher.Form>
-    </li>
+    </Card></li>
   );
 }
 
@@ -114,7 +111,7 @@ export default function ProfilePage() {
         {ratings.length === 0 ? (
           <p className="text-gray-400 text-sm">
             You haven&apos;t rated anything yet.{' '}
-            <Link to="/search" className="underline text-[#E21833]">
+            <Link to="/search" className="underline text-primary">
               Find a food to rate.
             </Link>
           </p>

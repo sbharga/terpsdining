@@ -103,7 +103,7 @@ export function getHallStatus(hoursRow) {
     }
   }
 
-  // Not open — find the next upcoming period to show "Opens X at Y"
+  // Not open — find the next upcoming period today to show "Opens X at Y"
   for (const { name, value } of periods) {
     const range = parseRange(value);
     if (!range) continue;
@@ -114,6 +114,17 @@ export function getHallStatus(hoursRow) {
         label:  `Opens ${name} at ${formatMinutes(range.start)}`,
       };
     }
+  }
+
+  // All of today's periods have passed — look ahead using today's schedule as a
+  // proxy for tomorrow's (dining halls keep consistent daily hours).
+  for (const { name, value } of periods) {
+    const range = parseRange(value);
+    if (!range) continue;
+    return {
+      status: 'closed',
+      label:  `Opens ${name} tomorrow at ${formatMinutes(range.start)}`,
+    };
   }
 
   return { status: 'closed', label: 'Closed Today' };

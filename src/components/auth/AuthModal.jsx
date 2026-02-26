@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../../api/supabase';
+import Button from '../ui/Button';
 
 export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
@@ -12,6 +14,18 @@ export default function AuthModal({ onClose }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+
+    if (mode === 'signup') {
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Passwords do not match.');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (mode === 'signin') {
@@ -38,7 +52,10 @@ export default function AuthModal({ onClose }) {
     setMode(next);
     setError(null);
     setSuccess(null);
+    setConfirm('');
   }
+
+  const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
     // Backdrop — click outside to close
@@ -79,7 +96,7 @@ export default function AuthModal({ onClose }) {
               placeholder="Email"
               required
               autoFocus
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E21833]"
+              className={inputClass}
             />
             <input
               type="password"
@@ -88,16 +105,23 @@ export default function AuthModal({ onClose }) {
               placeholder="Password"
               required
               minLength={6}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E21833]"
+              className={inputClass}
             />
+            {mode === 'signup' && (
+              <input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Confirm password"
+                required
+                minLength={6}
+                className={inputClass}
+              />
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-[#E21833] text-white py-2 text-sm font-medium hover:bg-[#c01028] disabled:opacity-50 transition-colors"
-            >
-              {loading ? '…' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
-            </button>
+            <Button type="submit" loading={loading} className="w-full py-2">
+              {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+            </Button>
           </form>
         )}
 
