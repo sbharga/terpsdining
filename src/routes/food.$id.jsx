@@ -199,7 +199,7 @@ export default function FoodPage() {
       {breakdown && (
         <section>
           <h2 className="text-lg font-semibold mb-2">Community Ratings</h2>
-          <Card className="p-4 max-w-xs">
+          <Card className="p-4 max-w-sm">
             <BreakdownRow label="Overall" value={breakdown.overall} />
             <BreakdownRow label="Taste"   value={breakdown.taste} />
             <BreakdownRow label="Health"  value={breakdown.health} />
@@ -244,21 +244,25 @@ export default function FoodPage() {
             hallOrder.indexOf(a.dining_halls?.slug) - hallOrder.indexOf(b.dining_halls?.slug)
           );
         }
+        const activePeriods = MEAL_PERIODS.filter(mp => grouped[mp]);
         return (
           <section>
             <h2 className="text-lg font-semibold mb-2">Today's Appearances</h2>
-            <div className="flex flex-col gap-3">
-              {MEAL_PERIODS.filter(mp => grouped[mp]).map(mp => (
-                <div key={mp}>
-                  <p className="text-sm font-medium text-gray-500 mb-1">{mp}</p>
-                  <div className="flex flex-col gap-1">
+            <Card className="p-4 max-w-sm">
+              {activePeriods.map((mp, idx) => (
+                <div
+                  key={mp}
+                  className={`flex items-start gap-4 py-2 ${idx === 0 ? 'pt-0' : ''} ${idx === activePeriods.length - 1 ? 'pb-0' : 'border-b border-gray-100'}`}
+                >
+                  <span className="text-sm text-gray-500 w-20 shrink-0 pt-0.5">{mp}</span>
+                  <div className="flex flex-col gap-0.5">
                     {grouped[mp].map((row, i) => (
-                      <p key={i} className="text-sm">{row.dining_halls?.name}</p>
+                      <span key={i} className="text-sm font-medium">{row.dining_halls?.name}</span>
                     ))}
                   </div>
                 </div>
               ))}
-            </div>
+            </Card>
           </section>
         );
       })()}
