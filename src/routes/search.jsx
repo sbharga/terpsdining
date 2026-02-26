@@ -43,7 +43,7 @@ export default function SearchPage() {
       <h1 className="text-2xl font-bold">Search Foods</h1>
 
       <Form method="get" ref={formRef} className="space-y-3">
-        {/* Row 1: search input + submit */}
+        {/* Row 1: search input + submit + filters (desktop) */}
         <div className="flex gap-2">
           <input
             type="search"
@@ -58,10 +58,21 @@ export default function SearchPage() {
           >
             Search
           </button>
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            className={`hidden sm:inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors
+              ${showFilters || hasActiveFilters
+                ? 'bg-[#E21833] text-white border-[#E21833]'
+                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-500'
+              }`}
+          >
+            {showFilters ? '✕ Filters' : '⚙ Filters'}{hasActiveFilters && !showFilters ? ' •' : ''}
+          </button>
         </div>
 
-        {/* Row 2: filter toggle (always in same spot) */}
-        <div>
+        {/* Row 2: filter toggle (mobile only) */}
+        <div className="sm:hidden">
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
