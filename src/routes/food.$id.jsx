@@ -139,17 +139,14 @@ function buildBreakdown(ratings) {
   };
 }
 
-function buildWeeklyChart(history) {
+function buildDailyChart(history) {
   const counts = {};
   history.forEach(({ date }) => {
-    const d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // snap to Monday
-    const key = d.toISOString().split('T')[0];
-    counts[key] = (counts[key] ?? 0) + 1;
+    counts[date] = (counts[date] ?? 0) + 1;
   });
   return Object.entries(counts)
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-5);
+    .slice(-14);
 }
 
 // ---------------------------------------------------------------------------
@@ -160,7 +157,7 @@ export default function FoodPage() {
   const { food, history, ratings, user, userRating } = useLoaderData();
   const navigate = useNavigate();
   const breakdown = buildBreakdown(ratings);
-  const chart = buildWeeklyChart(history);
+  const chart = buildDailyChart(history);
   const maxCount = Math.max(...chart.map(([, c]) => c), 1);
 
   return (
@@ -224,19 +221,24 @@ export default function FoodPage() {
 
       {/* Times served chart */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Times Served (last 30 days)</h2>
+        <h2 className="text-lg font-semibold mb-3">Times Served</h2>
         {chart.length === 0 ? (
-          <p className="text-gray-400 text-sm">No menu history in the last 30 days.</p>
+          <p className="text-gray-400 text-sm">No menu history available.</p>
         ) : (
-          <div className="flex items-end gap-3 h-24">
-            {chart.map(([week, count]) => (
-              <div key={week} className="flex flex-col items-center gap-1 flex-1">
-                <span className="text-xs text-gray-500">{count}</span>
+          <div className="flex items-end gap-1">
+            {chart.map(([date, count]) => (
+              <div key={date} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                <span className="text-xs text-gray-500 leading-none">{count}</span>
                 <div
                   className="w-full rounded-t bg-primary"
-                  style={{ height: `${(count / maxCount) * 72}px` }}
+                  style={{ height: `${Math.max((count / maxCount) * 64, 4)}px` }}
                 />
-                <span className="text-xs text-gray-400">{formatDateLabel(week)}</span>
+                <span
+                  className="text-xs text-gray-400"
+                  style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                >
+                  {formatDateLabel(date)}
+                </span>
               </div>
             ))}
           </div>

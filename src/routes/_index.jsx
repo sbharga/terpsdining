@@ -12,10 +12,10 @@ import StatusBadge from '../components/ui/StatusBadge';
 import { Card } from '../components/ui/Card';
 
 export async function loader({ request }) {
-  const today  = todayISO();
-  const url    = new URL(request.url);
-  const param  = url.searchParams.get('period');
-  const VALID  = ['Breakfast', 'Lunch', 'Dinner'];
+  const today = todayISO();
+  const url = new URL(request.url);
+  const param = url.searchParams.get('period');
+  const VALID = ['Breakfast', 'Lunch', 'Dinner'];
   const mealPeriod = (param && VALID.includes(param)) ? param : getCurrentMealPeriod();
 
   const [hours, menus] = await Promise.all([
@@ -63,8 +63,8 @@ function HoursCard({ row }) {
 
       <div>
         <HoursRow label="Breakfast" value={row.breakfast} />
-        <HoursRow label="Lunch"     value={row.lunch} />
-        <HoursRow label="Dinner"    value={row.dinner} />
+        <HoursRow label="Lunch" value={row.lunch} />
+        <HoursRow label="Dinner" value={row.dinner} />
       </div>
     </Card>
   );
@@ -111,11 +111,10 @@ export default function HomePage() {
               <Link
                 key={p}
                 to={`/?period=${p}`}
-                className={`px-2.5 py-1 rounded-full border font-medium ${
-                  p === mealPeriod
+                className={`px-2.5 py-1 rounded-full border font-medium ${p === mealPeriod
                     ? 'bg-primary text-white border-primary'
                     : 'text-gray-400 border-gray-200 bg-white hover:border-gray-400 hover:text-gray-600'
-                }`}
+                  }`}
               >
                 {p}
               </Link>
@@ -126,7 +125,7 @@ export default function HomePage() {
         {hallSlugs.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">
             <p className="text-gray-400 text-sm">
-              Menu not yet available. Check back after 4 AM when the daily sync runs.
+              Menu not yet available. Check back back later.
             </p>
           </div>
         ) : (
