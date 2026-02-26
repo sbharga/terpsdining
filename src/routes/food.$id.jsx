@@ -5,6 +5,7 @@ import {
   getFoodById,
   getFoodMenuHistory,
   getFoodRatings,
+  getTodayAppearancesForFood,
   getUserRatingForFood,
   upsertRating,
 } from '../api/queries';
@@ -24,14 +25,15 @@ export async function loader({ params }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [food, history, ratings, userRating] = await Promise.all([
+  const [food, history, ratings, todayAppearances, userRating] = await Promise.all([
     getFoodById(params.id),
     getFoodMenuHistory(params.id),
     getFoodRatings(params.id),
+    getTodayAppearancesForFood(params.id),
     user ? getUserRatingForFood(user.id, params.id) : Promise.resolve(null),
   ]);
 
-  return { food, history, ratings, user, userRating };
+  return { food, history, ratings, todayAppearances, user, userRating };
 }
 
 // ---------------------------------------------------------------------------
@@ -161,7 +163,7 @@ function buildDailyChart(history) {
 // ---------------------------------------------------------------------------
 
 export default function FoodPage() {
-  const { food, history, ratings, user, userRating } = useLoaderData();
+  const { food, history, ratings, todayAppearances, user, userRating } = useLoaderData();
   const navigate = useNavigate();
   const breakdown = buildBreakdown(ratings);
   const chart = buildDailyChart(history);
@@ -191,6 +193,25 @@ export default function FoodPage() {
           <AllergenIcons allergens={food.allergens} />
         </div>
       </div>
+
+      {/* Served today */}
+      {todayAppearances.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold mb-2">Served Today</h2>
+          <div className="flex flex-wrap gap-2">
+            {todayAppearances.map((row, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-3 py-1 text-sm text-green-800"
+              >
+                <span className="font-medium">{row.meal_period}</span>
+                <span className="text-green-500">·</span>
+                <span>{row.dining_halls?.name}</span>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Community rating breakdown */}
       {breakdown && (

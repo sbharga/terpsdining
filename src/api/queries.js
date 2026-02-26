@@ -64,6 +64,17 @@ export async function getFoodById(id) {
   );
 }
 
+export async function getTodayAppearancesForFood(foodId) {
+  return throwOnError(
+    await supabase
+      .from('menus')
+      .select('meal_period, dining_halls(name, slug)')
+      .eq('food_id', foodId)
+      .eq('date', todayISO())
+      .order('meal_period', { ascending: true })
+  ) ?? [];
+}
+
 export async function getFoodMenuHistory(foodId) {
   const cutoff = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
     .format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
