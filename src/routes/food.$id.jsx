@@ -144,9 +144,16 @@ function buildDailyChart(history) {
   history.forEach(({ date }) => {
     counts[date] = (counts[date] ?? 0) + 1;
   });
-  return Object.entries(counts)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-14);
+  // Generate a full 30-day window including days with 0 occurrences
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const [y, m, d] = todayStr.split('-').map(Number);
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const dt = new Date(y, m - 1, d - i);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    days.push([key, counts[key] ?? 0]);
+  }
+  return days;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,26 +228,41 @@ export default function FoodPage() {
 
       {/* Times served chart */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Times Served</h2>
-        {chart.length === 0 ? (
+        <h2 className="text-lg font-semibold mb-3">Times Served (last 30 days)</h2>
+        {history.length === 0 ? (
           <p className="text-gray-400 text-sm">No menu history available.</p>
         ) : (
-          <div className="flex items-end gap-1">
-            {chart.map(([date, count]) => (
-              <div key={date} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <span className="text-xs text-gray-500 leading-none">{count}</span>
-                <div
-                  className="w-full rounded-t bg-primary"
-                  style={{ height: `${Math.max((count / maxCount) * 64, 4)}px` }}
-                />
-                <span
-                  className="text-xs text-gray-400"
-                  style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                >
-                  {formatDateLabel(date)}
-                </span>
-              </div>
-            ))}
+          <div className="flex flex-col">
+            {/* Bar area — fixed height so all bars share the same baseline */}
+            <div className="flex items-stretch gap-px" style={{ height: 96 }}>
+              {chart.map(([date, count]) => (
+                <div key={date} className="flex flex-col justify-end items-center flex-1 min-w-0">
+                  {count > 0 && (
+                    <span className="text-xs text-gray-500 leading-none mb-1">{count}</span>
+                  )}
+                  <div
+                    className="w-full rounded-t"
+                    style={{
+                      height: `${Math.max((count / maxCount) * 80, 2)}px`,
+                      backgroundColor: count > 0 ? 'var(--color-primary, #E21833)' : '#e5e7eb',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            {/* Label area — separate row so label height never affects bar alignment */}
+            <div className="flex gap-px mt-1">
+              {chart.map(([date]) => (
+                <div key={date} className="flex-1 min-w-0 flex justify-center">
+                  <span
+                    className="text-xs text-gray-400"
+                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                  >
+                    {formatDateLabel(date)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
