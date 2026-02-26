@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLoaderData, Link, useFetcher } from 'react-router';
 import { redirect } from 'react-router';
 import { supabase } from '../api/supabase';
@@ -90,6 +91,14 @@ function RatingItem({ r }) {
 
 export default function ProfilePage() {
   const { user, ratings } = useLoaderData();
+  const [sortBy, setSortBy] = useState('newest');
+  const sorted = [...ratings].sort((a, b) => {
+    if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    if (sortBy === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+    if (sortBy === 'highest') return (b.rating_overall ?? 0) - (a.rating_overall ?? 0);
+    if (sortBy === 'lowest')  return (a.rating_overall ?? 0) - (b.rating_overall ?? 0);
+    return 0;
+  });
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -116,11 +125,33 @@ export default function ProfilePage() {
             </Link>
           </p>
         ) : (
-          <ul className="space-y-3">
-            {ratings.map((r) => (
-              <RatingItem key={r.id} r={r} />
-            ))}
-          </ul>
+          <>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {[
+                { key: 'newest',  label: 'Newest' },
+                { key: 'oldest',  label: 'Oldest' },
+                { key: 'highest', label: 'Highest Rated' },
+                { key: 'lowest',  label: 'Lowest Rated' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSortBy(key)}
+                  className={`px-2.5 py-1 rounded-full border text-xs font-medium ${
+                    sortBy === key
+                      ? 'bg-primary text-white border-primary'
+                      : 'text-gray-400 border-gray-200 bg-white hover:border-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <ul className="space-y-3">
+              {sorted.map((r) => (
+                <RatingItem key={r.id} r={r} />
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </div>

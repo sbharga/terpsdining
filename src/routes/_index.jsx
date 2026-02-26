@@ -10,6 +10,7 @@ import { formatFullDate } from '../utils/date';
 import FoodCard from '../components/food/FoodCard';
 import StatusBadge from '../components/ui/StatusBadge';
 import { Card } from '../components/ui/Card';
+import { DINING_HALLS } from '../config/halls';
 
 export async function loader({ request }) {
   const today = todayISO();
@@ -76,7 +77,7 @@ function HoursCard({ row }) {
 
 export default function HomePage() {
   const { hours, menusByHall, mealPeriod, today } = useLoaderData();
-  const hallSlugs = Object.keys(menusByHall);
+  const hallSlugs = DINING_HALLS.map(h => h.slug).filter(slug => menusByHall[slug]);
 
   return (
     <div className="space-y-10">
@@ -93,9 +94,13 @@ export default function HomePage() {
           <p className="text-gray-400 text-sm">Hours not yet available for today.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
-            {hours.map((row) => (
-              <HoursCard key={row.id} row={row} />
-            ))}
+            {DINING_HALLS
+              .map(h => hours.find(r => r.dining_halls?.slug === h.slug))
+              .filter(Boolean)
+              .map((row) => (
+                <HoursCard key={row.id} row={row} />
+              ))
+            }
           </div>
         )}
       </section>

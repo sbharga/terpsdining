@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLoaderData, useFetcher, useNavigate } from 'react-router';
 import { supabase } from '../api/supabase';
+import { DINING_HALLS } from '../config/halls';
 import {
   getFoodById,
   getFoodMenuHistory,
@@ -194,25 +195,6 @@ export default function FoodPage() {
         </div>
       </div>
 
-      {/* Served today */}
-      {todayAppearances.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-2">Served Today</h2>
-          <div className="flex flex-wrap gap-2">
-            {todayAppearances.map((row, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-1.5 rounded-full bg-green-50 border border-green-200 px-3 py-1 text-sm text-green-800"
-              >
-                <span className="font-medium">{row.meal_period}</span>
-                <span className="text-green-500">·</span>
-                <span>{row.dining_halls?.name}</span>
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Community rating breakdown */}
       {breakdown && (
         <section>
@@ -246,6 +228,40 @@ export default function FoodPage() {
           </p>
         )}
       </section>
+
+      {/* Today's Appearances */}
+      {todayAppearances.length > 0 && (() => {
+        const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
+        const hallOrder = DINING_HALLS.map(h => h.slug);
+        const grouped = {};
+        for (const row of todayAppearances) {
+          const mp = row.meal_period;
+          if (!grouped[mp]) grouped[mp] = [];
+          grouped[mp].push(row);
+        }
+        for (const mp of Object.keys(grouped)) {
+          grouped[mp].sort((a, b) =>
+            hallOrder.indexOf(a.dining_halls?.slug) - hallOrder.indexOf(b.dining_halls?.slug)
+          );
+        }
+        return (
+          <section>
+            <h2 className="text-lg font-semibold mb-2">Today's Appearances</h2>
+            <div className="flex flex-col gap-3">
+              {MEAL_PERIODS.filter(mp => grouped[mp]).map(mp => (
+                <div key={mp}>
+                  <p className="text-sm font-medium text-gray-500 mb-1">{mp}</p>
+                  <div className="flex flex-col gap-1">
+                    {grouped[mp].map((row, i) => (
+                      <p key={i} className="text-sm">{row.dining_halls?.name}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Times served chart */}
       <section>
@@ -288,21 +304,6 @@ export default function FoodPage() {
         )}
       </section>
 
-      {/* Recent appearances */}
-      {history.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold mb-2">Recent Appearances</h2>
-          <ul className="space-y-1 text-sm text-gray-600">
-            {history.slice(0, 10).map((row, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-gray-400 w-24">{formatDateLabel(row.date)}</span>
-                <span>{row.meal_period}</span>
-                <span className="text-gray-400">@ {row.dining_halls?.name}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }
