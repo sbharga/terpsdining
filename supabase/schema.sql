@@ -1,18 +1,8 @@
--- =============================================================================
--- Terps Dining – Full Schema
--- Run this entire file in the Supabase SQL Editor.
--- =============================================================================
 
 
--- ---------------------------------------------------------------------------
--- Extensions
--- ---------------------------------------------------------------------------
 create extension if not exists "uuid-ossp";
 
 
--- ---------------------------------------------------------------------------
--- 1. Dining Halls
--- ---------------------------------------------------------------------------
 create table dining_halls (
     id   uuid primary key default uuid_generate_v4(),
     name text not null,
@@ -25,9 +15,6 @@ insert into dining_halls (name, slug) values
     ('251 North',     '251_north');
 
 
--- ---------------------------------------------------------------------------
--- 2. Foods
--- ---------------------------------------------------------------------------
 create table foods (
     id           uuid        primary key default uuid_generate_v4(),
     name         text        not null unique,
@@ -39,9 +26,6 @@ create table foods (
 );
 
 
--- ---------------------------------------------------------------------------
--- 3. Menus  (daily availability)
--- ---------------------------------------------------------------------------
 create table menus (
     id             uuid primary key default uuid_generate_v4(),
     date           date not null,
@@ -52,9 +36,6 @@ create table menus (
 );
 
 
--- ---------------------------------------------------------------------------
--- 4. Hours
--- ---------------------------------------------------------------------------
 create table hours (
     id             uuid primary key default uuid_generate_v4(),
     date           date not null,
@@ -66,9 +47,6 @@ create table hours (
 );
 
 
--- ---------------------------------------------------------------------------
--- 5. Profiles & Roles
--- ---------------------------------------------------------------------------
 create table profiles (
     id         uuid primary key references auth.users on delete cascade,
     username   text unique,
@@ -77,9 +55,6 @@ create table profiles (
 );
 
 
--- ---------------------------------------------------------------------------
--- 6. Ratings
--- ---------------------------------------------------------------------------
 create table ratings (
     id             uuid primary key default uuid_generate_v4(),
     user_id        uuid references auth.users    on delete cascade,
@@ -88,20 +63,14 @@ create table ratings (
     rating_taste   int  check (rating_taste   between 1 and 5),
     rating_health  int  check (rating_health  between 1 and 5),
     created_at     timestamptz default now(),
-    unique(user_id, food_id)   -- one rating per food per user
+    unique(user_id, food_id)
 );
 
 
--- ---------------------------------------------------------------------------
--- 7. Indexes  (free-tier optimisations)
--- ---------------------------------------------------------------------------
 create index idx_menus_date       on menus(date);
 create index idx_ratings_food_id  on ratings(food_id);
 
 
--- ---------------------------------------------------------------------------
--- 8. Trigger – auto-create profile on sign-up
--- ---------------------------------------------------------------------------
 create or replace function handle_new_user()
 returns trigger
 language plpgsql security definer
@@ -118,9 +87,6 @@ create trigger on_auth_user_created
     for each row execute procedure handle_new_user();
 
 
--- ---------------------------------------------------------------------------
--- 9. Trigger – keep foods.avg_rating / rating_count in sync
--- ---------------------------------------------------------------------------
 create or replace function update_food_rating()
 returns trigger
 language plpgsql security definer
@@ -153,9 +119,6 @@ create trigger on_rating_change
     for each row execute procedure update_food_rating();
 
 
--- ---------------------------------------------------------------------------
--- 10. Row-Level Security
--- ---------------------------------------------------------------------------
 
 alter table dining_halls enable row level security;
 alter table foods         enable row level security;
@@ -164,19 +127,16 @@ alter table hours         enable row level security;
 alter table profiles      enable row level security;
 alter table ratings       enable row level security;
 
--- dining_halls – public read
 create policy "Public read dining_halls"
     on dining_halls for select
     to anon, authenticated
     using (true);
 
--- foods – public read
 create policy "Public read foods"
     on foods for select
     to anon, authenticated
     using (true);
 
--- foods – admin can update (image_url, allergens, etc.)
 create policy "Admin update foods"
     on foods for update
     to authenticated
@@ -187,70 +147,56 @@ create policy "Admin update foods"
         )
     );
 
--- menus – public read
 create policy "Public read menus"
     on menus for select
     to anon, authenticated
     using (true);
 
--- hours – public read
 create policy "Public read hours"
     on hours for select
     to anon, authenticated
     using (true);
 
--- profiles – public read
 create policy "Public read profiles"
     on profiles for select
     to anon, authenticated
     using (true);
 
--- profiles – user can update own row
 create policy "User update own profile"
     on profiles for update
     to authenticated
     using (id = auth.uid());
 
--- ratings – public read
 create policy "Public read ratings"
     on ratings for select
     to anon, authenticated
     using (true);
 
--- ratings – user can insert for themselves
 create policy "User insert own rating"
     on ratings for insert
     to authenticated
     with check (user_id = auth.uid());
 
--- ratings – user can update their own rating
 create policy "User update own rating"
     on ratings for update
     to authenticated
     using (user_id = auth.uid());
 
--- ratings – user can delete their own rating
 create policy "User delete own rating"
     on ratings for delete
     to authenticated
     using (user_id = auth.uid());
 
 
--- ---------------------------------------------------------------------------
--- 11. Storage Setup
--- ---------------------------------------------------------------------------
 
--- Create the bucket
 insert into storage.buckets (id, name, public)
 values ('food-images', 'food-images', true)
 on conflict (id) do nothing;
 
--- Public read access
 create policy "Public Access"
     on storage.objects for select
     using ( bucket_id = 'food-images' );
 
--- Admin upload access
 create policy "Admin Upload"
     on storage.objects for insert
     to authenticated
@@ -262,7 +208,6 @@ create policy "Admin Upload"
         )
     );
 
--- Admin update/upsert access
 create policy "Admin Update"
     on storage.objects for update
     to authenticated

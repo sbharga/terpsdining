@@ -6,12 +6,11 @@ import Button from '../components/ui/Button';
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying'); // 'verifying' | 'success' | 'error'
+  const [status, setStatus] = useState('verifying');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (window.location.hash.includes('access_token')) {
-      // Implicit flow — SDK auto-processes hash, wait for SIGNED_IN event
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
         if (session) {
           subscription.unsubscribe();
@@ -20,7 +19,6 @@ export default function AuthCallbackPage() {
           setTimeout(() => navigate('/'), 2000);
         }
       });
-      // 30 s gives the SDK enough time even on slow connections
       const timer = setTimeout(() => {
         subscription.unsubscribe();
         setStatus('error');
@@ -32,7 +30,6 @@ export default function AuthCallbackPage() {
       return () => { subscription.unsubscribe(); clearTimeout(timer); };
     }
 
-    // PKCE flow fallback
     const code = searchParams.get('code');
     if (!code) {
       setStatus('error');
@@ -49,7 +46,7 @@ export default function AuthCallbackPage() {
         setTimeout(() => navigate('/'), 2000);
       }
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [navigate, searchParams]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4">

@@ -34,9 +34,6 @@ export async function loader({ request }) {
   return { hours, menusByHall, mealPeriod, today };
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
 
@@ -71,9 +68,6 @@ function HoursCard({ row }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function HomePage() {
   const { hours, menusByHall, mealPeriod, today } = useLoaderData();
@@ -81,13 +75,11 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Date header */}
       <div>
         <h1 className="text-2xl font-bold">Today's Dining</h1>
         <p className="text-gray-500 text-sm mt-1">{formatFullDate(today)}</p>
       </div>
 
-      {/* Hours */}
       <section>
         <h2 className="text-lg font-semibold mb-3">Hours Today</h2>
         {hours.length === 0 ? (
@@ -105,12 +97,10 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Current meal menu */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">{mealPeriod} Menu</h2>
 
-          {/* Meal period pills */}
           <div className="flex gap-1.5 text-xs">
             {MEAL_PERIODS.map((p) => (
               <Link

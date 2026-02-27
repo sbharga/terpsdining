@@ -45,7 +45,6 @@ export default function SearchPage() {
       <h1 className="text-2xl font-bold">Search Foods</h1>
 
       <Form method="get" ref={formRef} className="space-y-3">
-        {/* Row 1: search input + submit + filters (desktop) */}
         <div className="flex gap-2">
           <input
             type="search"
@@ -68,7 +67,6 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* Row 2: filter toggle (mobile only) */}
         <div className="sm:hidden">
           <button
             type="button"
@@ -83,10 +81,8 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* Collapsible filters */}
         {showFilters && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-4 shadow-sm">
-            {/* Sort + Availability row */}
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-36">
                 <label className="text-sm font-medium text-gray-700 block mb-1">Sort by</label>
@@ -118,7 +114,6 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Dietary preferences */}
             <fieldset>
               <legend className="text-sm font-medium text-gray-700 mb-2">Dietary Preferences</legend>
               <div className="flex flex-wrap gap-2">
@@ -150,7 +145,6 @@ export default function SearchPage() {
               </div>
             </fieldset>
 
-            {/* Allergen exclusion */}
             <fieldset>
               <legend className="text-sm font-medium text-gray-700 mb-2">Exclude Allergens</legend>
               <div className="flex flex-wrap gap-2">
@@ -185,7 +179,6 @@ export default function SearchPage() {
         )}
       </Form>
 
-      {/* Results */}
       <div>
         {isSearching ? (
           <div className="flex items-center gap-2 text-sm text-gray-400">

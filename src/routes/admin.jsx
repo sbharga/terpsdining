@@ -39,7 +39,6 @@ export async function loader({ request }) {
   return { foods, query };
 }
 
-/** Inline form for uploading a food's image. */
 function ImageForm({ food }) {
   const fetcher = useFetcher();
   const isSubmitting = fetcher.state !== 'idle';
@@ -108,12 +107,10 @@ export async function action({ request }) {
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('food-images')
       .getPublicUrl(path);
 
-    // Update foods table
     const { error: updateError } = await supabase
       .from('foods')
       .update({ image_url: publicUrl })

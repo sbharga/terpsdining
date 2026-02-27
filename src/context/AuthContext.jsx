@@ -8,13 +8,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Hydrate from the current session immediately
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Keep UI in sync across tabs and on token refresh
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {

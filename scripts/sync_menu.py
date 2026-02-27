@@ -51,7 +51,6 @@ def fetch_dining_hours() -> dict[str, list[str]]:
     response = requests.get(GOOGLE_SHEET_URL, timeout=10)
     response.raise_for_status()
 
-    # Google Viz API wraps JSON in a callback; strip the wrapper
     raw_json = response.text[47:-2]
     data = json.loads(raw_json)
 
@@ -60,7 +59,6 @@ def fetch_dining_hours() -> dict[str, list[str]]:
         for row in data["table"]["rows"]
     ]
 
-    # Row 0 is the header; cells look like "2/25/2025 0:00:00"
     header = rows[0]
     today = date.today()
     today_str = f"{today.month}/{today.day}"
@@ -121,9 +119,6 @@ def scrape_menu(location_num: str, date_str: str, meal_period: str) -> list[dict
     return items
 
 
-# ---------------------------------------------------------------------------
-# Phase A – Hours
-# ---------------------------------------------------------------------------
 
 
 def sync_hours(supabase: Client, hall_ids: dict[str, str], today: date) -> None:
@@ -152,9 +147,6 @@ def sync_hours(supabase: Client, hall_ids: dict[str, str], today: date) -> None:
     log.info("  Upserted %d hour row(s).", len(records))
 
 
-# ---------------------------------------------------------------------------
-# Phase B – Menus & Foods
-# ---------------------------------------------------------------------------
 
 
 def sync_menus(
@@ -164,7 +156,6 @@ def sync_menus(
     today: date,
 ) -> None:
     log.info("Phase B: Syncing menus & foods...")
-    # nutrition.umd.edu expects M/D/YYYY (no leading zeros)
     today_str = f"{today.month}/{today.day}/{today.year}"
 
     for hall, period in product(halls, MEAL_PERIODS):
@@ -185,8 +176,6 @@ def sync_menus(
             log.info("  No items.")
             continue
 
-        # Step 1: Upsert foods – update allergens on name conflict
-        # Deduplicate by name; the scraper can return the same item multiple times
         seen: dict[str, dict] = {}
         for item in items:
             seen.setdefault(item["name"], {"name": item["name"], "allergens": item["allergens"]})
@@ -194,7 +183,6 @@ def sync_menus(
         for batch in chunks(food_records, BATCH_SIZE):
             supabase.table("foods").upsert(batch, on_conflict="name").execute()
 
-        # Step 2: Fetch the UUIDs that were just upserted
         names = [item["name"] for item in items]
         food_id_map: dict[str, str] = {}
         for batch in chunks(names, BATCH_SIZE):
@@ -204,7 +192,6 @@ def sync_menus(
             for row in resp.data:
                 food_id_map[row["name"]] = row["id"]
 
-        # Step 3: Bulk insert menu rows – silently skip duplicates
         menu_records = [
             {
                 "date": today.isoformat(),
@@ -225,9 +212,6 @@ def sync_menus(
         log.info("  Inserted %d menu row(s).", len(menu_records))
 
 
-# ---------------------------------------------------------------------------
-# Cleanup (free-tier guardrail)
-# ---------------------------------------------------------------------------
 
 
 def cleanup_old_data(supabase: Client, today: date) -> None:
@@ -239,9 +223,6 @@ def cleanup_old_data(supabase: Client, today: date) -> None:
     log.info("Cleanup complete.")
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:
@@ -250,7 +231,6 @@ def main() -> None:
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    # Load slug → UUID mapping from DB
     resp = supabase.table("dining_halls").select("id,slug").execute()
     hall_ids: dict[str, str] = {row["slug"]: row["id"] for row in resp.data}
 

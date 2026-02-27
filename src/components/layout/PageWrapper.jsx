@@ -8,7 +8,6 @@ export default function PageWrapper() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
-      {/* Top loading bar */}
       {isLoading && (
         <div className="fixed top-0 inset-x-0 z-50 h-0.5 bg-accent animate-pulse" />
       )}

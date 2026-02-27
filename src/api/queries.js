@@ -2,15 +2,9 @@ import { supabase } from './supabase';
 import { throwOnError } from './db';
 import { todayISO } from '../utils/date';
 
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
 
 export { todayISO, getCurrentMealPeriod } from '../utils/date';
 
-// ---------------------------------------------------------------------------
-// Hours
-// ---------------------------------------------------------------------------
 
 export async function getTodayHours() {
   return throwOnError(
@@ -18,9 +12,6 @@ export async function getTodayHours() {
   ) ?? [];
 }
 
-// ---------------------------------------------------------------------------
-// Menus
-// ---------------------------------------------------------------------------
 
 export async function getMenusByPeriod(date, mealPeriod) {
   return throwOnError(
@@ -32,10 +23,6 @@ export async function getMenusByPeriod(date, mealPeriod) {
   ) ?? [];
 }
 
-/**
- * Groups a flat menus array (from getMenusByPeriod) by dining-hall slug.
- * Returns: { [slug]: { hall: {...}, foods: [...] } }
- */
 export function groupMenusByHall(menus) {
   return menus.reduce((acc, row) => {
     const slug = row.dining_halls?.slug;
@@ -46,7 +33,6 @@ export function groupMenusByHall(menus) {
   }, {});
 }
 
-/** Returns a Set of food IDs that appear in any of today's menus. */
 export async function getTodayFoodIds() {
   const data = throwOnError(
     await supabase.from('menus').select('food_id').eq('date', todayISO())
@@ -54,9 +40,6 @@ export async function getTodayFoodIds() {
   return new Set((data ?? []).map((r) => r.food_id));
 }
 
-// ---------------------------------------------------------------------------
-// Foods
-// ---------------------------------------------------------------------------
 
 export async function getFoodById(id) {
   return throwOnError(
@@ -104,16 +87,7 @@ export async function getAllFoods() {
   ) ?? [];
 }
 
-// ---------------------------------------------------------------------------
-// Search
-// ---------------------------------------------------------------------------
 
-/**
- * Search foods by name and optionally exclude specific allergens.
- * Allergen exclusion and dietary filtering are pushed to the server via PostgREST
- * array operators (cs / not.cs) so only matching rows are transferred.
- * sort: 'rating' | 'trending' | 'recent'
- */
 export async function searchFoods(query = '', excludeAllergens = [], dietFilters = [], sort = 'rating') {
   const orderCol = sort === 'recent' ? 'created_at' : 'avg_rating';
   let req = supabase
@@ -124,17 +98,14 @@ export async function searchFoods(query = '', excludeAllergens = [], dietFilters
 
   if (query) req = req.ilike('name', `%${query}%`);
 
-  // Server-side: foods must contain every dietary marker
   if (dietFilters.length > 0) req = req.contains('allergens', dietFilters);
 
-  // Server-side: foods must not contain any excluded allergen
   for (const a of excludeAllergens) req = req.not('allergens', 'cs', `{${a}}`);
 
   let foods = throwOnError(await req) ?? [];
 
   if (sort === 'trending' && foods.length > 0) {
     const ids = foods.map((f) => f.id);
-    // Fetch a bounded window of recent rating events; one food_id per row is all we need.
     const { data: recentRatings } = await supabase
       .from('ratings')
       .select('food_id')
@@ -156,7 +127,6 @@ export async function searchFoods(query = '', excludeAllergens = [], dietFilters
   return foods;
 }
 
-/** Returns a Set of food IDs served at a specific dining hall today. */
 export async function getTodayFoodIdsByHall(hallSlug) {
   const data = throwOnError(
     await supabase
@@ -168,9 +138,6 @@ export async function getTodayFoodIdsByHall(hallSlug) {
   return new Set((data ?? []).map((r) => r.food_id));
 }
 
-// ---------------------------------------------------------------------------
-// Profile / Ratings
-// ---------------------------------------------------------------------------
 
 export async function getUserRatings(userId) {
   return throwOnError(
@@ -209,5 +176,5 @@ export async function getUserRatingForFood(userId, foodId) {
       .eq('user_id', userId)
       .eq('food_id', foodId)
       .maybeSingle()
-  ); // null if not yet rated
+  );
 }

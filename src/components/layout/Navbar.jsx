@@ -33,7 +33,6 @@ export default function Navbar() {
             TerpsDining
           </Link>
 
-          {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-5 text-sm font-medium">
             {visibleLinks.map(({ to, label, end }) => (
               <NavLink
@@ -58,7 +57,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile hamburger */}
           <button
             className="sm:hidden text-white text-xl leading-none px-1"
             onClick={() => setMenuOpen((v) => !v)}
@@ -68,7 +66,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile dropdown */}
         {menuOpen && (
           <div className="sm:hidden bg-primary border-t border-white/20 px-4 pb-3 space-y-2 text-sm font-medium text-white">
             {visibleLinks.map(({ to, label, end }) => (

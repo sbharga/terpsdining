@@ -7,9 +7,6 @@ import RatingStars from '../components/food/RatingStars';
 import { Card } from '../components/ui/Card';
 import ImageWithFallback from '../components/ui/ImageWithFallback';
 
-// ---------------------------------------------------------------------------
-// Loader
-// ---------------------------------------------------------------------------
 
 export async function loader() {
   const {
@@ -22,9 +19,6 @@ export async function loader() {
   return { user, ratings };
 }
 
-// ---------------------------------------------------------------------------
-// Action
-// ---------------------------------------------------------------------------
 
 export async function action({ request }) {
   const {
@@ -37,15 +31,10 @@ export async function action({ request }) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
-/** Single rating row with optimistic delete. */
 function RatingItem({ r }) {
   const fetcher = useFetcher();
 
-  // Optimistically hide the row while the delete is in flight
   if (fetcher.state !== 'idle') return null;
 
   return (
@@ -70,7 +59,6 @@ function RatingItem({ r }) {
         </p>
       </div>
 
-      {/* Delete button */}
       <fetcher.Form method="post">
         <input type="hidden" name="ratingId" value={r.id} />
         <button
@@ -85,9 +73,6 @@ function RatingItem({ r }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function ProfilePage() {
   const { user, ratings } = useLoaderData();

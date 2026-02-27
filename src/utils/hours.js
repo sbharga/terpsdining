@@ -1,13 +1,4 @@
-/**
- * Utilities for parsing UMD dining hours strings and computing live status.
- *
- * Hours are stored as strings like "7am-10am", "11am-2pm", "5pm-8pm", "Closed".
- */
 
-/**
- * Parse a single time token (e.g. "7am", "10am", "2pm", "7:30pm")
- * into minutes from midnight.  Returns null on failure.
- */
 function parseMinutes(str) {
   const match = str.trim().match(/^(\d{1,2})(?::(\d{2}))?(am|pm)$/i);
   if (!match) return null;
@@ -22,17 +13,11 @@ function parseMinutes(str) {
   return hour * 60 + min;
 }
 
-/**
- * Parse an hours-range string into { start, end } in minutes from midnight.
- * Returns null if the string is "Closed" or unparseable.
- */
 function parseRange(str) {
   if (!str) return null;
   const clean = str.trim().replace(/\s*(et|est|edt)\s*$/i, '');
   if (clean.toLowerCase() === 'closed') return null;
 
-  // Find the dash that separates start from end.
-  // The dash is always between a time-end char (m) and a digit.
   const dash = clean.search(/(?<=[ap]m)-(?=\d)/i);
   if (dash === -1) return null;
 
@@ -43,7 +28,6 @@ function parseRange(str) {
   return { start, end };
 }
 
-/** Format minutes-from-midnight as "7am", "12pm", "5:30pm", etc. */
 function formatMinutes(mins) {
   const totalHour = Math.floor(mins / 60);
   const min = mins % 60;
@@ -56,20 +40,8 @@ function formatMinutes(mins) {
     : `${hour12}${ampm}`;
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
 
-/**
- * @typedef {{ status: 'open' | 'closing_soon' | 'closed', label: string }} HallStatus
- */
 
-/**
- * Given a row from the `hours` table, return the current live status.
- *
- * @param {{ breakfast: string, lunch: string, dinner: string }} hoursRow
- * @returns {HallStatus}
- */
 export function getHallStatus(hoursRow) {
   const etDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const nowMins = etDate.getHours() * 60 + etDate.getMinutes();
@@ -80,7 +52,6 @@ export function getHallStatus(hoursRow) {
     { name: 'Dinner', value: hoursRow?.dinner },
   ];
 
-  // Check if we're currently inside any period
   for (const { name, value } of periods) {
     const range = parseRange(value);
     if (!range) continue;
@@ -99,7 +70,6 @@ export function getHallStatus(hoursRow) {
     }
   }
 
-  // Not open — find the next upcoming period today to show "Opens X at Y"
   for (const { name, value } of periods) {
     const range = parseRange(value);
     if (!range) continue;
@@ -112,8 +82,6 @@ export function getHallStatus(hoursRow) {
     }
   }
 
-  // All of today's periods have passed — look ahead using today's schedule as a
-  // proxy for tomorrow's (dining halls keep consistent daily hours).
   for (const { name, value } of periods) {
     const range = parseRange(value);
     if (!range) continue;

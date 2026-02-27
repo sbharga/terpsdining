@@ -17,9 +17,6 @@ import Button from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import ImageWithFallback from '../components/ui/ImageWithFallback';
 
-// ---------------------------------------------------------------------------
-// Loader
-// ---------------------------------------------------------------------------
 
 export async function loader({ params }) {
   const {
@@ -37,9 +34,6 @@ export async function loader({ params }) {
   return { food, history, ratings, todayAppearances, user, userRating };
 }
 
-// ---------------------------------------------------------------------------
-// Action
-// ---------------------------------------------------------------------------
 
 export async function action({ request, params }) {
   const {
@@ -57,11 +51,7 @@ export async function action({ request, params }) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
-/** Clickable star row for a single rating category. */
 function StarPicker({ name, defaultValue = 0 }) {
   const [value, setValue] = useState(defaultValue);
   return (
@@ -90,7 +80,6 @@ function StarPicker({ name, defaultValue = 0 }) {
   );
 }
 
-/** useFetcher-based rating form — submits without full navigation. */
 function RatingForm({ userRating, foodId }) {
   const fetcher = useFetcher();
   const isSubmitting = fetcher.state !== 'idle';
@@ -125,9 +114,6 @@ function BreakdownRow({ label, value }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function buildBreakdown(ratings) {
   if (!ratings.length) return null;
@@ -147,7 +133,6 @@ function buildDailyChart(history) {
   history.forEach(({ date }) => {
     counts[date] = (counts[date] ?? 0) + 1;
   });
-  // Generate a full 30-day window including days with 0 occurrences
   const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
   const [y, m, d] = todayStr.split('-').map(Number);
   const days = [];
@@ -159,9 +144,6 @@ function buildDailyChart(history) {
   return days;
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function FoodPage() {
   const { food, history, ratings, todayAppearances, user, userRating } = useLoaderData();
@@ -172,7 +154,6 @@ export default function FoodPage() {
 
   return (
     <div className="space-y-8 max-w-2xl">
-      {/* Back button */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
@@ -180,7 +161,6 @@ export default function FoodPage() {
         ← Back
       </button>
 
-      {/* Header */}
       <div className="flex gap-4 items-start">
         <ImageWithFallback
           src={food.image_url}
@@ -195,7 +175,6 @@ export default function FoodPage() {
         </div>
       </div>
 
-      {/* Community rating breakdown */}
       {breakdown && (
         <section>
           <h2 className="text-lg font-semibold mb-2">Community Ratings</h2>
@@ -207,7 +186,6 @@ export default function FoodPage() {
         </section>
       )}
 
-      {/* Rate this food */}
       <section>
         <h2 className="text-lg font-semibold mb-3">
           {userRating ? 'Your Rating' : 'Rate This Food'}
@@ -229,7 +207,6 @@ export default function FoodPage() {
         )}
       </section>
 
-      {/* Today's Appearances */}
       {todayAppearances.length > 0 && (() => {
         const MEAL_PERIODS = ['Breakfast', 'Lunch', 'Dinner'];
         const hallOrder = DINING_HALLS.map(h => h.slug);
@@ -267,14 +244,12 @@ export default function FoodPage() {
         );
       })()}
 
-      {/* Times served chart */}
       <section>
         <h2 className="text-lg font-semibold mb-3">Times Served (last 30 days)</h2>
         {history.length === 0 ? (
           <p className="text-gray-400 text-sm">No menu history available.</p>
         ) : (
           <div className="flex flex-col">
-            {/* Bar area — fixed height so all bars share the same baseline */}
             <div className="flex items-stretch gap-px" style={{ height: 96 }}>
               {chart.map(([date, count]) => (
                 <div key={date} className="flex flex-col justify-end items-center flex-1 min-w-0">
@@ -291,7 +266,6 @@ export default function FoodPage() {
                 </div>
               ))}
             </div>
-            {/* Label area — separate row so label height never affects bar alignment */}
             <div className="flex gap-px mt-1">
               {chart.map(([date]) => (
                 <div key={date} className="flex-1 min-w-0 flex justify-center">

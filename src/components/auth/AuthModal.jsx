@@ -3,7 +3,7 @@ import { supabase } from '../../api/supabase';
 import Button from '../ui/Button';
 
 export default function AuthModal({ onClose }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
+  const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -58,7 +58,6 @@ export default function AuthModal({ onClose }) {
   const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary';
 
   return (
-    // Backdrop — click outside to close
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onClose}
@@ -67,7 +66,6 @@ export default function AuthModal({ onClose }) {
         className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold">
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
@@ -125,7 +123,6 @@ export default function AuthModal({ onClose }) {
           </form>
         )}
 
-        {/* Mode toggle */}
         <p className="text-center text-xs text-gray-500 mt-4">
           {mode === 'signin' ? (
             <>
