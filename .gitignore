@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 
 SETUP.md
 venv/
+
+__pycache__/

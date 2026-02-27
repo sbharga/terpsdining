@@ -113,7 +113,7 @@ def scrape_menu(location_num: str, date_str: str, meal_period: str) -> list[dict
         name = link.get_text(strip=True)
         allergen_imgs = row.find_all("img", class_="nutri-icon")
         allergens = [
-            img["alt"].removeprefix("Contains ").lower().replace("-", "").replace(" ", "")
+            img["alt"].lower().replace("contains ", "").replace("-", "").replace(" ", "")
             for img in allergen_imgs
             if img.get("alt")
         ]

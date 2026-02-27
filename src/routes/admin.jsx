@@ -88,19 +88,16 @@ export async function action({ request }) {
     return { error: 'No file selected' };
   }
 
-  // Validate type: jpg/jpeg
-  const isJpg = file.type === 'image/jpeg' || file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg');
+  const isJpg = file.type === 'image/jpeg' || (!file.type && (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')));
   if (!isJpg) {
     return { error: 'Only JPG/JPEG images are allowed' };
   }
 
-  // Validate size: < 500KB
   if (file.size > 500 * 1024) {
     return { error: 'File size must be less than 500KB' };
   }
 
   try {
-    // Upload to Supabase Storage - rename to foodId.jpg
     const path = `${foodId}.jpg`;
     const { error: uploadError } = await supabase.storage
       .from('food-images')
