@@ -59,7 +59,7 @@ export function getHallStatus(hoursRow) {
     if (nowMins >= range.start && nowMins < range.end) {
       const minsLeft = range.end - nowMins;
 
-      if (minsLeft <= 30) {
+      if (name === 'Dinner' && minsLeft <= 30) {
         return {
           status: 'closing_soon',
           label: `Closing in ${minsLeft}m`,
