@@ -48,7 +48,7 @@ function RatingItem({ r }) {
 
       <div className="flex-1 min-w-0">
         <Link
-          to={`/food/${r.foods?.id}`}
+          to={`/food/${r.foods?.slug}`}
           className="font-medium text-sm hover:underline line-clamp-1"
         >
           {r.foods?.name ?? 'Unknown food'}
@@ -81,7 +81,7 @@ export default function ProfilePage() {
     if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
     if (sortBy === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
     if (sortBy === 'highest') return (b.rating_overall ?? 0) - (a.rating_overall ?? 0);
-    if (sortBy === 'lowest')  return (a.rating_overall ?? 0) - (b.rating_overall ?? 0);
+    if (sortBy === 'lowest') return (a.rating_overall ?? 0) - (b.rating_overall ?? 0);
     return 0;
   });
 
@@ -113,19 +113,18 @@ export default function ProfilePage() {
           <>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {[
-                { key: 'newest',  label: 'Newest' },
-                { key: 'oldest',  label: 'Oldest' },
+                { key: 'newest', label: 'Newest' },
+                { key: 'oldest', label: 'Oldest' },
                 { key: 'highest', label: 'Highest Rated' },
-                { key: 'lowest',  label: 'Lowest Rated' },
+                { key: 'lowest', label: 'Lowest Rated' },
               ].map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setSortBy(key)}
-                  className={`px-2.5 py-1 rounded-full border text-xs font-medium ${
-                    sortBy === key
+                  className={`px-2.5 py-1 rounded-full border text-xs font-medium ${sortBy === key
                       ? 'bg-primary text-white border-primary'
                       : 'text-gray-400 border-gray-200 bg-white hover:border-gray-400 hover:text-gray-600'
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>

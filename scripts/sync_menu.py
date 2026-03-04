@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from datetime import date, timedelta
 from itertools import product
 
@@ -141,6 +142,9 @@ def sync_hours(supabase: Client, hall_ids: dict[str, str], today: date) -> None:
             }
         )
 
+    # Delete historical hours before inserting today's
+    supabase.table("hours").delete().neq("date", today.isoformat()).execute()
+
     supabase.table("hours").upsert(
         records, on_conflict="date,dining_hall_id"
     ).execute()
@@ -178,7 +182,9 @@ def sync_menus(
 
         seen: dict[str, dict] = {}
         for item in items:
-            seen.setdefault(item["name"], {"name": item["name"], "allergens": item["allergens"]})
+            name = item["name"]
+            slug = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()).strip('-')
+            seen.setdefault(name, {"name": name, "slug": slug, "allergens": item["allergens"]})
         food_records = list(seen.values())
         for batch in chunks(food_records, BATCH_SIZE):
             supabase.table("foods").upsert(batch, on_conflict="name").execute()
@@ -215,11 +221,10 @@ def sync_menus(
 
 
 def cleanup_old_data(supabase: Client, today: date) -> None:
-    """Delete menus and hours older than CLEANUP_DAYS days."""
+    """Delete menus older than CLEANUP_DAYS days."""
     cutoff = (today - timedelta(days=CLEANUP_DAYS)).isoformat()
-    log.info("Cleanup: removing data before %s...", cutoff)
+    log.info("Cleanup: removing menus before %s...", cutoff)
     supabase.table("menus").delete().lt("date", cutoff).execute()
-    supabase.table("hours").delete().lt("date", cutoff).execute()
     log.info("Cleanup complete.")
 
 

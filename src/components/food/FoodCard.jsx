@@ -6,7 +6,7 @@ import ImageWithFallback from '../ui/ImageWithFallback';
 export default function FoodCard({ food }) {
   return (
     <Link
-      to={`/food/${food.id}`}
+      to={`/food/${food.slug}`}
       className="block rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
       <ImageWithFallback src={food.image_url} alt={food.name} className="w-full h-36" />

@@ -17,7 +17,7 @@ export async function getMenusByPeriod(date, mealPeriod) {
   return throwOnError(
     await supabase
       .from('menus')
-      .select('dining_hall_id, dining_halls(id, name, slug), foods(id, name, allergens, avg_rating, rating_count, image_url)')
+      .select('dining_hall_id, dining_halls(id, name, slug), foods(id, name, slug, allergens, avg_rating, rating_count, image_url)')
       .eq('date', date)
       .eq('meal_period', mealPeriod)
   ) ?? [];
@@ -41,9 +41,9 @@ export async function getTodayFoodIds() {
 }
 
 
-export async function getFoodById(id) {
+export async function getFoodBySlug(slug) {
   return throwOnError(
-    await supabase.from('foods').select('*').eq('id', id).single()
+    await supabase.from('foods').select('*').eq('slug', slug).single()
   );
 }
 
@@ -83,7 +83,7 @@ export async function getFoodRatings(foodId) {
 
 export async function getAllFoods() {
   return throwOnError(
-    await supabase.from('foods').select('id, name, allergens, avg_rating, rating_count, image_url').order('name')
+    await supabase.from('foods').select('id, name, slug, allergens, avg_rating, rating_count, image_url').order('name')
   ) ?? [];
 }
 
@@ -92,7 +92,7 @@ export async function searchFoods(query = '', excludeAllergens = [], dietFilters
   const orderCol = sort === 'recent' ? 'created_at' : 'avg_rating';
   let req = supabase
     .from('foods')
-    .select('id, name, allergens, avg_rating, rating_count, image_url, created_at')
+    .select('id, name, slug, allergens, avg_rating, rating_count, image_url, created_at')
     .order(orderCol, { ascending: false })
     .limit(200);
 
@@ -143,7 +143,7 @@ export async function getUserRatings(userId) {
   return throwOnError(
     await supabase
       .from('ratings')
-      .select('*, foods(id, name, image_url)')
+      .select('*, foods(id, name, slug, image_url)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
   ) ?? [];

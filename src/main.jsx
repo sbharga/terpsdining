@@ -9,7 +9,7 @@ import ErrorPage from './routes/error';
 
 import HomePage, { loader as homeLoader } from './routes/_index';
 import SearchPage, { loader as searchLoader } from './routes/search';
-import FoodPage, { loader as foodLoader, action as foodAction } from './routes/food.$id';
+import FoodPage, { loader as foodLoader, action as foodAction } from './routes/food.$slug';
 import ProfilePage, { loader as profileLoader, action as profileAction } from './routes/profile';
 import AdminPage, { loader as adminLoader, action as adminAction } from './routes/admin';
 import AuthCallbackPage from './routes/auth.callback';
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: '/food/:id',
+        path: '/food/:slug',
         element: <FoodPage />,
         loader: foodLoader,
         action: foodAction,

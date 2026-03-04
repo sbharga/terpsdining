@@ -1,5 +1,3 @@
-
-
 create extension if not exists "uuid-ossp";
 
 
@@ -18,6 +16,7 @@ insert into dining_halls (name, slug) values
 create table foods (
     id           uuid        primary key default uuid_generate_v4(),
     name         text        not null unique,
+    slug         text        unique,
     allergens    text[]      default '{}',
     image_url    text,
     avg_rating   decimal(3,2) default 0,

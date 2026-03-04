@@ -24,7 +24,7 @@ export default function AuthCallbackPage() {
         setStatus('error');
         setErrorMsg(
           'Verification is taking longer than expected. ' +
-          'You may already be verified — try signing in with your credentials.'
+          'You may already be verified &mdash; try signing in with your credentials.'
         );
       }, 30_000);
       return () => { subscription.unsubscribe(); clearTimeout(timer); };
