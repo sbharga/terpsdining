@@ -184,30 +184,30 @@ def sync_menus(
         for item in items:
             name = item["name"]
             slug = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()).strip('-')
-            seen.setdefault(name, {"name": name, "slug": slug, "allergens": item["allergens"]})
+            seen.setdefault(slug, {"name": name, "slug": slug, "allergens": item["allergens"]})
         food_records = list(seen.values())
         for batch in chunks(food_records, BATCH_SIZE):
-            supabase.table("foods").upsert(batch, on_conflict="name").execute()
+            supabase.table("foods").upsert(batch, on_conflict="slug").execute()
 
-        names = [item["name"] for item in items]
+        slugs = [item["slug"] for item in food_records]
         food_id_map: dict[str, str] = {}
-        for batch in chunks(names, BATCH_SIZE):
+        for batch in chunks(slugs, BATCH_SIZE):
             resp = (
-                supabase.table("foods").select("id,name").in_("name", batch).execute()
+                supabase.table("foods").select("id,slug").in_("slug", batch).execute()
             )
             for row in resp.data:
-                food_id_map[row["name"]] = row["id"]
+                food_id_map[row["slug"]] = row["id"]
 
-        menu_records = [
-            {
-                "date": today.isoformat(),
-                "meal_period": period,
-                "dining_hall_id": hall_id,
-                "food_id": food_id_map[item["name"]],
-            }
-            for item in items
-            if item["name"] in food_id_map
-        ]
+        menu_records = []
+        for item in items:
+            slug = re.sub(r'[^a-zA-Z0-9]+', '-', item["name"].lower()).strip('-')
+            if slug in food_id_map:
+                menu_records.append({
+                    "date": today.isoformat(),
+                    "meal_period": period,
+                    "dining_hall_id": hall_id,
+                    "food_id": food_id_map[slug],
+                })
         for batch in chunks(menu_records, BATCH_SIZE):
             supabase.table("menus").upsert(
                 batch,
