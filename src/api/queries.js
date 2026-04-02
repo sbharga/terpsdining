@@ -28,7 +28,9 @@ export function groupMenusByHall(menus) {
     const slug = row.dining_halls?.slug;
     if (!slug) return acc;
     if (!acc[slug]) acc[slug] = { hall: row.dining_halls, foods: [] };
-    if (row.foods) acc[slug].foods.push(row.foods);
+    if (row.foods && !acc[slug].foods.find(f => f.id === row.foods.id)) {
+      acc[slug].foods.push(row.foods);
+    }
     return acc;
   }, {});
 }
@@ -51,7 +53,7 @@ export async function getTodayAppearancesForFood(foodId) {
   return throwOnError(
     await supabase
       .from('menus')
-      .select('meal_period, dining_halls(name, slug)')
+      .select('meal_period, section, dining_halls(name, slug)')
       .eq('food_id', foodId)
       .eq('date', todayISO())
       .order('meal_period', { ascending: true })

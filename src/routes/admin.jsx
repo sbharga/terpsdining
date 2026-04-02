@@ -111,9 +111,11 @@ export async function action({ request }) {
       .from('food-images')
       .getPublicUrl(path);
 
+    const bustedUrl = `${publicUrl}?v=${Date.now()}`;
+
     const { error: updateError } = await supabase
       .from('foods')
-      .update({ image_url: publicUrl })
+      .update({ image_url: bustedUrl })
       .eq('id', foodId);
 
     if (updateError) throw updateError;

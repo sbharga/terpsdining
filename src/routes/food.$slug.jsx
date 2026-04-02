@@ -180,6 +180,16 @@ export default function FoodPage() {
                   <h1 className="text-2xl font-bold">{food.name}</h1>
                   <RatingStars rating={food.avg_rating} count={food.rating_count} size="lg" />
                   <AllergenIcons allergens={food.allergens} />
+                  {food.nutrition_url && (
+                    <a
+                      href={food.nutrition_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline inline-block mt-1"
+                    >
+                      View Nutritional Information
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -242,7 +252,7 @@ export default function FoodPage() {
                           <span className="text-sm text-gray-500 w-20 shrink-0 pt-0.5">{mp}</span>
                           <div className="flex flex-col gap-0.5">
                             <span className="text-sm font-medium">
-                              {grouped[mp].map(row => row.dining_halls?.name).join(', ')}
+                              {grouped[mp].map(row => `${row.dining_halls?.name} (${row.section})`).join(', ')}
                             </span>
                           </div>
                         </div>

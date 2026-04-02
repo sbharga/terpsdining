@@ -1,6 +1,6 @@
 
 function parseMinutes(str) {
-  const match = str.trim().match(/^(\d{1,2})(?::(\d{2}))?(am|pm)$/i);
+  const match = str.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
   if (!match) return null;
 
   let hour = parseInt(match[1], 10);
@@ -18,11 +18,22 @@ function parseRange(str) {
   const clean = str.trim().replace(/\s*(et|est|edt)\s*$/i, '');
   if (clean.toLowerCase() === 'closed') return null;
 
-  const dash = clean.search(/(?<=[ap]m)-(?=\d)/i);
-  if (dash === -1) return null;
+  const parts = clean.split('-');
+  if (parts.length !== 2) return null;
 
-  const start = parseMinutes(clean.slice(0, dash));
-  const end = parseMinutes(clean.slice(dash + 1));
+  const startStr = parts[0].trim();
+  const endStr = parts[1].trim();
+
+  const startHasPeriod = /[ap]m$/i.test(startStr);
+  const endPeriodMatch = endStr.match(/[ap]m$/i);
+
+  let finalStartStr = startStr;
+  if (!startHasPeriod && endPeriodMatch) {
+    finalStartStr += endPeriodMatch[0];
+  }
+
+  const start = parseMinutes(finalStartStr);
+  const end = parseMinutes(endStr);
   if (start === null || end === null) return null;
 
   return { start, end };

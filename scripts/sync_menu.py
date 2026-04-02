@@ -2,8 +2,9 @@ import json
 import logging
 import os
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from itertools import product
+from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup
@@ -45,7 +46,7 @@ def chunks(lst: list, n: int):
         yield lst[i : i + n]
 
 
-def fetch_dining_hours() -> dict[str, list[str]]:
+def fetch_dining_hours(today: date) -> dict[str, list[str]]:
     """
     Returns a dict mapping each hall slug to [breakfast, lunch, dinner] strings.
     """
@@ -61,15 +62,13 @@ def fetch_dining_hours() -> dict[str, list[str]]:
     ]
 
     header = rows[0]
-    today = date.today()
-    today_str = f"{today.month}/{today.day}"
 
     col = next(
-        (i for i, h in enumerate(header) if h and h.startswith(today_str)),
+        (i for i, h in enumerate(header) if h and re.match(rf"^{today.month}/{today.day}\b", str(h))),
         None,
     )
     if col is None:
-        raise ValueError(f"No column found for today ({today_str!r}) in Google Sheet")
+        raise ValueError(f"No column found for today ({today.month}/{today.day}) in Google Sheet")
 
     result: dict[str, list[str]] = {}
     for i in range(1, len(rows), 3):
@@ -124,7 +123,7 @@ def scrape_menu(location_num: str, date_str: str, meal_period: str) -> list[dict
 
 def sync_hours(supabase: Client, hall_ids: dict[str, str], today: date) -> None:
     log.info("Phase A: Syncing hours...")
-    hours_data = fetch_dining_hours()
+    hours_data = fetch_dining_hours(today)
 
     records = []
     for slug, (breakfast, lunch, dinner) in hours_data.items():
@@ -184,7 +183,7 @@ def sync_menus(
         for item in items:
             name = item["name"]
             slug = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()).strip('-')
-            seen.setdefault(slug, {"name": name, "slug": slug, "allergens": item["allergens"]})
+            seen.setdefault(slug, {"name": name, "slug": slug, "allergens": item["allergens"], "nutrition_url": item["url"]})
         food_records = list(seen.values())
         for batch in chunks(food_records, BATCH_SIZE):
             supabase.table("foods").upsert(batch, on_conflict="slug").execute()
@@ -207,11 +206,12 @@ def sync_menus(
                     "meal_period": period,
                     "dining_hall_id": hall_id,
                     "food_id": food_id_map[slug],
+                    "section": item["section"],
                 })
         for batch in chunks(menu_records, BATCH_SIZE):
             supabase.table("menus").upsert(
                 batch,
-                on_conflict="date,meal_period,dining_hall_id,food_id",
+                on_conflict="date,meal_period,dining_hall_id,food_id,section",
                 ignore_duplicates=True,
             ).execute()
 
@@ -231,13 +231,24 @@ def cleanup_old_data(supabase: Client, today: date) -> None:
 
 
 def main() -> None:
-    today = date.today()
+    today = datetime.now(ZoneInfo("America/New_York")).date()
     log.info("Starting sync for %s", today.isoformat())
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     resp = supabase.table("dining_halls").select("id,slug").execute()
     hall_ids: dict[str, str] = {row["slug"]: row["id"] for row in resp.data}
+
+    sync_hours(supabase, hall_ids, today)
+    sync_menus(supabase, hall_ids, DINING_HALLS, today)
+    cleanup_old_data(supabase, today)
+
+    log.info("Sync complete.")
+
+
+if __name__ == "__main__":
+    main()
+ for row in resp.data}
 
     sync_hours(supabase, hall_ids, today)
     sync_menus(supabase, hall_ids, DINING_HALLS, today)

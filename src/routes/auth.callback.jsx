@@ -11,6 +11,7 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     if (window.location.hash.includes('access_token')) {
+      let timer;
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
         if (session) {
           subscription.unsubscribe();
@@ -19,7 +20,7 @@ export default function AuthCallbackPage() {
           setTimeout(() => navigate('/'), 2000);
         }
       });
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         subscription.unsubscribe();
         setStatus('error');
         setErrorMsg(

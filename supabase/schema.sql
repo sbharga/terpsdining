@@ -19,6 +19,7 @@ create table foods (
     slug         text        unique,
     allergens    text[]      default '{}',
     image_url    text,
+    nutrition_url text,
     avg_rating   decimal(3,2) default 0,
     rating_count int         default 0,
     created_at   timestamptz default now()
@@ -31,7 +32,8 @@ create table menus (
     meal_period    text check (meal_period in ('Breakfast', 'Lunch', 'Dinner')),
     dining_hall_id uuid references dining_halls(id) on delete cascade,
     food_id        uuid references foods(id)         on delete cascade,
-    unique(date, meal_period, dining_hall_id, food_id)
+    section        text not null default 'Unknown',
+    unique(date, meal_period, dining_hall_id, food_id, section)
 );
 
 
