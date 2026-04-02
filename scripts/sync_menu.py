@@ -87,7 +87,7 @@ def fetch_dining_hours(today: date) -> dict[str, list[str]]:
 def scrape_menu(location_num: str, date_str: str, meal_period: str) -> list[dict]:
     """
     Scrapes nutrition.umd.edu and returns a list of
-    {"name": str, "allergens": list[str]} dicts.
+    {"name": str, "allergens": list[str], "url": str, "section": str} dicts.
 
     date_str format: "M/D/YYYY" (no leading zeros).
     """
@@ -104,18 +104,32 @@ def scrape_menu(location_num: str, date_str: str, meal_period: str) -> list[dict
 
     soup = BeautifulSoup(response.text, "html.parser")
     items = []
+    current_section = "Unknown"
     for row in soup.find_all("tr"):
+        strong = row.find("strong")
         link = row.find("a", href=lambda h: h and "label.aspx" in h)
+        
+        if strong and not link:
+            current_section = strong.get_text(strip=True)
+            continue
+            
         if not link:
             continue
+            
         name = link.get_text(strip=True)
+        url = f"https://nutrition.umd.edu/{link.get('href')}"
         allergen_imgs = row.find_all("img", class_="nutri-icon")
         allergens = [
             img["alt"].lower().replace("contains ", "").replace("-", "").replace(" ", "")
             for img in allergen_imgs
             if img.get("alt")
         ]
-        items.append({"name": name, "allergens": allergens})
+        items.append({
+            "name": name, 
+            "allergens": allergens, 
+            "url": url, 
+            "section": current_section
+        })
     return items
 
 
@@ -183,7 +197,13 @@ def sync_menus(
         for item in items:
             name = item["name"]
             slug = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()).strip('-')
-            seen.setdefault(slug, {"name": name, "slug": slug, "allergens": item["allergens"], "nutrition_url": item["url"]})
+            seen.setdefault(slug, {
+                "name": name, 
+                "slug": slug, 
+                "allergens": item["allergens"],
+                "nutrition_url": item["url"]
+            })
+        
         food_records = list(seen.values())
         for batch in chunks(food_records, BATCH_SIZE):
             supabase.table("foods").upsert(batch, on_conflict="slug").execute()
@@ -238,17 +258,6 @@ def main() -> None:
 
     resp = supabase.table("dining_halls").select("id,slug").execute()
     hall_ids: dict[str, str] = {row["slug"]: row["id"] for row in resp.data}
-
-    sync_hours(supabase, hall_ids, today)
-    sync_menus(supabase, hall_ids, DINING_HALLS, today)
-    cleanup_old_data(supabase, today)
-
-    log.info("Sync complete.")
-
-
-if __name__ == "__main__":
-    main()
- for row in resp.data}
 
     sync_hours(supabase, hall_ids, today)
     sync_menus(supabase, hall_ids, DINING_HALLS, today)
