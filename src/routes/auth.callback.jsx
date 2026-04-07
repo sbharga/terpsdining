@@ -33,8 +33,10 @@ export default function AuthCallbackPage() {
 
     const code = searchParams.get('code');
     if (!code) {
-      setStatus('error');
-      setErrorMsg('No verification code found in the URL. The link may have expired.');
+      Promise.resolve().then(() => {
+        setStatus('error');
+        setErrorMsg('No verification code found in the URL. The link may have expired.');
+      });
       return;
     }
 

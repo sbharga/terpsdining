@@ -81,7 +81,7 @@ export function getHallStatus(hoursRow) {
     }
   }
 
-  for (const { name, value } of periods) {
+  for (const { value } of periods) {
     const range = parseRange(value);
     if (!range) continue;
 
@@ -93,7 +93,7 @@ export function getHallStatus(hoursRow) {
     }
   }
 
-  for (const { name, value } of periods) {
+  for (const { value } of periods) {
     const range = parseRange(value);
     if (!range) continue;
     return {

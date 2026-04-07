@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useLoaderData, Form, useNavigation } from 'react-router';
 import { searchFoods, getTodayFoodIds, getTodayFoodIdsByHall } from '../api/queries';
 import FoodCard from '../components/food/FoodCard';
-import { ALLERGEN_LABELS, DIETARY_LABELS } from '../components/food/AllergenIcons';
+import { ALLERGEN_LABELS, DIETARY_LABELS } from '../config/allergens';
 import Button from '../components/ui/Button';
 import { DINING_HALLS } from '../config/halls';
 
