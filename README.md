@@ -85,6 +85,13 @@ Import [sbharga/terpsdining](https://github.com/sbharga/terpsdining), the public
 
 After deployment, change `site_url` in `supabase/config.toml` to the production URL. Add `https://<prod-domain>/**` and the team's Vercel preview pattern `https://*-<vercel-team>.vercel.app/**` to `additional_redirect_urls`, preserving localhost. Run `supabase config diff` and `supabase config push`. Deployment and production auth URLs require the user's Vercel project/domain.
 
+### Privacy and terms
+
+The footer links to `/privacy` and `/terms`. After deploying, use `https://<your-project>.vercel.app/privacy` and `https://<your-project>.vercel.app/terms` in Google Auth Platform's Branding settings, with the deployed root URL as the homepage. These pages work on the assigned Vercel hostname without a custom domain. This does not waive Google's separate authorized-domain or ownership-verification requirements; follow the requirements shown in its Verification Center.
+
+Both pages use `support@docet.org` for inquiries and account-data requests. Ensure that mailbox is monitored. Account deletion requests require manual handling by an authorized Supabase administrator; signing out or revoking Google access does not delete the account. Review the policies before public launch and update them whenever data practices change.
+
+
 ## Verification
 
 ```sh
