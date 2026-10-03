@@ -4,7 +4,7 @@ import { addDays, formatDay, todayET } from '../lib/dates'
 import type { CardItem } from '../lib/menu'
 import { getPageSeo, renderSeoJsonLd } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { HallState, Meal } from '../lib/hours'
 import { dietTone, mealTones, nameTone, tones, type Tone } from '../lib/theme'
 export function PageTitle({ title }: { title: string }) {
@@ -62,7 +62,7 @@ export function Loading({ inline = false }: { inline?: boolean }) {
   return <div role="status" className="grid gap-4 py-2 sm:grid-cols-2"><span className="sr-only">Loading…</span>{[0, 1, 2, 3].map(n => <div key={n} aria-hidden="true" className="flex gap-4 rounded-2xl bg-surface p-4 ring-1 ring-line"><div className="h-20 w-20 rounded-xl bg-surface-2 motion-safe:animate-pulse" /><div className="flex-1 space-y-3 py-2"><div className="h-4 w-2/3 rounded-full bg-surface-2 motion-safe:animate-pulse" /><div className="h-3 w-1/3 rounded-full bg-surface-2 motion-safe:animate-pulse" /></div></div>)}</div>
 }
 export function NotFound() {
-  return <><PageTitle title="Not found" /><div className="flex flex-col items-center py-16 text-center"><div className={`grid h-16 w-16 place-items-center rounded-3xl text-white ${tones.tomato.solid}`}><UtensilsCrossed size={30} aria-hidden="true" /></div><h1 className="mt-6 font-display text-4xl font-extrabold tracking-tight">Page not found</h1><p className="mt-2 text-muted">This dish isn't on today's menu.</p><Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-semibold text-brand-ink hover:brightness-110"><ArrowLeft size={18} aria-hidden="true" />Back to today</Link></div></>
+  return <><PageTitle title="Not found" /><div className="flex flex-col items-center py-16 text-center"><h1 className="font-display text-4xl font-extrabold tracking-tight">Page not found</h1><p className="mt-2 text-muted">This dish isn't on today's menu.</p><Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 font-semibold text-brand-ink hover:brightness-110"><ArrowLeft size={18} aria-hidden="true" />Back to today</Link></div></>
 }
 export function ErrorNote({ retry }: { retry: () => unknown }) {
   return <div role="alert" className="my-4 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-100"><TriangleAlert size={18} aria-hidden="true" /><span className="flex-1">Couldn't load.</span><button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 font-semibold ring-1 ring-red-200 hover:bg-red-100 dark:ring-red-400/30 dark:hover:bg-red-400/20" onClick={() => void retry()}><RotateCcw size={14} aria-hidden="true" />Retry</button></div>

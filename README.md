@@ -14,6 +14,7 @@ Menus, hours, nutrition, and ratings for the University of Maryland’s three di
 - Solid fresh food market colors, flat rounded cards, OS-following dark mode, and self-hosted Inter and Bricolage Grotesque fonts.
 - Keyboard skip link, date reset controls, clearable filters, and reduced-motion support.
 - Average-rating pills use red below 3, amber from 3 to under 4, and green from 4 to 5; the numeric score remains visible.
+- Text-only not-found page with a link back to today's menu; no fork-and-knife icons.
 
 Dates and hours use America/New_York. Food images are illustrative, not official dining hall photos.
 
