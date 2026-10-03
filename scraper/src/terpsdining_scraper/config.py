@@ -10,4 +10,4 @@ SHEET_URL = (
 MENU_URL = "https://nutrition.umd.edu/longmenu.aspx"
 LABEL_BASE = "https://nutrition.umd.edu/"
 BUCKET = "food-images"
-USER_AGENT = "terpsdining-scraper"
+USER_AGENT = "terpsdining-scraper (+https://github.com/sbharga/terpsdining)"
