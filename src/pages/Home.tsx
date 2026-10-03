@@ -3,7 +3,7 @@ import { useHalls, useHours, usePopular } from '../api/queries'
 import { EmptyState, ErrorNote, ItemCard, Loading, MealIcon, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import { formatDay, nowMinutesET, todayET } from '../lib/dates'
 import { hallStatus, hoursLabel, meals, mealStatus } from '../lib/hours'
-import { hallTone, tones } from '../lib/theme'
+import { tones } from '../lib/theme'
 import { CalendarDays, ChevronRight, MapPin, Star, Trophy } from 'lucide-react'
 
 export default function Home() {
@@ -30,12 +30,11 @@ export default function Home() {
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               {halls.data?.map(hall => {
                 const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
-                const tone = hallTone(hall.slug)
                 return (
                   <Link
                     key={hall.id}
                     to={`/halls/${hall.slug}`}
-                    className={`group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none ${tone.depth}`}
+                    className="group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none"
                   >
                     <div className="flex items-center gap-3"><h2 className="font-display text-xl font-bold">{hall.name}</h2><ChevronRight size={18} aria-hidden="true" className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" /></div>
                     {hours.isSuccess && (

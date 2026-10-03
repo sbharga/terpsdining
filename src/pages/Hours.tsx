@@ -38,7 +38,7 @@ export default function Hours() {
       </div>
 
       {halls.isSuccess && hours.isSuccess && halls.data?.map(hall => (
-        <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface shadow-stack ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
+        <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
           <h2 id={`hours-${hall.slug}`} className="flex items-center gap-3 px-5 py-4 font-display text-xl font-bold">
             <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
           </h2>
