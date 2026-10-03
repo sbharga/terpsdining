@@ -5,7 +5,7 @@ site_url = "http://localhost:5173"
 additional_redirect_urls = ["http://localhost:5173/**"]
 
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 skip_nonce_check = false
