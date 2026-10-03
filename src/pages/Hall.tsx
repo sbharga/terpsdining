@@ -64,19 +64,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
       {date === today && hours.isSuccess && <p className="mt-2 text-zinc-600">{hallStatus(rows, nowMinutesET()).label}</p>}
       <div className="mt-6"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
 
-      <section className="mt-6" aria-label="Hours">
-        {hours.isError ? <ErrorNote retry={hours.refetch} /> : hours.isPending ? <Loading /> : (
-          <dl className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-            {meals.map(value => {
-              const row = rows.find(row => row.meal === value)
-              const label = row?.status === 'open' && row.opens && row.closes
-                ? `${formatTime(row.opens)}–${formatTime(row.closes)}`
-                : row?.status === 'closed' ? 'Closed' : 'TBD'
-              return <div key={value}><dt className="font-medium">{value}</dt><dd className="mt-1 text-zinc-600">{label}</dd></div>
-            })}
-          </dl>
-        )}
-      </section>
+      {hours.isError && <ErrorNote retry={hours.refetch} />}
 
       <div className="mt-8 flex gap-2" role="group" aria-label="Meal">
         {meals.map(value => {
