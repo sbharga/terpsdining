@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router'
+import { CircleCheck, Clock, Search as SearchIcon, SearchX } from 'lucide-react'
 import { useSearch } from '../api/queries'
-import { ErrorNote, ItemCard, Loading, PageTitle } from '../components/UI'
+import { EmptyState, ErrorNote, ItemCard, Loading, PageTitle } from '../components/UI'
 import type { Json } from '../lib/database.types'
 import { todayET } from '../lib/dates'
 
@@ -29,32 +30,40 @@ export default function Search() {
   const query = params.get('q') ?? ''
   const results = useSearch(query, todayET())
   const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
-
   return (
     <section>
       <PageTitle title="Search" />
-      <h1 className="mb-6 text-3xl font-semibold tracking-tight">Search</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Search</h1>
+      {query.trim().length >= 2 && results.data && <p className="mt-2 text-muted">{results.data.length} {results.data.length === 1 ? 'result' : 'results'} for “{query.trim()}”</p>}
       {query.trim().length < 2 ? (
-        <p className="mt-4 text-zinc-600">Type 2+ characters.</p>
+        <EmptyState icon={SearchIcon} title="Find a dish">Type 2+ characters to search every hall's menu.</EmptyState>
       ) : results.isError ? (
         <ErrorNote retry={results.refetch} />
       ) : results.isPending ? (
         <Loading />
       ) : results.data?.length ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2" aria-busy={results.isFetching}>
-          {results.data.map(item => (
-            <ItemCard key={item.id} item={item}>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                {todayStatus(item.halls) ?? (item.last_seen
-                  ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
-                  : 'Not served yet')}
-              </p>
-            </ItemCard>
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2" aria-busy={results.isFetching}>
+            {results.data.map(item => {
+              const served = todayStatus(item.halls)
+              return (
+                <ItemCard key={item.id} item={item}>
+                  {served ? (
+                    <p className="mt-2 flex items-start gap-1 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
+                  ) : (
+                    <p className="mt-2 flex items-start gap-1 text-xs leading-relaxed text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
+                      ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
+                      : 'Not served yet'}</p>
+                  )}
+                </ItemCard>
+              )
+            })}
+          </div>
+        </>
       ) : (
-        <p className="mt-4 text-zinc-600">No matches.</p>
+        <EmptyState icon={SearchX} title="No matches">Nothing found for “{query.trim()}”. Try a shorter word.</EmptyState>
       )}
     </section>
   )
 }
+
