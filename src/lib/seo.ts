@@ -45,6 +45,10 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     pageTitle = 'Search Dining Menus'
     description = 'Search University of Maryland dining hall menus and food information on TerpsDining.'
     robots = 'noindex,follow'
+  } else if (path === '/account') {
+    pageTitle = 'Your Account'
+    description = 'Manage your TerpsDining account, ratings, and favorites.'
+    robots = 'noindex,follow'
   } else if (path === '/hours') {
     pageTitle = 'Dining Hall Hours'
     description = 'View University of Maryland dining hall hours for breakfast, lunch, and dinner.'

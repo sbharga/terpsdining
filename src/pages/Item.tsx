@@ -1,12 +1,12 @@
 import { Link, useParams } from 'react-router'
-import { useItem, useItemHistory, useMyRating, useRateItem, useSession } from '../api/queries'
+import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
 import type { ItemHistoryRow } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
 import { Badges, ErrorNote, FoodSwatch, Loading, NotFound, PageTitle, Panel, RatingPill, StarRating } from '../components/UI'
 import type { Json } from '../lib/database.types'
 import { formatDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
-import { CalendarDays, ChevronRight, ExternalLink, Flame, LoaderCircle, MapPin, Star, Wheat } from 'lucide-react'
+import { CalendarDays, ChevronRight, ExternalLink, Flame, Heart, LoaderCircle, MapPin, Star, Wheat } from 'lucide-react'
 import { hallTone, tones } from '../lib/theme'
 
 const meals = ['Breakfast', 'Lunch', 'Dinner'] as const
@@ -52,6 +52,9 @@ export default function Item() {
   const { session, error: sessionError } = useSession()
   const myRating = useMyRating(id, session?.user.id)
   const rateItem = useRateItem(id)
+  const favorites = useFavorites(session?.user.id)
+  const isFavorite = favorites.data?.some(row => row.item_id === id) ?? false
+  const toggleFavorite = useToggleFavorite(id)
   const today = todayET()
 
   if (itemQuery.isError) return <><PageTitle title="Item" /><ErrorNote retry={itemQuery.refetch} /></>
@@ -96,6 +99,7 @@ export default function Item() {
               ? <RatingPill avg={item.rating_avg} count={item.rating_count} />
               : <p className="text-sm text-muted">No ratings yet</p>}
           </div>
+          {session && <><button type="button" aria-pressed={isFavorite} disabled={favorites.isPending || favorites.isError || toggleFavorite.isPending} onClick={() => toggleFavorite.mutate(!isFavorite)} className={`mt-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60 ${isFavorite ? `${tones.berry.soft} ${tones.berry.border}` : 'border-line text-muted hover:text-ink'}`}><Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />{isFavorite ? 'Favorited' : 'Add to favorites'}</button>{(toggleFavorite.isError || favorites.isError) && <p role="alert" className="mt-2 text-sm text-muted">Couldn't update favorite.</p>}</>}
         </div>
       </header>
 

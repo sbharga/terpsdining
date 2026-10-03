@@ -10,6 +10,7 @@ describe('page SEO metadata', () => {
 
   it('marks search, missing routes, and the item shell noindex', () => {
     expect(getPageSeo('/search').robots).toBe('noindex,follow')
+    expect(getPageSeo('/account').robots).toBe('noindex,follow')
     expect(getPageSeo('/missing-route').robots).toBe('noindex,follow')
     expect(getPageSeo('/item-shell').robots).toBe('noindex,follow')
     expect(getPageSeo('/item-shell').canonical).toBe('')

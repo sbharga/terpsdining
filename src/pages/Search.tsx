@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router'
 import { CircleCheck, Clock, Search as SearchIcon, SearchX } from 'lucide-react'
-import { useSearch } from '../api/queries'
+import { useFavoriteIds, useSearch, useSession } from '../api/queries'
 import { EmptyState, ErrorNote, ItemCard, Loading, PageTitle } from '../components/UI'
 import type { Json } from '../lib/database.types'
 import { todayET } from '../lib/dates'
@@ -26,6 +26,8 @@ function todayStatus(value: Json): string | null {
 }
 
 export default function Search() {
+  const { session } = useSession()
+  const favoriteIds = useFavoriteIds(session?.user.id)
   const [params] = useSearchParams()
   const query = params.get('q') ?? ''
   const results = useSearch(query, todayET())
@@ -47,7 +49,7 @@ export default function Search() {
             {results.data.map(item => {
               const served = todayStatus(item.halls)
               return (
-                <ItemCard key={item.id} item={item}>
+                <ItemCard key={item.id} item={item} favorite={favoriteIds.has(item.id)}>
                   {served ? (
                     <p className="mt-2 flex items-start gap-1 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
                   ) : (

@@ -1,12 +1,12 @@
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ArrowLeft, Ban, ListFilter, Soup, Trophy, X } from 'lucide-react'
-import { useHallMenu, useHalls, useHours, usePopular } from '../api/queries'
+import { ArrowLeft, Ban, Heart, ListFilter, Soup, Trophy, X } from 'lucide-react'
+import { useFavoriteIds, useHallMenu, useHalls, useHours, usePopular, useSession } from '../api/queries'
 import { DatePager, DietIcon, EmptyState, ErrorNote, ItemCard, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import type { Database } from '../lib/database.types'
 import { nowMinutesET, todayET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
 import { dietTone, mealTones, nameTone, tones } from '../lib/theme'
-import { filterItems, groupByStation } from '../lib/menu'
+import { filterItems, groupByStation, pickFavorites } from '../lib/menu'
 
 const diets = [
   { value: 'vegan', label: 'Vegan' },
@@ -27,6 +27,8 @@ export default function Hall() {
 
 function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row'] }) {
   const [params, setParams] = useSearchParams()
+  const { session } = useSession()
+  const favoriteIds = useFavoriteIds(session?.user.id)
   const today = todayET()
   const requestedDate = params.get('date')
   const date = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && !Number.isNaN(Date.parse(`${requestedDate}T12:00:00Z`))
@@ -41,6 +43,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
   const mealRows = (menu.data ?? []).flatMap(row => row.meal === meal && row.item ? [{ station: row.station, item: row.item }] : [])
   const allergens = [...new Set(mealRows.flatMap(row => row.item.allergens))].sort((a, b) => a.localeCompare(b))
   const filteredItems = filterItems(mealRows.map(row => row.item), { diet, avoid })
+  const favoriteItems = pickFavorites(filteredItems, favoriteIds)
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
   const topRated = (popular.data ?? []).filter(item => filteredIds.has(item.id))
@@ -136,12 +139,13 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
       {popular.isError && <div className="mt-10"><ErrorNote retry={popular.refetch} /></div>}
       {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
+          {favoriteItems.length > 0 && <section className="mt-10" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-4 grid gap-4 sm:grid-cols-2">{favoriteItems.map(item => <ItemCard key={item.id} item={item} favorite />)}</div></section>}
           {popular.isPending && <div className="mt-10"><Loading /></div>}
           {!popular.isError && topRated.length > 0 && (
             <section className="mt-10" aria-labelledby="hall-popular-heading">
               <SectionHeading id="hall-popular-heading" icon={Trophy} tone={tones.citrus}>Top rated</SectionHeading>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {topRated.map(item => <ItemCard key={item.id} item={item} />)}
+                {topRated.map(item => <ItemCard key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}
               </div>
             </section>
           )}
@@ -149,7 +153,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
             <section key={station} className="mt-10" aria-label={station}>
               <h2 className="flex items-center gap-2 font-display text-xl font-bold"><span aria-hidden="true" className={`h-3 w-3 rounded-full ${nameTone(station).dot}`} />{station}<span className="ml-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-muted">{items.length}<span className="sr-only"> items</span></span></h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {items.map(item => <ItemCard key={item.id} item={item} />)}
+                {items.map(item => <ItemCard key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}
               </div>
             </section>
           ))}
