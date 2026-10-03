@@ -5,7 +5,7 @@ import { DatePager, DietIcon, EmptyState, ErrorNote, ItemCard, Loading, MealIcon
 import type { Database } from '../lib/database.types'
 import { nowMinutesET, todayET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
-import { dietTone, hallTone, mealTones, nameTone, tones } from '../lib/theme'
+import { dietTone, mealTones, nameTone, tones } from '../lib/theme'
 import { filterItems, groupByStation } from '../lib/menu'
 
 const diets = [
@@ -44,7 +44,6 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
   const topRated = (popular.data ?? []).filter(item => filteredIds.has(item.id))
-  const tone = hallTone(hall.slug)
 
   function updateParam(key: string, value: string) {
     setParams(previous => {
@@ -72,7 +71,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
   return (
     <>
       <PageTitle title={hall.name} />
-      <header className={`relative overflow-hidden rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8 ${tone.depth}`}>
+      <header className="rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8">
         <div className="relative">
           <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
           <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{hall.name}</h1>

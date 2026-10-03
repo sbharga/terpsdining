@@ -11,7 +11,7 @@ Menus, hours, nutrition, and ratings for the University of Maryland’s three di
 - Food search, ingredients, nutrition facts, and serving history.
 - Availability across multiple dining halls on the same day.
 - Google sign-in and one editable 1–5 star rating per user per item.
-- Solid fresh food market colors, stacked dining hall and hours cards, OS-following dark mode, and self-hosted Inter and Bricolage Grotesque fonts.
+- Solid fresh food market colors, flat rounded cards, OS-following dark mode, and self-hosted Inter and Bricolage Grotesque fonts.
 - Keyboard skip link, date reset controls, clearable filters, and reduced-motion support.
 - Average-rating pills use red below 3, amber from 3 to under 4, and green from 4 to 5; the numeric score remains visible.
 
