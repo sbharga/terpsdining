@@ -12,16 +12,16 @@ export function SearchBar() {
   const text = draft.query === query ? draft.value : query
   useEffect(() => {
     if (location.pathname !== '/search' || text === query) return
-    const timer = window.setTimeout(() => navigate(`/search?q=${encodeURIComponent(text)}`, { replace: true }), 250)
+    const timer = window.setTimeout(() => navigate(`/search?q=${encodeURIComponent(text)}`, { replace: true, preventScrollReset: true }), 250)
     return () => window.clearTimeout(timer)
   }, [text, query, location.pathname, navigate])
-  return <form className="w-full sm:max-w-xs" onSubmit={event => { event.preventDefault(); navigate(`/search?q=${encodeURIComponent(text)}`) }}><div className="relative"><Search size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" /><input aria-label="Search food" type="search" placeholder="Search dishes, e.g. tacos" value={text} onChange={event => setDraft({ query, value: event.target.value })} className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm shadow-sm placeholder:text-muted focus:border-brand" /></div></form>
+  return <form className="w-full sm:max-w-xs" onSubmit={event => { event.preventDefault(); navigate(`/search?q=${encodeURIComponent(text)}`) }}><div className="relative"><Search size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" /><input aria-label="Search food" type="search" placeholder="Search dishes, e.g. tacos" value={text} onChange={event => setDraft({ query, value: event.target.value })} className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-base shadow-sm placeholder:text-muted focus:border-brand sm:text-sm" /></div></form>
 }
 export default function Layout() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand focus:px-4 focus:py-2 focus:font-semibold focus:text-brand-ink">Skip to content</a>
-      <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md">
+      <header className="border-b border-line bg-canvas/85 backdrop-blur-md sm:sticky sm:top-0 sm:z-30">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
           <Link to="/" className="mr-auto font-display text-xl font-extrabold tracking-tight">Terps<span className="text-brand">Dining</span></Link>
           <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1"><SearchBar /></div>

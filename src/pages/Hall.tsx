@@ -1,12 +1,12 @@
 import { Link, useParams, useSearchParams } from 'react-router'
 import { ArrowLeft, Ban, Heart, ListFilter, Soup, Trophy, X } from 'lucide-react'
-import { useFavoriteIds, useHallMenu, useHalls, useHours, usePopular, useSession } from '../api/queries'
+import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
 import { DatePager, DietIcon, EmptyState, ErrorNote, ItemCard, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
-import type { Database } from '../lib/database.types'
-import { nowMinutesET, todayET } from '../lib/dates'
+import { halls, type Hall } from '../lib/halls'
+import { nowMinutesET, parseDateParam, todayET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
 import { dietTone, mealTones, nameTone, tones } from '../lib/theme'
-import { filterItems, groupByStation, pickFavorites } from '../lib/menu'
+import { filterItems, groupByStation, pickFavorites, rankTopRated } from '../lib/menu'
 
 const diets = [
   { value: 'vegan', label: 'Vegan' },
@@ -16,26 +16,19 @@ const diets = [
 
 export default function Hall() {
   const { slug } = useParams()
-  const halls = useHalls()
-
-  if (halls.isError) return <><PageTitle title="Dining hall" /><ErrorNote retry={halls.refetch} /></>
-  if (halls.isPending) return <><PageTitle title="Dining hall" /><Loading /></>
-  const hall = halls.data?.find(hall => hall.slug === slug)
+  const hall = halls.find(hall => hall.slug === slug)
   if (!hall) return <NotFound />
   return <HallMenu key={hall.id} hall={hall} />
 }
 
-function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row'] }) {
+function HallMenu({ hall }: { hall: Hall }) {
   const [params, setParams] = useSearchParams()
   const { session } = useSession()
   const favoriteIds = useFavoriteIds(session?.user.id)
   const today = todayET()
-  const requestedDate = params.get('date')
-  const date = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && !Number.isNaN(Date.parse(`${requestedDate}T12:00:00Z`))
-    ? requestedDate : today
+  const date = parseDateParam(params.get('date'), today)
   const hours = useHours(date, date)
   const menu = useHallMenu(hall.id, date)
-  const popular = usePopular(date, hall.id)
   const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
   const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, nowMinutesET(), date === today)
   const diet = (params.get('diet') ?? '').split(',').filter(Boolean)
@@ -46,7 +39,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
   const favoriteItems = pickFavorites(filteredItems, favoriteIds)
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
-  const topRated = (popular.data ?? []).filter(item => filteredIds.has(item.id))
+  const topRated = rankTopRated(filteredItems)
 
   function updateParam(key: string, value: string) {
     setParams(previous => {
@@ -54,7 +47,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
       if (value) next.set(key, value)
       else next.delete(key)
       return next
-    })
+    }, { preventScrollReset: true })
   }
 
   function toggleFilter(key: 'diet' | 'avoid', value: string) {
@@ -68,7 +61,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
       next.delete('diet')
       next.delete('avoid')
       return next
-    })
+    }, { preventScrollReset: true })
   }
 
   return (
@@ -136,12 +129,10 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
         )}
       </div>
 
-      {popular.isError && <div className="mt-10"><ErrorNote retry={popular.refetch} /></div>}
       {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
           {favoriteItems.length > 0 && <section className="mt-10" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-4 grid gap-4 sm:grid-cols-2">{favoriteItems.map(item => <ItemCard key={item.id} item={item} favorite />)}</div></section>}
-          {popular.isPending && <div className="mt-10"><Loading /></div>}
-          {!popular.isError && topRated.length > 0 && (
+          {topRated.length > 0 && (
             <section className="mt-10" aria-labelledby="hall-popular-heading">
               <SectionHeading id="hall-popular-heading" icon={Trophy} tone={tones.citrus}>Top rated</SectionHeading>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -8,7 +8,7 @@ Menus, hours, nutrition, and ratings for the University of Maryland’s three di
 
 - Daily menus organized by dining hall, meal, and station.
 - Dietary and allergen filters, with links to official nutrition labels.
-- Food search, ingredients, nutrition facts, and serving history.
+- Paginated food search, ingredients, nutrition facts, and serving history; every matching item is reachable.
 - Availability across multiple dining halls on the same day.
 - Google sign-in and one editable 1–5 star rating per user per item.
 - Solid fresh food market colors, flat rounded cards, OS-following dark mode, and self-hosted Inter and Bricolage Grotesque fonts.
@@ -46,7 +46,7 @@ Never commit credentials or place a Supabase secret key or Google client secret 
 
 ## Data collection
 
-Dining hours and menus come from the public sources documented in [DATA.md](DATA.md). The scraper downloads nutrition labels and stores resized food images in Supabase Storage.
+Dining hours and menus come from the public sources documented in [DATA.md](DATA.md). The scraper stores 480px WebP food images in Supabase Storage and 160px card thumbnails under `thumbs/`.
 
 For an independently configured database, provide `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in the ignored `scraper/.env` file:
 
@@ -59,6 +59,8 @@ uv run --env-file .env terpsdining-scrape --image-limit 10
 Options include `--date YYYY-MM-DD`, `--days N`, `--skip-images`, and `--skip-hours`. A failed menu request preserves existing offerings for that slot; a successful empty menu clears it. Offerings preserve separate halls, meals, and stations for the same item.
 
 The daily GitHub Actions workflow supports scheduled and manual runs. Independent deployments must supply their own scraper credentials through GitHub Actions secrets, never through source files.
+
+Set the GitHub Actions secret `VERCEL_DEPLOY_HOOK_URL` to a Vercel Deploy Hook for the production branch. The workflow requests a rebuild after each scrape, including partial menu failures; without the secret, the rebuild step is skipped.
 
 ## Build and checks
 
@@ -83,7 +85,17 @@ On Vercel, use the Vite preset, repository root, install command `bun install --
 
 Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages; `/robots.txt` advertises it. Search and missing pages are marked `noindex`. Canonicals omit query parameters. If deploying this code to a different website, update the production origin in `src/lib/seo.ts` and the URL in the social-preview artwork.
 
-Prerendered content and sitemap entries refresh on deployment; the browser fetches live data. Newly scraped items remain accessible before the next deployment, but require a rebuild for initial HTML and sitemap inclusion. Search engines determine indexing and rankings.
+Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render. Fresh queries do not immediately refetch: hours and history stay fresh for six hours, menus for 30 minutes, and other queries for five minutes. Newly scraped items remain accessible before the next deployment, but require a rebuild for initial HTML and sitemap inclusion. Search engines determine indexing and rankings.
+
+Deploy the paginated-search/history migration before the frontend, then backfill existing card thumbnails using the scraper's secret-key environment:
+
+```sh
+cd scraper && uv run --env-file .env terpsdining-thumbnails
+```
+
+Require `failures=0` before deploying the thumbnail-enabled frontend. Hashed `/assets/` files have a one-year immutable cache policy; food objects use a seven-day cache policy. Only the Latin subsets of the two fonts are shipped.
+
+Hall metadata lives in `src/lib/halls.ts`; update it whenever the database seed adds or renames a hall. Hall “Top rated” uses Bayesian ranking within the selected meal and dietary/allergen filters.
 
 ## Privacy and terms
 

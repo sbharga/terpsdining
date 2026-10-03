@@ -277,6 +277,13 @@ export type Database = {
           rating_count: number
         }[]
       }
+      item_histories: {
+        Args: { p_ids: string[] }
+        Returns: {
+          history: Json
+          item_id: string
+        }[]
+      }
       popular_items: {
         Args: { p_date: string; p_hall?: number; p_limit?: number }
         Returns: {
@@ -300,7 +307,12 @@ export type Database = {
         Returns: undefined
       }
       search_items: {
-        Args: { p_date: string; p_limit?: number; p_query: string }
+        Args: {
+          p_date: string
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+        }
         Returns: {
           allergens: string[]
           dietary: string[]
@@ -311,6 +323,7 @@ export type Database = {
           name: string
           rating_avg: number
           rating_count: number
+          total_count: number
         }[]
       }
     }

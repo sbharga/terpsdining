@@ -1,4 +1,4 @@
-"""Find a food image, resize it, and store a public WebP thumbnail."""
+"""Find food images, resize them, and store public WebP images and thumbnails."""
 
 import logging
 import re
@@ -12,6 +12,28 @@ from storage3.exceptions import StorageException
 from supabase import Client
 
 from .config import BUCKET
+
+THUMB_SIZE = 160
+FULL_SIZE = 480
+UPLOAD_OPTIONS = {
+    "content-type": "image/webp",
+    "upsert": "true",
+    "cache-control": "604800",
+}
+
+
+def webp_bytes(image: Image.Image, size: int) -> bytes:
+    resized = image.copy()
+    resized.thumbnail((size, size))
+    with BytesIO() as output:
+        resized.save(output, format="WEBP", quality=75)
+        return output.getvalue()
+
+
+def make_thumbnail(data: bytes) -> bytes:
+    with Image.open(BytesIO(data)) as original, original.convert("RGB") as image:
+        return webp_bytes(image, THUMB_SIZE)
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,18 +60,18 @@ def fetch_and_store_image(
                 if response.status_code != 200 or len(response.content) > 5 * 1024 * 1024:
                     continue
                 with Image.open(BytesIO(response.content)) as original, original.convert("RGB") as image:
-                    image.thumbnail((480, 480))
-                    with BytesIO() as output:
-                        image.save(output, format="WEBP", quality=75)
-                        path = f"{item_id}.webp"
-                        sb.storage.from_(BUCKET).upload(
-                            path,
-                            output.getvalue(),
-                            file_options={
-                                "content-type": "image/webp",
-                                "upsert": "true",
-                            },
-                        )
+                    path = f"{item_id}.webp"
+                    storage = sb.storage.from_(BUCKET)
+                    storage.upload(
+                        path,
+                        webp_bytes(image, FULL_SIZE),
+                        file_options=UPLOAD_OPTIONS,
+                    )
+                    storage.upload(
+                        f"thumbs/{path}",
+                        webp_bytes(image, THUMB_SIZE),
+                        file_options=UPLOAD_OPTIONS,
+                    )
                 return path
             except RatelimitException:
                 raise
@@ -57,3 +79,5 @@ def fetch_and_store_image(
                 logger.warning("Image candidate failed for %s: %s", item_id, exc)
                 continue
     return None
+
+

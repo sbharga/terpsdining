@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useSession } from '../api/queries'
-import { supabase } from '../lib/supabase'
+import { auth } from '../lib/supabase'
 import { ChevronDown, LogOut, UserRound } from 'lucide-react'
 import { nameTone } from '../lib/theme'
 export function SignInButton({ children = 'Sign in' }: { children?: ReactNode }) {
@@ -9,7 +9,7 @@ export function SignInButton({ children = 'Sign in' }: { children?: ReactNode })
   const [pending, setPending] = useState(false)
   async function signIn() {
     setPending(true)
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
+    const { error } = await auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
     setError(!!error)
     setPending(false)
   }
@@ -51,7 +51,7 @@ export function AuthButton() {
     {visible && <div role="menu" className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl bg-surface p-1 shadow-lg ring-1 ring-line">
       <div className="px-3 py-2"><p className="truncate font-semibold">{name}</p><p className="truncate text-xs text-muted">{session.user.email}</p></div>
       <Link ref={firstItemRef} role="menuitem" to="/account" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={() => setOpen(false)}><UserRound size={16} aria-hidden="true" />My account</Link>
-      <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={async () => { const { error } = await supabase.auth.signOut(); setError(!!error); if (!error) setOpen(false) }}><LogOut size={16} aria-hidden="true" />Sign out</button>
+      <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={async () => { const { error } = await auth.signOut(); setError(!!error); if (!error) setOpen(false) }}><LogOut size={16} aria-hidden="true" />Sign out</button>
       {error && <p role="alert" className="px-3 py-1 text-xs text-brand">Couldn't sign out. Try again.</p>}
     </div>}
   </div>

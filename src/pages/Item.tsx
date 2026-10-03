@@ -1,3 +1,4 @@
+import { CalendarDays, ChevronRight, ExternalLink, Flame, Heart, LoaderCircle, MapPin, Star, Wheat } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
 import type { ItemHistoryRow } from '../api/queries'
@@ -6,10 +7,8 @@ import { Badges, ErrorNote, FoodSwatch, Loading, NotFound, PageTitle, Panel, Rat
 import type { Json } from '../lib/database.types'
 import { formatDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
-import { CalendarDays, ChevronRight, ExternalLink, Flame, Heart, LoaderCircle, MapPin, Star, Wheat } from 'lucide-react'
 import { hallTone, tones } from '../lib/theme'
-
-const meals = ['Breakfast', 'Lunch', 'Dinner'] as const
+import { meals } from '../lib/hours'
 
 type HallMeals = { slug: string; name: string; meals: string[] }
 
@@ -51,10 +50,10 @@ export default function Item() {
   const historyQuery = useItemHistory(id)
   const { session, error: sessionError } = useSession()
   const myRating = useMyRating(id, session?.user.id)
-  const rateItem = useRateItem(id)
+  const rateItem = useRateItem(id, session?.user.id)
   const favorites = useFavorites(session?.user.id)
   const isFavorite = favorites.data?.some(row => row.item_id === id) ?? false
-  const toggleFavorite = useToggleFavorite(id)
+  const toggleFavorite = useToggleFavorite(id, session?.user.id)
   const today = todayET()
 
   if (itemQuery.isError) return <><PageTitle title="Item" /><ErrorNote retry={itemQuery.refetch} /></>
@@ -87,7 +86,7 @@ export default function Item() {
       <PageTitle title={item.name} />
       <header className="grid gap-6 rounded-3xl bg-surface p-5 ring-1 ring-line sm:grid-cols-[auto_1fr] sm:items-center sm:p-6">
         {image ? (
-          <img src={image} alt="" width={176} height={176} loading="lazy" decoding="async" className="h-44 w-full rounded-2xl object-cover sm:w-44" />
+          <img src={image} alt="" width={176} height={176} loading="eager" fetchPriority="high" decoding="async" className="h-44 w-full rounded-2xl object-cover sm:w-44" />
         ) : (
           <FoodSwatch name={item.name} className="h-44 w-full rounded-2xl text-7xl sm:w-44" />
         )}

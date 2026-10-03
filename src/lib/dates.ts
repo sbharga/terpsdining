@@ -3,6 +3,9 @@ export function todayET(now = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now)
   return ['year', 'month', 'day'].map(type => parts.find(p => p.type === type)!.value).join('-')
 }
+export function parseDateParam(value: string | null, fallback: string): string {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T12:00:00Z`)) ? value : fallback
+}
 export function nowMinutesET(now = new Date()): number {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).formatToParts(now)
   return Number(parts.find(p => p.type === 'hour')!.value) * 60 + Number(parts.find(p => p.type === 'minute')!.value)
