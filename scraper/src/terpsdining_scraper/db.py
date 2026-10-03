@@ -72,5 +72,25 @@ def items_needing_images(limit: int) -> list[dict]:
     )
 
 
+def image_paths() -> list[str]:
+    paths = []
+    start = 0
+    while True:
+        page = (
+            client()
+            .table("items")
+            .select("image_path")
+            .not_.is_("image_path", "null")
+            .order("id")
+            .range(start, start + 999)
+            .execute()
+            .data
+        )
+        paths.extend(row["image_path"] for row in page)
+        if len(page) < 1000:
+            return paths
+        start += 1000
+
+
 def update_item(id: str, fields: dict) -> None:
     client().table("items").update(fields).eq("id", id).execute()

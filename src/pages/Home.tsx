@@ -1,12 +1,12 @@
 import { Link } from 'react-router'
-import { useFavoriteIds, useFavoriteItems, useHalls, useHours, usePopular, useSession } from '../api/queries'
+import { useFavoriteIds, useFavoriteItems, useHours, usePopular, useSession } from '../api/queries'
 import { EmptyState, ErrorNote, ItemCard, Loading, MealIcon, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import { formatDay, nowMinutesET, todayET } from '../lib/dates'
+import { halls } from '../lib/halls'
 import { hallStatus, hoursLabel, meals, mealStatus } from '../lib/hours'
 import { tones } from '../lib/theme'
 import { CalendarDays, ChevronRight, Heart, MapPin, Star, Trophy } from 'lucide-react'
 import type { Json } from '../lib/database.types'
-
 function hallNames(value: Json): string[] {
   const locations = Array.isArray(value) ? value : []
   return [...new Set(locations.flatMap(hall =>
@@ -19,7 +19,6 @@ export default function Home() {
   const { session } = useSession()
   const favoriteIds = useFavoriteIds(session?.user.id)
   const favorites = useFavoriteItems(today, session?.user.id)
-  const halls = useHalls()
   const hours = useHours(today, today)
   const popular = usePopular(today)
   const now = nowMinutesET()
@@ -35,41 +34,37 @@ export default function Home() {
 
       <section className="mt-6" aria-label="Dining halls">
         {hours.isError && <ErrorNote retry={hours.refetch} />}
-        {halls.isError ? <ErrorNote retry={halls.refetch} /> : halls.isPending ? <Loading /> : (
-          <>
-            {hours.isPending && <Loading inline />}
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              {halls.data?.map(hall => {
-                const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
-                return (
-                  <Link
-                    key={hall.id}
-                    to={`/halls/${hall.slug}`}
-                    className="group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none"
-                  >
-                    <div className="flex items-center gap-3"><h2 className="font-display text-xl font-bold">{hall.name}</h2><ChevronRight size={18} aria-hidden="true" className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" /></div>
-                    {hours.isSuccess && (
-                      <>
-                        <div className="mt-4"><StatusPill status={hallStatus(rows, now)} /></div>
-                        <dl className="mt-4 space-y-1 text-sm">
-                          {meals.map(meal => {
-                            const row = rows.find(row => row.meal === meal)
-                            return (
-                              <div key={meal} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 ${row && mealStatus(row, now) === 'open' ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
-                                <dt className="flex items-center gap-2 font-medium"><MealIcon meal={meal} />{meal}</dt>
-                                <dd className="tabular-nums text-muted">{hoursLabel(row)}</dd>
-                              </div>
-                            )
-                          })}
-                        </dl>
-                      </>
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-          </>
-        )}
+        {hours.isPending && <Loading inline />}
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {halls.map(hall => {
+            const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
+            return (
+              <Link
+                key={hall.id}
+                to={`/halls/${hall.slug}`}
+                className="group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none"
+              >
+                <div className="flex items-center gap-3"><h2 className="font-display text-xl font-bold">{hall.name}</h2><ChevronRight size={18} aria-hidden="true" className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" /></div>
+                {hours.isSuccess && (
+                  <>
+                    <div className="mt-4"><StatusPill status={hallStatus(rows, now)} /></div>
+                    <dl className="mt-4 space-y-1 text-sm">
+                      {meals.map(meal => {
+                        const row = rows.find(row => row.meal === meal)
+                        return (
+                          <div key={meal} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 ${row && mealStatus(row, now) === 'open' ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
+                            <dt className="flex items-center gap-2 font-medium"><MealIcon meal={meal} />{meal}</dt>
+                            <dd className="tabular-nums text-muted">{hoursLabel(row)}</dd>
+                          </div>
+                        )
+                      })}
+                    </dl>
+                  </>
+                )}
+              </Link>
+            )
+          })}
+        </div>
       </section>
       {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-12" aria-labelledby="favorites-heading">
         <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>

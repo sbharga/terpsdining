@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
+terpsdining-thumbnails = "terpsdining_scraper.thumbnails:main"
 terpsdining-scrape = "terpsdining_scraper.main:main"
 
 [build-system]

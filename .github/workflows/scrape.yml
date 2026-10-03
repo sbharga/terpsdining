@@ -21,6 +21,8 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -34,3 +36,6 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           SCRAPE_DATE: ${{ inputs.date }}
           SCRAPE_DAYS: ${{ inputs.days }}
+      - name: Rebuild site
+        if: ${{ !cancelled() && env.VERCEL_DEPLOY_HOOK_URL != '' }}
+        run: curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
