@@ -81,7 +81,7 @@ gh workflow run scrape.yml
 
 ## Vercel
 
-Import [sbharga/terpsdining](https://github.com/sbharga/terpsdining), the public GitHub repository, into Vercel. Use the Vite preset, build command `bun run build`, and output directory `dist`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for Production and Preview. `vercel.json` routes deep links to the SPA.
+Import [sbharga/terpsdining](https://github.com/sbharga/terpsdining), the public GitHub repository, into Vercel. Use the Vite preset, install command `bun install --frozen-lockfile`, build command `bun run build`, and output directory `dist`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for Production and Preview. `vercel.json` serves prerendered pages at extensionless URLs and preserves live item deep links for items discovered after a deployment.
 
 After deployment, change `site_url` in `supabase/config.toml` to the production URL. Add `https://<prod-domain>/**` and the team's Vercel preview pattern `https://*-<vercel-team>.vercel.app/**` to `additional_redirect_urls`, preserving localhost. Run `supabase config diff` and `supabase config push`. Deployment and production auth URLs require the user's Vercel project/domain.
 
@@ -90,6 +90,17 @@ After deployment, change `site_url` in `supabase/config.toml` to the production 
 The footer links to `/privacy` and `/terms`. After deploying, use `https://<your-project>.vercel.app/privacy` and `https://<your-project>.vercel.app/terms` in Google Auth Platform's Branding settings, with the deployed root URL as the homepage. These pages work on the assigned Vercel hostname without a custom domain. This does not waive Google's separate authorized-domain or ownership-verification requirements; follow the requirements shown in its Verification Center.
 
 Both pages use `support@docet.org` for inquiries and account-data requests. Ensure that mailbox is monitored. Account deletion requests require manual handling by an authorized Supabase administrator; signing out or revoking Google access does not delete the account. Review the policies before public launch and update them whenever data practices change.
+
+### Search engine indexing
+
+The production origin is `https://terpsdining.vercel.app`, shared in `src/lib/seo.ts`. The build uses the public Supabase URL and publishable key to render the actual React pages into HTML before deployment. Home, halls, weekly hours, legal pages, and every stored item receive initial content, descriptive titles, descriptions, canonical URLs, Open Graph/Twitter previews, and WebSite structured data. The footer also links to the public GitHub repository.
+
+`/sitemap.xml` lists indexable canonical pages; `/robots.txt` advertises it. Search, the item fallback shell, and missing pages are marked `noindex`. Query parameters do not create separate canonical pages. Vercel preview deployments should retain Vercel's default noindex protection.
+
+Prerendered menus, hours, item details, and sitemap entries are snapshots refreshed on each deployment. The browser still fetches live Supabase data. Newly scraped items remain accessible through the live item fallback, but need a new deployment for initial HTML and sitemap inclusion. To refresh crawler snapshots after new data, redeploy in Vercel. Build failures fetching public data stop deployment rather than publish empty content. CI uses repository variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`; no service secret is used for prerendering.
+
+In Google Search Console, add a **URL-prefix** property for `https://terpsdining.vercel.app/` (no custom domain required). Verify using the provided HTML file uploaded into `public/` and redeploy, then submit `https://terpsdining.vercel.app/sitemap.xml`. Do not choose Domain-property DNS verification for the shared `vercel.app` domain. Use URL Inspection to request indexing of the home and hall pages. Search engines decide when and whether to index pages; these changes do not guarantee rankings.
+
 
 
 ## Verification

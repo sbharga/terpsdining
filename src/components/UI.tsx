@@ -1,10 +1,57 @@
 import { useEffect, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { addDays, formatDay } from '../lib/dates'
 import type { CardItem } from '../lib/menu'
+import { getPageSeo, renderSeoJsonLd } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
 export function PageTitle({ title }: { title: string }) {
-  useEffect(() => { document.title = `${title} · TerpsDining` }, [title])
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    const seo = getPageSeo(pathname, title)
+    document.title = seo.title
+    const tags: Array<[string, string]> = [
+      ['meta[name="description"]', seo.description],
+      ['meta[name="robots"]', seo.robots],
+      ['link[rel="canonical"]', seo.canonical],
+      ['meta[property="og:type"]', 'website'],
+      ['meta[property="og:site_name"]', 'TerpsDining'],
+      ['meta[property="og:title"]', seo.title],
+      ['meta[property="og:description"]', seo.description],
+      ['meta[property="og:url"]', seo.canonical],
+      ['meta[property="og:image"]', seo.image],
+      ['meta[property="og:image:alt"]', seo.imageAlt],
+      ['meta[property="og:image:width"]', '1200'],
+      ['meta[property="og:image:height"]', '630'],
+      ['meta[name="twitter:card"]', 'summary_large_image'],
+      ['meta[name="twitter:title"]', seo.title],
+      ['meta[name="twitter:description"]', seo.description],
+      ['meta[name="twitter:image"]', seo.image],
+      ['meta[name="twitter:image:alt"]', seo.imageAlt],
+    ]
+    for (const [selector, content] of tags) {
+      const matches = document.head.querySelectorAll(selector)
+      if (selector.startsWith('link') && !content) {
+        for (const match of matches) match.remove()
+        continue
+      }
+      const tag = matches[0] ?? document.head.appendChild(document.createElement(selector.startsWith('link') ? 'link' : 'meta'))
+      for (const duplicate of Array.from(matches).slice(1)) duplicate.remove()
+      if (selector.startsWith('link')) {
+        tag.setAttribute('rel', 'canonical')
+        tag.setAttribute('href', content)
+      } else {
+        const attribute = selector.includes('[property=') ? 'property' : 'name'
+        tag.setAttribute(attribute, selector.match(/\[(?:name|property)="([^"]+)"/)?.[1] ?? '')
+        tag.setAttribute('content', content)
+      }
+    }
+    const scripts = document.head.querySelectorAll('script[type="application/ld+json"]')
+    const script = scripts[0] ?? document.head.appendChild(document.createElement('script'))
+    for (const duplicate of Array.from(scripts).slice(1)) duplicate.remove()
+    script.setAttribute('type', 'application/ld+json')
+    script.setAttribute('data-terpsdining-seo', '')
+    script.textContent = renderSeoJsonLd()
+  }, [pathname, search, title])
   return null
 }
 export function Loading() { return <p role="status" className="py-8 text-sm text-zinc-500">Loading…</p> }
