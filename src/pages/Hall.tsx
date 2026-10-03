@@ -1,9 +1,11 @@
-import { useParams, useSearchParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
+import { ArrowLeft, Ban, ListFilter, Soup, Trophy, X } from 'lucide-react'
 import { useHallMenu, useHalls, useHours, usePopular } from '../api/queries'
-import { DatePager, ErrorNote, ItemCard, Loading, NotFound, PageTitle } from '../components/UI'
+import { DatePager, DietIcon, EmptyState, ErrorNote, ItemCard, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import type { Database } from '../lib/database.types'
 import { nowMinutesET, todayET } from '../lib/dates'
-import { defaultMeal, formatTime, hallStatus, meals } from '../lib/hours'
+import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
+import { dietTone, hallTone, mealTones, nameTone, tones } from '../lib/theme'
 import { filterItems, groupByStation } from '../lib/menu'
 
 const diets = [
@@ -42,6 +44,7 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
   const topRated = (popular.data ?? []).filter(item => filteredIds.has(item.id))
+  const tone = hallTone(hall.slug)
 
   function updateParam(key: string, value: string) {
     setParams(previous => {
@@ -57,59 +60,75 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
     updateParam(key, (selected.includes(value) ? selected.filter(tag => tag !== value) : [...selected, value]).join(','))
   }
 
+  function clearFilters() {
+    setParams(previous => {
+      const next = new URLSearchParams(previous)
+      next.delete('diet')
+      next.delete('avoid')
+      return next
+    })
+  }
+
   return (
     <>
       <PageTitle title={hall.name} />
-      <h1 className="text-3xl font-semibold tracking-tight">{hall.name}</h1>
-      {date === today && hours.isSuccess && <p className="mt-2 text-zinc-600">{hallStatus(rows, nowMinutesET()).label}</p>}
-      <div className="mt-6"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
+      <header className={`relative overflow-hidden rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8 ${tone.depth}`}>
+        <div className="relative">
+          <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{hall.name}</h1>
+          {date === today && hours.isSuccess && <div className="mt-3"><StatusPill status={hallStatus(rows, nowMinutesET())} /></div>}
+          <div className="mt-5"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
+        </div>
+      </header>
 
       {hours.isError && <ErrorNote retry={hours.refetch} />}
 
-      <div className="mt-8 flex gap-2" role="group" aria-label="Meal">
+      <div className="mt-6 grid grid-cols-3 gap-1 rounded-2xl bg-surface-2 p-1" role="group" aria-label="Meal">
         {meals.map(value => {
           const row = rows.find(row => row.meal === value)
-          const label = row?.status === 'open' && row.opens && row.closes
-            ? `${formatTime(row.opens)}–${formatTime(row.closes)}`
-            : row?.status === 'closed' ? 'Closed' : 'TBD'
           return (
             <button
               key={value}
               type="button"
               aria-pressed={meal === value}
               onClick={() => updateParam('meal', value)}
-              className={`min-w-0 flex-1 rounded-xl border px-2 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 ${meal === value ? 'border-red-600 bg-red-50 text-red-700' : 'border-zinc-200 hover:bg-zinc-50'}`}
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-2 py-2.5 text-sm transition ${meal === value ? `bg-surface shadow-sm ring-1 ring-line ${tones[mealTones[value]].text}` : 'text-muted hover:bg-surface/60 hover:text-ink'}`}
             >
-              <span className="block font-semibold">{value}</span>
-              <span className="mt-1 block text-xs">{hours.isSuccess ? label : '—'}</span>
+              <span className="flex items-center gap-1.5 font-semibold"><MealIcon meal={value} />{value}</span>
+              <span className="text-xs tabular-nums opacity-80">{hours.isSuccess ? hoursLabel(row) : '—'}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="mt-6 space-y-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Diet">
+      <div className="mt-4 space-y-3 rounded-3xl bg-surface p-4 ring-1 ring-line sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold"><ListFilter size={16} aria-hidden="true" />Filters</h2>
+          {(diet.length > 0 || avoid.length > 0) && <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-brand hover:bg-canvas"><X size={14} aria-hidden="true" />Clear filters</button>}
+        </div>
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Diet">
+          <span aria-hidden="true" className="w-14 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted">Diet</span>
           {diets.map(tag => (
             <button
               key={tag.value}
               type="button"
               aria-pressed={diet.includes(tag.value)}
               onClick={() => toggleFilter('diet', tag.value)}
-              className={`rounded-full border px-3 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 ${diet.includes(tag.value) ? 'border-green-700 bg-green-50 text-green-800' : 'border-zinc-300 text-zinc-600 hover:bg-zinc-50'}`}
-            >{tag.label}</button>
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${diet.includes(tag.value) ? `${dietTone(tag.value).soft} ${dietTone(tag.value).border}` : 'border-line bg-surface text-muted hover:text-ink'}`}
+            ><DietIcon tag={tag.value} size={14} />{tag.label}</button>
           ))}
         </div>
         {(allergens.length > 0 || avoid.length > 0) && (
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Avoid allergens">
-            <span className="mr-1 text-sm text-zinc-600">Avoid:</span>
+            <span aria-hidden="true" className="w-14 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted">Avoid</span>
             {[...new Set([...allergens, ...avoid])].map(tag => (
               <button
                 key={tag}
                 type="button"
                 aria-pressed={avoid.includes(tag)}
                 onClick={() => toggleFilter('avoid', tag)}
-                className={`rounded-full border px-3 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 ${avoid.includes(tag) ? 'border-red-600 bg-red-50 text-red-700' : 'border-zinc-300 text-zinc-600 hover:bg-zinc-50'}`}
-              >{tag.replace(/\b\w/g, letter => letter.toUpperCase())}</button>
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${avoid.includes(tag) ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200' : 'border-line bg-surface text-muted hover:text-ink'}`}
+              >{avoid.includes(tag) && <Ban size={14} aria-hidden="true" />}{tag.replace(/\b\w/g, letter => letter.toUpperCase())}</button>
             ))}
           </div>
         )}
@@ -121,15 +140,15 @@ function HallMenu({ hall }: { hall: Database['public']['Tables']['halls']['Row']
           {popular.isPending && <div className="mt-10"><Loading /></div>}
           {!popular.isError && topRated.length > 0 && (
             <section className="mt-10" aria-labelledby="hall-popular-heading">
-              <h2 id="hall-popular-heading" className="text-xl font-semibold">Top rated</h2>
+              <SectionHeading id="hall-popular-heading" icon={Trophy} tone={tones.citrus}>Top rated</SectionHeading>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {topRated.map(item => <ItemCard key={item.id} item={item} />)}
               </div>
             </section>
           )}
-          {mealRows.length === 0 ? <p className="mt-10 text-zinc-600">No menu posted.</p> : stations.length === 0 ? <p className="mt-10 text-zinc-600">No items match filters.</p> : stations.map(([station, items]) => (
+          {mealRows.length === 0 ? <EmptyState icon={Soup} title="No menu posted">Try another meal or day.</EmptyState> : stations.length === 0 ? <EmptyState icon={ListFilter} title="No items match filters"><button type="button" onClick={clearFilters} className="font-semibold text-brand underline underline-offset-4">Clear filters</button></EmptyState> : stations.map(([station, items]) => (
             <section key={station} className="mt-10" aria-label={station}>
-              <h2 className="text-xl font-semibold">{station}</h2>
+              <h2 className="flex items-center gap-2 font-display text-xl font-bold"><span aria-hidden="true" className={`h-3 w-3 rounded-full ${nameTone(station).dot}`} />{station}<span className="ml-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-muted">{items.length}<span className="sr-only"> items</span></span></h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {items.map(item => <ItemCard key={item.id} item={item} />)}
               </div>
