@@ -1,0 +1,36 @@
+name: Daily dining data
+on:
+  schedule:
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Start date (YYYY-MM-DD)
+        type: string
+        required: false
+      days:
+        description: Days to scrape
+        type: string
+        default: "1"
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: scraper/uv.lock
+      - run: uv run --frozen terpsdining-scrape
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SCRAPE_DATE: ${{ inputs.date }}
+          SCRAPE_DAYS: ${{ inputs.days }}

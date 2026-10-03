@@ -1,0 +1,29 @@
+[project]
+name = "terpsdining-scraper"
+version = "0.1.0"
+description = "UMD dining menus, nutrition, hours, and food images"
+readme = "README.md"
+authors = [
+    { name = "sbharga", email = "shreyasbhar@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "ddgs>=9.16.0",
+    "httpx>=0.28.1",
+    "pillow>=12.3.0",
+    "supabase>=2.32.0",
+]
+
+[project.scripts]
+terpsdining-scrape = "terpsdining_scraper.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]

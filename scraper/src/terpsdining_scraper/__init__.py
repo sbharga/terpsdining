@@ -1,0 +1,1 @@
+"""UMD dining data collection."""
