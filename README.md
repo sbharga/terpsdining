@@ -81,7 +81,7 @@ gh workflow run scrape.yml
 
 ## Vercel
 
-Import the private GitHub repository into Vercel. Use the Vite preset, build command `bun run build`, and output directory `dist`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for Production and Preview. `vercel.json` routes deep links to the SPA.
+Import [sbharga/terpsdining](https://github.com/sbharga/terpsdining), the public GitHub repository, into Vercel. Use the Vite preset, build command `bun run build`, and output directory `dist`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for Production and Preview. `vercel.json` routes deep links to the SPA.
 
 After deployment, change `site_url` in `supabase/config.toml` to the production URL. Add `https://<prod-domain>/**` and the team's Vercel preview pattern `https://*-<vercel-team>.vercel.app/**` to `additional_redirect_urls`, preserving localhost. Run `supabase config diff` and `supabase config push`. Deployment and production auth URLs require the user's Vercel project/domain.
 
@@ -98,3 +98,5 @@ uv run --frozen pytest
 ```
 
 The initial hosted scrape for 2026-10-02 produced 595 items and 1,738 offerings; 166 items appeared at multiple halls. Repeating it preserved the offerings count. Label `040065` has 241 calories; ten public WebP images were uploaded during initial verification. Hosted schema lint, anonymous write denial, and transactional rating insert/edit/delete aggregate checks passed. Browser checks covered hall filtering, multi-hall item links, nutrition, search, weekly hours, mobile layout, and unknown routes. Full Google sign-in/rating interaction remains dependent on OAuth configuration.
+
+Hall pages show each meal's hours once, inside its menu-selection tab.
