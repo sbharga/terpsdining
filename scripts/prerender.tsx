@@ -16,6 +16,7 @@ import Item from '../src/pages/Item'
 import Privacy from '../src/pages/Privacy'
 import Search from '../src/pages/Search'
 import Terms from '../src/pages/Terms'
+import Account from '../src/pages/Account'
 
 type Table = Database['public']['Tables']
 type HallRow = Table['halls']['Row']
@@ -80,6 +81,7 @@ const routeSet = <Routes>
     <Route path="/hours" element={<Hours />} />
     <Route path="/privacy" element={<Privacy />} />
     <Route path="/terms" element={<Terms />} />
+    <Route path="/account" element={<Account />} />
     <Route path="*" element={<NotFound />} />
   </Route>
 </Routes>
@@ -111,6 +113,7 @@ await writePage('hours.html', '/hours')
 await writePage('privacy.html', '/privacy')
 await writePage('terms.html', '/terms')
 await writePage('search.html', '/search')
+await writePage('account.html', '/account')
 
 const sitemap: string[] = ['/', '/hours', '/privacy', '/terms'].map(path => `${SITE_URL}${path}`)
 for (const hall of halls) {

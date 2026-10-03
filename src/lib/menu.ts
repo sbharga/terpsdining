@@ -12,3 +12,11 @@ export function groupByStation(offerings: { station: string; item: CardItem }[])
 export function filterItems<T extends Pick<CardItem, 'dietary' | 'allergens'>>(items: T[], filters: { diet: string[]; avoid: string[] }): T[] {
   return items.filter(item => filters.diet.every(tag => item.dietary.includes(tag)) && !filters.avoid.some(tag => item.allergens.includes(tag)))
 }
+export function pickFavorites<T extends Pick<CardItem, 'id' | 'name'>>(items: T[], ids: Set<string>): T[] {
+  const seen = new Set<string>()
+  return items.filter(item => {
+    if (!ids.has(item.id) || seen.has(item.id)) return false
+    seen.add(item.id)
+    return true
+  }).sort((a, b) => a.name.localeCompare(b.name))
+}

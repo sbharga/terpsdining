@@ -1,13 +1,24 @@
 import { Link } from 'react-router'
-import { useHalls, useHours, usePopular } from '../api/queries'
+import { useFavoriteIds, useFavoriteItems, useHalls, useHours, usePopular, useSession } from '../api/queries'
 import { EmptyState, ErrorNote, ItemCard, Loading, MealIcon, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import { formatDay, nowMinutesET, todayET } from '../lib/dates'
 import { hallStatus, hoursLabel, meals, mealStatus } from '../lib/hours'
 import { tones } from '../lib/theme'
-import { CalendarDays, ChevronRight, MapPin, Star, Trophy } from 'lucide-react'
+import { CalendarDays, ChevronRight, Heart, MapPin, Star, Trophy } from 'lucide-react'
+import type { Json } from '../lib/database.types'
 
+function hallNames(value: Json): string[] {
+  const locations = Array.isArray(value) ? value : []
+  return [...new Set(locations.flatMap(hall =>
+    hall !== null && typeof hall === 'object' && !Array.isArray(hall) && typeof hall.name === 'string'
+      ? [hall.name] : [],
+  ))]
+}
 export default function Home() {
   const today = todayET()
+  const { session } = useSession()
+  const favoriteIds = useFavoriteIds(session?.user.id)
+  const favorites = useFavoriteItems(today, session?.user.id)
   const halls = useHalls()
   const hours = useHours(today, today)
   const popular = usePopular(today)
@@ -60,6 +71,13 @@ export default function Home() {
           </>
         )}
       </section>
+      {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-12" aria-labelledby="favorites-heading">
+        <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>
+        <div className="mt-4">{favorites.isError ? <ErrorNote retry={favorites.refetch} /> : favorites.isPending ? <Loading inline /> : <div className="grid gap-4 sm:grid-cols-2">{favorites.data.map(item => {
+          const names = hallNames(item.halls)
+          return <ItemCard key={item.id} item={item} favorite>{names.length > 0 && <p className="mt-2 flex items-center gap-1 text-xs text-muted"><MapPin size={12} aria-hidden="true" />{names.join(' · ')}</p>}</ItemCard>
+        })}</div>}</div>
+      </section>}
 
       <section className="mt-12" aria-labelledby="popular-heading">
         <SectionHeading id="popular-heading" icon={Trophy} tone={tones.citrus}>Top rated today</SectionHeading>
@@ -67,13 +85,9 @@ export default function Home() {
           {popular.isError ? <ErrorNote retry={popular.refetch} /> : popular.isPending ? <Loading /> : popular.data?.length ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {popular.data.map(item => {
-                const locations = Array.isArray(item.halls) ? item.halls : []
-                const names = [...new Set(locations.flatMap(hall =>
-                  hall !== null && typeof hall === 'object' && !Array.isArray(hall) && typeof hall.name === 'string'
-                    ? [hall.name] : [],
-                ))]
+                const names = hallNames(item.halls)
                 return (
-                  <ItemCard key={item.id} item={item}>
+                  <ItemCard key={item.id} item={item} favorite={favoriteIds.has(item.id)}>
                     {names.length > 0 && <p className="mt-2 flex items-center gap-1 text-xs text-muted"><MapPin size={12} aria-hidden="true" />{names.join(' · ')}</p>}
                   </ItemCard>
                 )

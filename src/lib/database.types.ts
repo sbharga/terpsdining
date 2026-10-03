@@ -39,6 +39,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          item_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       halls: {
         Row: {
           id: number
@@ -237,6 +263,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_account: { Args: never; Returns: undefined }
+      favorite_items: {
+        Args: { p_date: string }
+        Returns: {
+          allergens: string[]
+          dietary: string[]
+          halls: Json
+          id: string
+          image_path: string
+          name: string
+          rating_avg: number
+          rating_count: number
+        }[]
+      }
       popular_items: {
         Args: { p_date: string; p_hall?: number; p_limit?: number }
         Returns: {

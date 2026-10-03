@@ -4,7 +4,7 @@ import { addDays, formatDay, todayET } from '../lib/dates'
 import type { CardItem } from '../lib/menu'
 import { getPageSeo, renderSeoJsonLd } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, CircleCheck, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, UtensilsCrossed, type LucideIcon } from 'lucide-react'
 import type { HallState, Meal } from '../lib/hours'
 import { dietTone, mealTones, nameTone, tones, type Tone } from '../lib/theme'
 export function PageTitle({ title }: { title: string }) {
@@ -104,11 +104,11 @@ export function FoodSwatch({ name, className }: { name: string; className: strin
 export function Badges({ allergens, dietary }: { allergens: string[]; dietary: string[] }) {
   return <div className="flex flex-wrap gap-1.5">{dietary.map(tag => <span key={tag} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${dietTone(tag).soft}`}><DietIcon tag={tag} />{tag}</span>)}{allergens.map(tag => <span key={tag} className="rounded-full border border-line px-2 py-0.5 text-xs capitalize text-muted">{tag}</span>)}</div>
 }
-export function ItemCard({ item, children }: { item: CardItem; children?: ReactNode }) {
+export function ItemCard({ item, children, favorite = false }: { item: CardItem; children?: ReactNode; favorite?: boolean }) {
   const image = imageUrl(item.image_path)
   return <Link to={`/items/${item.id}`} className="group flex gap-4 rounded-2xl bg-surface p-3 ring-1 ring-line transition hover:-translate-y-0.5 motion-reduce:transform-none">
     {image ? <img src={image} alt="" width={80} height={80} loading="lazy" decoding="async" className="h-20 w-20 shrink-0 rounded-xl object-cover" /> : <FoodSwatch name={item.name} className="h-20 w-20 rounded-xl text-3xl" />}
-    <div className="min-w-0 flex-1 py-0.5"><h3 className="font-semibold leading-snug group-hover:text-brand">{item.name}</h3><div className="mt-2"><Badges allergens={item.allergens} dietary={item.dietary} /></div>{item.rating_count > 0 && <div className="mt-2"><RatingPill avg={Number(item.rating_avg)} count={item.rating_count} /></div>}{children}</div>
+    <div className="min-w-0 flex-1 py-0.5"><h3 className="font-semibold leading-snug group-hover:text-brand">{item.name}{favorite && <><Heart size={14} fill="currentColor" aria-hidden="true" className="ml-1.5 inline align-[-2px] text-fuchsia-600 dark:text-fuchsia-300" /><span className="sr-only"> (favorite)</span></>}</h3><div className="mt-2"><Badges allergens={item.allergens} dietary={item.dietary} /></div>{item.rating_count > 0 && <div className="mt-2"><RatingPill avg={Number(item.rating_avg)} count={item.rating_count} /></div>}{children}</div>
   </Link>
 }
 export function StarRating({ value, onChange, disabled = false }: { value: number | null; onChange: (value: number | null) => void; disabled?: boolean }) {

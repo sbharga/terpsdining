@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addDays, todayET, nowMinutesET } from './dates'
 import { defaultMeal, hallStatus, mealStatus, type Hours } from './hours'
-import { filterItems } from './menu'
+import { filterItems, pickFavorites } from './menu'
 const lunch: Hours = { hall_id: 19, date: '2026-10-02', meal: 'Lunch', status: 'open', label: '10:30am-4pm', opens: '10:30:00', closes: '16:00:00' }
 describe('Eastern calendar', () => {
   it('keeps UTC midnight on the previous Eastern day', () => {
@@ -26,4 +26,9 @@ it('excludes avoided allergens and requires all diets', () => {
   const vegan = { allergens: [], dietary: ['vegan', 'vegetarian'] }
   expect(filterItems([dairy, vegan], { diet: [], avoid: ['dairy'] })).toEqual([vegan])
   expect(filterItems([dairy, vegan], { diet: ['vegan', 'vegetarian'], avoid: [] })).toEqual([vegan])
+})
+it('picks favorites once across stations, keeping the first copy and sorting by name', () => {
+  const zucchini = { id: 'z', name: 'Zucchini', station: 'Grill' }
+  const apple = { id: 'a', name: 'Apple', station: 'Fruit' }
+  expect(pickFavorites([zucchini, { ...zucchini, station: 'Other' }, { id: 'b', name: 'Bread', station: 'Bakery' }, apple], new Set(['z', 'a']))).toEqual([apple, zucchini])
 })
