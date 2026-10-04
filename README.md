@@ -86,6 +86,8 @@ On Vercel, use the Vite preset, repository root, install command `bun install --
 
 Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages; `/robots.txt` advertises it. Search and missing pages are marked `noindex`. Canonicals omit query parameters. If deploying this code to a different website, update the production origin in `src/lib/seo.ts` and the URL in the social-preview artwork.
 
+The homepage targets UMD dining menus and hours with matching metadata and visible introductory copy. Hall pages identify their UMD menus and hours, and descriptive links connect the homepage, hall menus, and weekly hours. The independent-project disclaimer remains visible. After deployment, verify the production URL in Google Search Console, submit `/sitemap.xml`, and inspect the homepage to request indexing. These on-page improvements do not guarantee indexing or placement for “umd dining.”
+
 Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render. Fresh queries do not immediately refetch: hours and history stay fresh for six hours, menus for 30 minutes, and other queries for five minutes. Newly scraped items remain accessible before the next deployment, but require a rebuild for initial HTML and sitemap inclusion. Search engines determine indexing and rankings.
 
 Deploy the paginated-search/history migration before the frontend, then backfill existing card thumbnails using the scraper's secret-key environment:

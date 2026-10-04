@@ -69,8 +69,10 @@ function HallMenu({ hall }: { hall: Hall }) {
       <PageTitle title={hall.name} />
       <header className="rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8">
         <div className="relative">
-          <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
-          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{hall.name}</h1>
+          <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"><ArrowLeft size={16} aria-hidden="true" />All UMD dining halls</Link>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">{hall.name} menus &amp; hours</h1>
+          <p className="mt-2 text-muted">Browse {hall.name} dining hall menus at the University of Maryland. Choose a day and meal to explore dishes, nutrition, and student ratings, or filter by dietary preferences and allergens.</p>
+          <Link to="/hours" className="mt-3 inline-block text-sm font-semibold text-brand hover:underline underline-offset-4">View {hall.name} weekly hours</Link>
           {date === today && hours.isSuccess && <div className="mt-3"><StatusPill status={hallStatus(rows, nowMinutesET())} /></div>}
           <div className="mt-5"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
         </div>
