@@ -23,8 +23,8 @@ export default function Hours() {
   return (
     <>
       <PageTitle title="Hours" />
-      <h1 className="font-display text-4xl font-extrabold tracking-tight">UMD dining hall hours</h1>
-      <p className="mt-2 text-muted">Breakfast, lunch, and dinner hours for University of Maryland dining halls, a week at a glance. Select a hall below to explore its menus.</p>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Hours</h1>
+      <p className="mt-2 text-muted">Meal times for every dining hall, a week at a glance.</p>
       <div className="mt-6"><DatePager date={start} onChange={changeStart} step={7} /></div>
       <p className="mt-2 text-sm text-muted">{formatDay(start)} – {formatDay(dates[6])}</p>
 
@@ -36,7 +36,7 @@ export default function Hours() {
       {hours.isSuccess && halls.map(hall => (
         <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
           <h2 id={`hours-${hall.slug}`} className="flex items-center gap-3 px-5 py-4 font-display text-xl font-bold">
-            <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name} menus</Link>
+            <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
           </h2>
           <div className="overflow-x-auto border-t border-line">
             <table className="w-full min-w-[540px] border-collapse text-left text-sm">

@@ -12,7 +12,7 @@ export type PageSeo = {
 const DEFAULT_IMAGE = `${SITE_URL}/social.png`
 const DEFAULT_IMAGE_ALT = 'TerpsDining — University of Maryland dining menus and hours'
 const SITE_TITLE = 'TerpsDining'
-const HOME_DESCRIPTION = 'Explore UMD dining menus, hours, nutrition, and student ratings for University of Maryland dining halls: Yahentamitsi, South Campus, and 251 North.'
+const HOME_DESCRIPTION = 'Explore University of Maryland dining hall menus, hours, nutrition, and today’s food options with TerpsDining.'
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({
@@ -50,8 +50,8 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     description = 'Manage your TerpsDining account, ratings, and favorites.'
     robots = 'noindex,follow'
   } else if (path === '/hours') {
-    pageTitle = 'UMD Dining Hall Hours'
-    description = 'Check UMD dining hall hours for breakfast, lunch, and dinner at Yahentamitsi, South Campus, and 251 North, a week at a glance.'
+    pageTitle = 'Dining Hall Hours'
+    description = 'View University of Maryland dining hall hours for breakfast, lunch, and dinner.'
   } else if (path === '/privacy') {
     pageTitle = 'Privacy Policy'
     description = 'Read the TerpsDining privacy policy and learn how account and service information is handled.'
@@ -65,8 +65,8 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     canonicalPath = ''
   } else if (/^\/halls\/[^/]+$/.test(path)) {
     const hall = title?.trim() || 'Dining Hall'
-    pageTitle = `${hall} Menu & Hours at UMD`
-    description = `Browse ${hall} dining hall menus and meal hours at the University of Maryland (UMD). Explore dishes, nutrition, dietary filters, and student ratings.`
+    pageTitle = `${hall} Dining Hall Menu & Hours`
+    description = `Explore ${hall} dining hall menus, meal availability, and hours at the University of Maryland.`
   } else if (/^\/items\/[^/]+$/.test(path)) {
     const item = title?.trim() || 'Dining Menu Item'
     pageTitle = `${item} Nutrition & Availability`
