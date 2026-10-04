@@ -28,9 +28,8 @@ export default function Home() {
       <PageTitle title="Today" />
       <header className="mb-8">
         <p className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1 text-sm font-medium text-muted ring-1 ring-line"><CalendarDays size={16} aria-hidden="true" />{formatDay(today)}</p>
-        <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">UMD dining <span className="text-brand">menus</span></h1>
-        <p className="mt-2 text-muted">Explore today's University of Maryland (UMD) dining hall menus, hours, nutrition, and student ratings for Yahentamitsi, South Campus, and 251 North.</p>
-        <Link to="/hours" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline underline-offset-4">View weekly dining hall hours<ChevronRight size={16} aria-hidden="true" /></Link>
+        <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">What's cooking <span className="text-brand">today</span></h1>
+        <p className="mt-2 text-muted">Hours, menus, and top-rated eats across UMD's dining halls.</p>
       </header>
 
       <section className="mt-6" aria-label="Dining halls">
@@ -46,7 +45,6 @@ export default function Home() {
                 className="group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none"
               >
                 <div className="flex items-center gap-3"><h2 className="font-display text-xl font-bold">{hall.name}</h2><ChevronRight size={18} aria-hidden="true" className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" /></div>
-                <p className="mt-1 text-sm text-muted">View menus, nutrition, and ratings</p>
                 {hours.isSuccess && (
                   <>
                     <div className="mt-4"><StatusPill status={hallStatus(rows, now)} /></div>
