@@ -59,7 +59,7 @@ uv run --env-file .env terpsdining-scrape --image-limit 10
 
 Options include `--date YYYY-MM-DD`, `--days N`, `--skip-images`, and `--skip-hours`. A failed menu request preserves existing offerings for that slot; a successful empty menu clears it. Offerings preserve separate halls, meals, and stations for the same item.
 
-The daily GitHub Actions workflow starts at 3:00 a.m. America/New_York, automatically following daylight saving time, and also supports manual runs. GitHub Actions may delay scheduled starts; menus update after the scrape and site rebuild finish. Independent deployments must supply their own scraper credentials through GitHub Actions secrets, never through source files.
+The daily GitHub Actions workflow is scheduled for 3:17 a.m. America/New_York, automatically following daylight saving time, and also supports manual runs. The off-hour minute avoids the top-of-hour scheduling hotspot, but GitHub Actions may still delay or drop scheduled runs; menus update after the scrape and site rebuild finish. Independent deployments must supply their own scraper credentials through GitHub Actions secrets, never through source files.
 
 Set the GitHub Actions secret `VERCEL_DEPLOY_HOOK_URL` to a Vercel Deploy Hook for the production branch. The workflow requests a rebuild after each scrape, including partial menu failures; without the secret, the rebuild step is skipped.
 
