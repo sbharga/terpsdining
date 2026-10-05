@@ -1,7 +1,7 @@
 name: Daily dining data
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "17 3 * * *"
       timezone: "America/New_York"
   workflow_dispatch:
     inputs:
