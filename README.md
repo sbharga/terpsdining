@@ -59,6 +59,14 @@ uv run --env-file .env terpsdining-scrape --image-limit 10
 
 Options include `--date YYYY-MM-DD`, `--days N`, `--skip-images`, and `--skip-hours`. A failed menu request preserves existing offerings for that slot; a successful empty menu clears it. Offerings preserve separate halls, meals, and stations for the same item.
 
+Image searches use Bing only. Regenerate selected existing food images without scraping menus, hours, or nutrition:
+
+```sh
+uv run --env-file .env terpsdining-scrape --regenerate-images 151365 040065
+```
+
+Run from `scraper/`. IDs are space-separated and preserve leading zeros. Both full-size images and thumbnails are replaced; cached copies may persist for up to seven days. See [scraper/README.md](scraper/README.md) for failure handling.
+
 The dining-data GitHub Actions workflow runs through `workflow_dispatch`, supporting both manual runs and external scheduling through cron-job.org. Configure cron-job.org to POST `{"ref":"main"}` to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/scrape.yml/dispatches` daily at 3:00 a.m. in `America/New_York`, automatically following daylight saving time. Authenticate using a fine-grained GitHub token restricted to this repository with Actions write permission, stored in cron-job.org's Authorization header, never in source files. There is no built-in GitHub schedule. Menus update after the scrape and site rebuild finish. Independent deployments must supply their own scraper credentials through GitHub Actions secrets, never through source files.
 
 Set the GitHub Actions secret `VERCEL_DEPLOY_HOOK_URL` to a Vercel Deploy Hook for the production branch. The workflow requests a rebuild after each scrape, including partial menu failures; without the secret, the rebuild step is skipped.

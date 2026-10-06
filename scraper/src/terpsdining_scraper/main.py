@@ -9,6 +9,7 @@ from datetime import UTC, date, datetime, timedelta
 
 import httpx
 from ddgs.exceptions import RatelimitException
+from supabase import Client
 
 from . import db
 from .config import HALL_IDS, MEALS, SHEET_URL, TZ, USER_AGENT
@@ -34,13 +35,65 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--image-limit", type=int, default=150)
     parser.add_argument("--skip-images", action="store_true")
     parser.add_argument("--skip-hours", action="store_true")
-    return parser.parse_args()
+    parser.add_argument(
+        "--regenerate-images",
+        nargs="+",
+        metavar="ID",
+        help="Replace images for these food IDs only; skip hours, menus, and nutrition",
+    )
+    args = parser.parse_args()
+    if args.regenerate_images and args.skip_images:
+        parser.error("--regenerate-images cannot be combined with --skip-images")
+    return args
 
 
 def _fetch_nutrition(http: httpx.Client, label_url: str) -> dict:
     response = http.get(label_url)
     response.raise_for_status()
     return parse_label(response.text)
+
+
+def _regenerate_images(http: httpx.Client, sb: Client, item_ids: list[str]) -> int:
+    item_ids = list(dict.fromkeys(item_ids))
+    items = {}
+    for start in range(0, len(item_ids), 500):
+        rows = (
+            sb.table("items")
+            .select("id,name")
+            .in_("id", item_ids[start : start + 500])
+            .execute()
+            .data
+        )
+        items.update((item["id"], item) for item in rows)
+
+    missing = [item_id for item_id in item_ids if item_id not in items]
+    for item_id in missing:
+        logger.error("Unknown food ID: %s", item_id)
+    failures = len(missing)
+    images = 0
+    selected = [items[item_id] for item_id in item_ids if item_id in items]
+    for index, item in enumerate(selected):
+        item_id = item["id"]
+        if index:
+            time.sleep(2)
+        try:
+            path = fetch_and_store_image(http, sb, item_id, item["name"])
+        except RatelimitException:
+            logger.error("Bing rate limited; stopping image regeneration")
+            failures += len(selected) - index
+            break
+        if path is None:
+            logger.error("Image regeneration failed for %s; keeping existing image", item_id)
+            failures += 1
+            continue
+        db.update_item(
+            item_id,
+            {"image_path": path, "image_checked_at": datetime.now(UTC).isoformat()},
+        )
+        images += 1
+
+    print(f"images={images} failures={failures}")
+    return 1 if failures else 0
 
 
 def main() -> int:
@@ -53,6 +106,8 @@ def main() -> int:
     with httpx.Client(
         headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=True
     ) as http:
+        if args.regenerate_images:
+            return _regenerate_images(http, sb, args.regenerate_images)
         if not args.skip_hours:
             halls = sb.table("halls").select("id,sheet_name").execute().data
             hall_ids_by_sheet_name = {hall["sheet_name"]: hall["id"] for hall in halls}
@@ -139,7 +194,7 @@ def main() -> int:
                 try:
                     path = fetch_and_store_image(http, sb, item["id"], item["name"])
                 except RatelimitException:
-                    print("ddgs rate limited; stopping image phase")
+                    print("Bing rate limited; stopping image phase")
                     break
                 fields = {"image_checked_at": datetime.now(UTC).isoformat()}
                 if path is not None:

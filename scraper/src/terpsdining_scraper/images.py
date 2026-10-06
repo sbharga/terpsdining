@@ -43,7 +43,9 @@ def fetch_and_store_image(
 ) -> str | None:
     query = re.sub(r"\s*\([^)]*\)", "", name).strip() + " food"
     try:
-        results = DDGS().images(query, max_results=5, safesearch="moderate")
+        results = DDGS().images(
+            query, max_results=5, safesearch="moderate", backend="bing"
+        )
     except RatelimitException:
         raise
     except DDGSException as exc:
