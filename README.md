@@ -8,7 +8,7 @@ Menus, hours, nutrition, and ratings for the University of Maryland’s three di
 
 - Daily menus organized by dining hall, meal, and station.
 - Dietary and allergen filters, with links to official nutrition labels.
-- Paginated food search, ingredients, nutrition facts, and serving history; every matching item is reachable.
+- Paginated food search matching all words in any order, ingredients, nutrition facts, and serving history; every matching item is reachable.
 - Availability across multiple dining halls on the same day.
 - Google sign-in and one editable 1–5 star rating per user per item.
 - Solid fresh food market colors, flat rounded cards, OS-following dark mode, and self-hosted Inter and Bricolage Grotesque fonts.
