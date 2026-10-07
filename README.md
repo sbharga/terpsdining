@@ -49,6 +49,8 @@ Never commit credentials or place a Supabase secret key or Google client secret 
 
 Dining hours and menus come from the public sources documented in [DATA.md](DATA.md). The scraper stores 480px WebP food images in Supabase Storage and 160px card thumbnails under `thumbs/`.
 
+Each daily scrape deletes offerings and hours dated more than one year ago (America/New_York); items, ratings, favorites, and `first_seen`/`last_seen` are kept. Apply `supabase/migrations/20261007000000_prune_history.sql` before deploying the updated scraper; otherwise the pruning RPC returns 404 and the job fails. Image-only regeneration does not prune history.
+
 For an independently configured database, provide `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in the ignored `scraper/.env` file:
 
 ```sh

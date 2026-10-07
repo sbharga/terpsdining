@@ -297,6 +297,7 @@ export type Database = {
           rating_count: number
         }[]
       }
+      prune_history: { Args: never; Returns: number }
       replace_offerings: {
         Args: {
           p_date: string
