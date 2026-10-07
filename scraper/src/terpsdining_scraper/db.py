@@ -44,6 +44,10 @@ def replace_offerings(
     ).execute()
 
 
+def prune_history() -> int:
+    return client().rpc("prune_history").execute().data
+
+
 def items_needing_nutrition(limit: int) -> list[dict]:
     return (
         client()

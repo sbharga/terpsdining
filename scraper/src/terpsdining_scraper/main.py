@@ -100,7 +100,9 @@ def main() -> int:
     args = _arguments()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     sb = db.client()
-    counts = dict.fromkeys(("hours", "items", "offerings", "nutrition", "images", "failures"), 0)
+    counts = dict.fromkeys(
+        ("hours", "items", "offerings", "nutrition", "images", "pruned", "failures"), 0
+    )
     menu_failed = False
 
     with httpx.Client(
@@ -201,6 +203,8 @@ def main() -> int:
                     fields["image_path"] = path
                     counts["images"] += 1
                 db.update_item(item["id"], fields)
+
+        counts["pruned"] = db.prune_history()
 
     print(" ".join(f"{key}={value}" for key, value in counts.items()))
     return 1 if menu_failed else 0

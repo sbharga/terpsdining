@@ -195,7 +195,7 @@ export default function Item() {
             {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : (
               <>
                 <p className="mb-4 text-sm text-muted">
-                  {`Served ${dates.length} ${dates.length === 1 ? 'day' : 'days'}${item.first_seen ? ` since ${formatDay(item.first_seen)}` : ''}`}
+                  {`Served ${dates.length} ${dates.length === 1 ? 'day' : 'days'} in the last year${item.first_seen ? ` · First served ${formatDay(item.first_seen)}` : ''}`}
                 </p>
                 {dates.length ? (
                   <ol className="space-y-4 border-l-2 border-line pl-5">

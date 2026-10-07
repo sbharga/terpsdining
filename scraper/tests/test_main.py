@@ -88,3 +88,34 @@ def test_rate_limit_counts_unprocessed_ids_and_preserves_them(store, monkeypatch
     assert store.rows["000002"] == before["000002"]
     assert store.rows["000003"] == before["000003"]
     assert capsys.readouterr().out == "images=1 failures=3\n"
+
+
+def test_daily_scrape_prunes_history_with_images_skipped(monkeypatch, capsys):
+    prunes = []
+    monkeypatch.setattr(main.db, "client", lambda: None)
+    monkeypatch.setattr(main.db, "upsert_hours", lambda rows: None)
+    monkeypatch.setattr(main.db, "upsert_items", lambda rows: None)
+    monkeypatch.setattr(main.db, "replace_offerings", lambda *args: None)
+    monkeypatch.setattr(main.db, "items_needing_nutrition", lambda limit: [])
+    monkeypatch.setattr(main, "fetch_menu", lambda *args: "")
+    monkeypatch.setattr(main, "parse_menu", lambda html: [])
+
+    def prune():
+        prunes.append(True)
+        return 7
+
+    monkeypatch.setattr(main.db, "prune_history", prune)
+    monkeypatch.setattr(sys, "argv", ["scraper", "--skip-hours", "--skip-images"])
+    assert main.main() == 0
+    assert prunes == [True]
+    assert capsys.readouterr().out.endswith("pruned=7 failures=0\n")
+
+
+def test_regeneration_does_not_prune_history(store, monkeypatch):
+    def prune():
+        pytest.fail("Image regeneration must not prune history")
+
+    monkeypatch.setattr(main.db, "prune_history", prune)
+    monkeypatch.setattr(main, "fetch_and_store_image", lambda *args: "new.webp")
+    monkeypatch.setattr(sys, "argv", ["scraper", "--regenerate-images", "040065"])
+    assert main.main() == 0
