@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "UMD dining menus, nutrition, hours, and food images"
 readme = "README.md"
 authors = [
-    { name = "sbharga", email = "shreyasbhar@gmail.com" }
+    { name = "sbharga", email = "hello@shreyas.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
