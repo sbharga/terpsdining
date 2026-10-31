@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://terpsdining.vercel.app'
+export const SITE_URL = 'https://terpsdining.app'
 
 export type PageSeo = {
   title: string

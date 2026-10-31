@@ -1,6 +1,6 @@
 # TerpsDining
 
-[Visit TerpsDining](https://terpsdining.vercel.app)
+[Visit TerpsDining](https://terpsdining.app)
 
 Menus, hours, nutrition, and ratings for the University of Maryland’s three dining halls: South Campus, Yahentamitsi, and 251 North.
 
@@ -110,6 +110,6 @@ Hall metadata lives in `src/lib/halls.ts`; update it whenever the database seed 
 
 ## Privacy and terms
 
-Read the [privacy policy](https://terpsdining.vercel.app/privacy) and [terms of use](https://terpsdining.vercel.app/terms). Questions and account-data requests: **support@docet.org**.
+Read the [privacy policy](https://terpsdining.app/privacy) and [terms of use](https://terpsdining.app/terms). Questions and account-data requests: **support@docet.org**.
 
 For independent deployments, review the policies and replace the contact details with your own before publishing.
