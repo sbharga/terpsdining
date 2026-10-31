@@ -2,6 +2,8 @@
 
 [Visit TerpsDining](https://terpsdining.app)
 
+![TerpsDining home page showing today's hours and top-rated items for the three UMD dining halls](docs/screenshot.png)
+
 Menus, hours, nutrition, and ratings for the University of Maryland’s three dining halls: South Campus, Yahentamitsi, and 251 North.
 
 ## Features
