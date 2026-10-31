@@ -23,7 +23,7 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand focus:px-4 focus:py-2 focus:font-semibold focus:text-brand-ink">Skip to content</a>
       <header className="border-b border-line bg-canvas/85 backdrop-blur-md sm:sticky sm:top-0 sm:z-30">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
-          <Link to="/" className="mr-auto font-display text-xl font-extrabold tracking-tight">Terps<span className="text-brand">Dining</span></Link>
+          <Link to="/" className="mr-auto inline-flex items-center gap-2 font-display text-xl font-extrabold tracking-tight"><img src="/favicon.svg" alt="" width="28" height="28" className="h-7 w-7" /><span>Terps<span className="text-brand">Dining</span></span></Link>
           <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1"><SearchBar /></div>
           <nav aria-label="Main navigation" className="flex items-center gap-2">
             <NavLink to="/hours" className={({ isActive }) => `inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-surface text-ink ring-1 ring-line' : 'text-muted hover:bg-surface hover:text-ink'}`}><Clock size={16} aria-hidden="true" />Hours</NavLink>
