@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from terpsdining_scraper.config import MEALS, TZ
-from terpsdining_scraper.hours import parse_sheet
+from terpsdining_scraper.hours import count_changed_hours, parse_sheet
 
 FIXTURES = Path(__file__).parent / "fixtures"
 HALLS = {"South Campus": 16, "Yahentamitsi": 19, "251 North": 51}
@@ -100,3 +100,28 @@ def test_live_fixture_has_every_hall_and_meal_per_date():
     for slots in slots_by_date.values():
         assert len(slots) == len(expected_slots)
         assert set(slots) == expected_slots
+
+
+BASE_ROW = {
+    "hall_id": 16,
+    "date": "2026-10-02",
+    "meal": "Lunch",
+    "status": "open",
+    "label": "11am-2pm",
+    "opens": "11:00:00",
+    "closes": "14:00:00",
+}
+
+
+@pytest.mark.parametrize(
+    ("after", "expected"),
+    [
+        ([BASE_ROW], 0),
+        ([{**BASE_ROW, "closes": "15:00:00"}], 1),
+        ([{**BASE_ROW, "status": "closed", "label": "Closed", "opens": None, "closes": None}], 1),
+        ([BASE_ROW, {**BASE_ROW, "meal": "Dinner"}], 1),
+        ([{**BASE_ROW, "date": "2026-10-09", "closes": "15:00:00"}], 0),
+    ],
+)
+def test_count_changed_hours(after, expected):
+    assert count_changed_hours([BASE_ROW], after, "2026-10-02", "2026-10-08") == expected

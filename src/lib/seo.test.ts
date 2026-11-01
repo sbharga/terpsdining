@@ -18,7 +18,7 @@ describe('page SEO metadata', () => {
 
   it('escapes dynamic metadata before emitting raw HTML', () => {
     const html = renderSeoHead(getPageSeo('/items/17', '<b>Food & "More"</b>'))
-    expect(html).toContain('&lt;b&gt;Food &amp; &quot;More&quot;&lt;/b&gt; Nutrition &amp; Availability')
+    expect(html).toContain('&lt;b&gt;Food &amp; &quot;More&quot;&lt;/b&gt;')
     expect(html).not.toContain('<b>Food')
   })
 })

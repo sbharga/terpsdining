@@ -72,3 +72,17 @@ def parse_sheet(text: str, hall_ids_by_sheet_name: dict[str, int]) -> list[dict]
                 }
             )
     return parsed
+
+
+def count_changed_hours(before: list[dict], after: list[dict], start: str, end: str) -> int:
+    fields = ("status", "label", "opens", "closes")
+    previous = {(row["hall_id"], row["date"], row["meal"]): row for row in before}
+    return sum(
+        1
+        for row in after
+        if start <= row["date"] <= end
+        and (
+            (old := previous.get((row["hall_id"], row["date"], row["meal"]))) is None
+            or any(old[field] != row[field] for field in fields)
+        )
+    )

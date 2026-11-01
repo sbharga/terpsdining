@@ -1,3 +1,5 @@
+import { halls } from './halls'
+
 export const SITE_URL = 'https://terpsdining.app'
 
 export type PageSeo = {
@@ -12,7 +14,7 @@ export type PageSeo = {
 const DEFAULT_IMAGE = `${SITE_URL}/social.png`
 const DEFAULT_IMAGE_ALT = 'TerpsDining — University of Maryland dining menus and hours'
 const SITE_TITLE = 'TerpsDining'
-const HOME_DESCRIPTION = 'Explore University of Maryland dining hall menus, hours, nutrition, and today’s food options with TerpsDining.'
+const HOME_DESCRIPTION = 'Today’s UMD dining hall menus and hours for Yahentamitsi, South Campus, and 251 North, with nutrition facts, allergens, dietary filters, and student ratings.'
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({
@@ -39,7 +41,7 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
     robots = 'noindex,follow'
   } else if (path === '/') {
-    pageTitle = 'UMD Dining Menus & Hours'
+    pageTitle = 'UMD Dining Hall Menus & Hours Today'
     description = HOME_DESCRIPTION
   } else if (path === '/search') {
     pageTitle = 'Search Dining Menus'
@@ -50,8 +52,8 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     description = 'Manage your TerpsDining account, ratings, and favorites.'
     robots = 'noindex,follow'
   } else if (path === '/hours') {
-    pageTitle = 'Dining Hall Hours'
-    description = 'View University of Maryland dining hall hours for breakfast, lunch, and dinner.'
+    pageTitle = 'UMD Dining Hall Hours Today & This Week'
+    description = 'UMD dining hall hours for today and the week ahead: breakfast, lunch, and dinner times at Yahentamitsi, South Campus, and 251 North, updated daily.'
   } else if (path === '/privacy') {
     pageTitle = 'Privacy Policy'
     description = 'Read the TerpsDining privacy policy and learn how account and service information is handled.'
@@ -65,12 +67,13 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     canonicalPath = ''
   } else if (/^\/halls\/[^/]+$/.test(path)) {
     const hall = title?.trim() || 'Dining Hall'
-    pageTitle = `${hall} Dining Hall Menu & Hours`
-    description = `Explore ${hall} dining hall menus, meal availability, and hours at the University of Maryland.`
+    const nickname = halls.find(entry => entry.slug === path.slice('/halls/'.length))?.nickname
+    pageTitle = `UMD ${hall} Dining Hall Hours & Menu Today`
+    description = `${hall} Dining Hall${nickname ? ` (${nickname})` : ''} hours and today’s menu at UMD: breakfast, lunch, and dinner by station, with nutrition facts, allergens, and student ratings.`
   } else if (/^\/items\/[^/]+$/.test(path)) {
     const item = title?.trim() || 'Dining Menu Item'
-    pageTitle = `${item} Nutrition & Availability`
-    description = `View nutrition details, dietary and allergen information, and serving availability for ${item} at University of Maryland dining halls.`
+    pageTitle = `${item}: UMD Dining Nutrition & Allergens`
+    description = `${item} nutrition facts, ingredients, allergens, and recent serving dates at University of Maryland (UMD) dining halls.`
   } else {
     pageTitle = title?.trim() || 'Page Not Found'
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
@@ -95,6 +98,7 @@ export function renderSeoJsonLd(): string {
     name: SITE_TITLE,
     url: `${SITE_URL}/`,
     description: HOME_DESCRIPTION,
+    alternateName: ['Terps Dining', 'terpsdining.app'],
   })
 }
 

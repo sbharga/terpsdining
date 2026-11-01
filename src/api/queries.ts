@@ -9,7 +9,7 @@ export const SEARCH_PAGE_SIZE = 30
 
 export const hoursQuery = (from: string, to: string) => queryOptions({
   queryKey: ['hours', from, to] as const,
-  staleTime: 6 * 60 * 60_000,
+  refetchInterval: 5 * 60_000,
   queryFn: async () => {
     const { data, error } = await db.from('hours').select('*').gte('date', from).lte('date', to)
     if (error) throw error

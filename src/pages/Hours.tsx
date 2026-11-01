@@ -1,13 +1,15 @@
 import { Link, useSearchParams } from 'react-router'
+import { CalendarDays, Clock } from 'lucide-react'
 import { useHours } from '../api/queries'
-import { DatePager, ErrorNote, Loading, MealIcon, PageTitle } from '../components/UI'
-import { addDays, formatDay, parseDateParam, todayET } from '../lib/dates'
+import { DatePager, ErrorNote, HallHoursCard, HoursTable, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { addDays, formatDay, nowMinutesET, parseDateParam, todayET } from '../lib/dates'
 import { halls } from '../lib/halls'
-import { hoursLabel, meals } from '../lib/hours'
-import { hallTone } from '../lib/theme'
+import { hallTone, tones } from '../lib/theme'
 export default function Hours() {
   const [params, setParams] = useSearchParams()
   const today = todayET()
+  const now = nowMinutesET()
+  const todayHours = useHours(today, today)
   const start = parseDateParam(params.get('start'), today)
   const dates = Array.from({ length: 7 }, (_, index) => addDays(start, index))
   const hours = useHours(start, dates[6])
@@ -23,49 +25,35 @@ export default function Hours() {
   return (
     <>
       <PageTitle title="Hours" />
-      <h1 className="font-display text-4xl font-extrabold tracking-tight">Hours</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">UMD dining hall hours</h1>
       <p className="mt-2 text-muted">Meal times for every dining hall, a week at a glance.</p>
-      <div className="mt-6"><DatePager date={start} onChange={changeStart} step={7} /></div>
-      <p className="mt-2 text-sm text-muted">{formatDay(start)} – {formatDay(dates[6])}</p>
 
-      <div className="mt-6 space-y-4">
-        {hours.isError && <ErrorNote retry={hours.refetch} />}
-        {hours.isPending && <Loading />}
-      </div>
+      <section className="mt-8" aria-labelledby="hours-today-heading">
+        <SectionHeading id="hours-today-heading" icon={Clock} tone={tones.citrus}>Today · {formatDay(today)}</SectionHeading>
+        {todayHours.isError && <ErrorNote retry={todayHours.refetch} />}
+        {todayHours.isPending && <Loading inline />}
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">{halls.map(hall => <HallHoursCard key={hall.id} hall={hall} rows={todayHours.isSuccess ? todayHours.data : undefined} now={now} heading="h3" />)}</div>
+      </section>
 
-      {hours.isSuccess && halls.map(hall => (
-        <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
-          <h2 id={`hours-${hall.slug}`} className="flex items-center gap-3 px-5 py-4 font-display text-xl font-bold">
-            <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
-          </h2>
-          <div className="overflow-x-auto border-t border-line">
-            <table className="w-full min-w-[540px] border-collapse text-left text-sm">
-              <caption className="sr-only">{hall.name} hours, {formatDay(start)} through {formatDay(dates[6])}</caption>
-              <thead className="bg-surface-2 text-xs uppercase tracking-wider text-muted">
-                <tr>
-                  <th scope="col" className="sticky left-0 z-10 bg-surface-2 px-4 py-3 font-semibold">Date</th>
-                  {meals.map(meal => <th key={meal} scope="col" className="px-4 py-3 font-semibold"><span className="inline-flex items-center gap-1.5"><MealIcon meal={meal} size={14} />{meal}</span></th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {dates.map(date => (
-                  <tr key={date} className={`border-t border-line ${date === today ? 'bg-orange-50/70 dark:bg-orange-400/10' : ''}`}>
-                    <th scope="row" className={`sticky left-0 z-10 whitespace-nowrap px-4 py-3 font-medium ${date === today ? 'bg-orange-50 dark:bg-orange-950' : 'bg-surface'}`}>
-                      <time dateTime={date}>{formatDay(date)}</time>
-                      {date === today && <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-brand-ink">Today</span>}
-                    </th>
-                    {meals.map(meal => {
-                      const row = hours.data?.find(row => row.hall_id === hall.id && row.date === date && row.meal === meal)
-                      const label = hoursLabel(row)
-                      return <td key={meal} className={`whitespace-nowrap px-4 py-3 tabular-nums ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</td>
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ))}
+      <section className="mt-12" aria-labelledby="hours-week-heading">
+        <SectionHeading id="hours-week-heading" icon={CalendarDays} tone={tones.sky}>Hours by day</SectionHeading>
+        <div className="mt-4"><DatePager date={start} onChange={changeStart} step={7} /></div>
+        <p className="mt-2 text-sm text-muted">{formatDay(start)} – {formatDay(dates[6])}</p>
+
+        <div className="mt-6 space-y-4">
+          {hours.isError && <ErrorNote retry={hours.refetch} />}
+          {hours.isPending && <Loading />}
+        </div>
+
+        {hours.isSuccess && halls.map(hall => (
+          <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
+            <h3 id={`hours-${hall.slug}`} className="flex items-center gap-3 border-b border-line px-5 py-4 font-display text-xl font-bold">
+              <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
+            </h3>
+            <HoursTable hall={hall} dates={dates} rows={hours.data} today={today} />
+          </section>
+        ))}
+      </section>
     </>
   )
 }

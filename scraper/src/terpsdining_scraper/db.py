@@ -26,6 +26,18 @@ def upsert_hours(rows: list[dict]) -> None:
         ).execute()
 
 
+def hours_between(start: str, end: str) -> list[dict]:
+    return (
+        client()
+        .table("hours")
+        .select("hall_id,date,meal,status,label,opens,closes")
+        .gte("date", start)
+        .lte("date", end)
+        .execute()
+        .data
+    )
+
+
 def upsert_items(rows: list[dict]) -> None:
     keys = ("id", "name", "allergens", "dietary", "label_url")
     for start in range(0, len(rows), 500):

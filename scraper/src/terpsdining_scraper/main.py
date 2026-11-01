@@ -13,7 +13,7 @@ from supabase import Client
 
 from . import db
 from .config import HALL_IDS, MEALS, SHEET_URL, TZ, USER_AGENT
-from .hours import parse_sheet
+from .hours import count_changed_hours, parse_sheet
 from .images import fetch_and_store_image
 from .label import parse_label
 from .menu import fetch_menu, parse_menu
@@ -36,6 +36,11 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--skip-images", action="store_true")
     parser.add_argument("--skip-hours", action="store_true")
     parser.add_argument(
+        "--hours-only",
+        action="store_true",
+        help="Refresh hours only; skip menus, nutrition, images, and pruning",
+    )
+    parser.add_argument(
         "--regenerate-images",
         nargs="+",
         metavar="ID",
@@ -44,6 +49,10 @@ def _arguments() -> argparse.Namespace:
     args = parser.parse_args()
     if args.regenerate_images and args.skip_images:
         parser.error("--regenerate-images cannot be combined with --skip-images")
+    if args.hours_only and (args.skip_hours or args.regenerate_images):
+        parser.error(
+            "--hours-only cannot be combined with --skip-hours or --regenerate-images"
+        )
     return args
 
 
@@ -96,6 +105,16 @@ def _regenerate_images(http: httpx.Client, sb: Client, item_ids: list[str]) -> i
     return 1 if failures else 0
 
 
+def _refresh_hours(http: httpx.Client, sb: Client) -> list[dict]:
+    halls = sb.table("halls").select("id,sheet_name").execute().data
+    hall_ids_by_sheet_name = {hall["sheet_name"]: hall["id"] for hall in halls}
+    response = http.get(SHEET_URL)
+    response.raise_for_status()
+    rows = parse_sheet(response.text, hall_ids_by_sheet_name)
+    db.upsert_hours(rows)
+    return rows
+
+
 def main() -> int:
     args = _arguments()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -110,14 +129,20 @@ def main() -> int:
     ) as http:
         if args.regenerate_images:
             return _regenerate_images(http, sb, args.regenerate_images)
+        if args.hours_only:
+            first = datetime.now(TZ).date()
+            start = first.isoformat()
+            end = (first + timedelta(days=6)).isoformat()
+            before = db.hours_between(start, end)
+            rows = _refresh_hours(http, sb)
+            changed = count_changed_hours(before, rows, start, end)
+            print(f"hours={len(rows)} changed={changed}")
+            if output := os.environ.get("GITHUB_OUTPUT"):
+                with open(output, "a", encoding="utf-8") as file:
+                    file.write(f"changed={changed}\n")
+            return 0
         if not args.skip_hours:
-            halls = sb.table("halls").select("id,sheet_name").execute().data
-            hall_ids_by_sheet_name = {hall["sheet_name"]: hall["id"] for hall in halls}
-            response = http.get(SHEET_URL)
-            response.raise_for_status()
-            rows = parse_sheet(response.text, hall_ids_by_sheet_name)
-            db.upsert_hours(rows)
-            counts["hours"] = len(rows)
+            counts["hours"] = len(_refresh_hours(http, sb))
 
         items = {}
         slots = []

@@ -75,6 +75,8 @@ The dining-data GitHub Actions workflow runs through `workflow_dispatch`, suppor
 
 Set the GitHub Actions secret `VERCEL_DEPLOY_HOOK_URL` to a Vercel Deploy Hook for the production branch. The workflow requests a rebuild after each scrape, including partial menu failures; without the secret, the rebuild step is skipped.
 
+The separate `hours.yml` workflow refreshes hours only (`terpsdining-scrape --hours-only`) and rebuilds the site only when a row in the next seven days changed. Schedule it the same way as the daily scrape, with a second cron-job.org job that POSTs `{"ref":"main"}` every 15 minutes to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/hours.yml/dispatches`. The browser also refetches hours when its copy is more than five minutes old.
+
 ## Build and checks
 
 ```sh

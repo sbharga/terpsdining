@@ -1,0 +1,29 @@
+name: Hours refresh
+on:
+  workflow_dispatch:
+concurrency:
+  group: hours
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  hours:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: scraper/uv.lock
+      - id: hours
+        run: uv run --frozen terpsdining-scrape --hours-only
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      - name: Rebuild site
+        if: ${{ steps.hours.outputs.changed != '0' && env.VERCEL_DEPLOY_HOOK_URL != '' }}
+        run: curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
