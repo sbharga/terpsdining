@@ -1,7 +1,8 @@
 import { Link, useSearchParams } from 'react-router'
 import { CalendarDays, Clock } from 'lucide-react'
 import { useHours } from '../api/queries'
-import { DatePager, ErrorNote, HallHoursCard, HoursTable, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { DatePager, ErrorNote, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { HoursBoard, WeekChart } from '../components/HoursViz'
 import { addDays, formatDay, nowMinutesET, parseDateParam, todayET } from '../lib/dates'
 import { halls } from '../lib/halls'
 import { hallTone, tones } from '../lib/theme'
@@ -31,8 +32,7 @@ export default function Hours() {
       <section className="mt-8" aria-labelledby="hours-today-heading">
         <SectionHeading id="hours-today-heading" icon={Clock} tone={tones.citrus}>Today · {formatDay(today)}</SectionHeading>
         {todayHours.isError && <ErrorNote retry={todayHours.refetch} />}
-        {todayHours.isPending && <Loading inline />}
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">{halls.map(hall => <HallHoursCard key={hall.id} hall={hall} rows={todayHours.isSuccess ? todayHours.data : undefined} now={now} heading="h3" />)}</div>
+        <div className="mt-4"><HoursBoard halls={halls} rows={todayHours.isSuccess ? todayHours.data : undefined} now={now} heading="h3" /></div>
       </section>
 
       <section className="mt-12" aria-labelledby="hours-week-heading">
@@ -47,10 +47,10 @@ export default function Hours() {
 
         {hours.isSuccess && halls.map(hall => (
           <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
-            <h3 id={`hours-${hall.slug}`} className="flex items-center gap-3 border-b border-line px-5 py-4 font-display text-xl font-bold">
+            <h3 id={`hours-${hall.slug}`} className="flex items-center gap-3 px-5 pt-4 font-display text-xl font-bold">
               <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
             </h3>
-            <HoursTable hall={hall} dates={dates} rows={hours.data} today={today} />
+            <WeekChart hall={hall} dates={dates} rows={hours.data} today={today} now={now} />
           </section>
         ))}
       </section>

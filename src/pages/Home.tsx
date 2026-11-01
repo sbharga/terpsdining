@@ -1,5 +1,6 @@
 import { useFavoriteIds, useFavoriteItems, useHours, usePopular, useSession } from '../api/queries'
-import { EmptyState, ErrorNote, HallHoursCard, ItemCard, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { EmptyState, ErrorNote, ItemCard, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { HoursBoard } from '../components/HoursViz'
 import { formatDay, nowMinutesET, todayET } from '../lib/dates'
 import { halls } from '../lib/halls'
 import { tones } from '../lib/theme'
@@ -33,9 +34,7 @@ export default function Home() {
       <section className="mt-6" aria-label="Dining halls">
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {halls.map(hall => <HallHoursCard key={hall.id} hall={hall} rows={hours.isSuccess ? hours.data : undefined} now={now} />)}
-        </div>
+        <div className="mt-4"><HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} /></div>
       </section>
       {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-12" aria-labelledby="favorites-heading">
         <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>

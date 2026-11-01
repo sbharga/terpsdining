@@ -5,8 +5,7 @@ import type { CardItem } from '../lib/menu'
 import { getPageSeo, renderSeoJsonLd } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
-import { hallStatus, hoursLabel, meals, mealStatus, type HallState, type Hours, type Meal } from '../lib/hours'
-import type { Hall } from '../lib/halls'
+import type { HallState, Meal } from '../lib/hours'
 import { dietTone, mealTones, nameTone, tones, type Tone } from '../lib/theme'
 export function PageTitle({ title }: { title: string }) {
   const { pathname, search } = useLocation()
@@ -77,9 +76,9 @@ export function SectionHeading({ id, icon: Icon, tone, children }: { id?: string
 export function Panel({ id, title, icon, tone, children }: { id?: string; title: string; icon: LucideIcon; tone: Tone; children: ReactNode }) {
   return <section aria-labelledby={id} className="rounded-3xl bg-surface p-5 ring-1 ring-line sm:p-6"><SectionHeading id={id} icon={icon} tone={tone}>{title}</SectionHeading><div className="mt-4">{children}</div></section>
 }
-export function MealIcon({ meal, size = 16 }: { meal: Meal; size?: number }) {
+export function MealIcon({ meal, size = 16, className = tones[mealTones[meal]].text }: { meal: Meal; size?: number; className?: string }) {
   const Icon = { Breakfast: Sunrise, Lunch: Sun, Dinner: Moon }[meal]
-  return <Icon size={size} className={tones[mealTones[meal]].text} aria-hidden="true" />
+  return <Icon size={size} className={className} aria-hidden="true" />
 }
 export function DietIcon({ tag, size = 12 }: { tag: string; size?: number }) {
   const Icon = tag === 'vegan' ? Sprout : tag === 'halal' ? CircleCheck : Leaf
@@ -89,63 +88,6 @@ export function StatusPill({ status }: { status: { label: string; state: HallSta
   const color = status.state === 'open' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200' : status.state === 'upcoming' ? 'bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200' : 'bg-surface-2 text-muted'
   const dot = status.state === 'open' ? 'bg-emerald-500' : status.state === 'upcoming' ? 'bg-amber-500' : 'bg-muted/60'
   return <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${color}`}><span aria-hidden="true" className="relative flex h-2 w-2">{status.state === 'open' && <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 motion-safe:animate-ping" />}<span className={`relative inline-flex h-2 w-2 rounded-full ${dot}`} /></span>{status.label}</span>
-}
-export function HallHoursCard({ hall, rows, now, heading: Heading = 'h2' }: { hall: Hall; rows?: Hours[]; now: number; heading?: 'h2' | 'h3' }) {
-  const hallRows = rows?.filter(row => row.hall_id === hall.id)
-  return (
-    <Link
-      to={`/halls/${hall.slug}`}
-      className="group flex flex-col rounded-3xl bg-surface p-5 ring-1 ring-line transition hover:-translate-y-1 motion-reduce:transform-none"
-    >
-      <div className="flex items-center gap-3"><Heading className="font-display text-xl font-bold">{hall.name}</Heading><ChevronRight size={18} aria-hidden="true" className="ml-auto text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" /></div>
-      {hallRows && (
-        <>
-          <div className="mt-4"><StatusPill status={hallStatus(hallRows, now)} /></div>
-          <dl className="mt-4 space-y-1 text-sm">
-            {meals.map(meal => {
-              const row = hallRows.find(row => row.meal === meal)
-              return (
-                <div key={meal} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 ${row && mealStatus(row, now) === 'open' ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
-                  <dt className="flex items-center gap-2 font-medium"><MealIcon meal={meal} />{meal}</dt>
-                  <dd className="tabular-nums text-muted">{hoursLabel(row)}</dd>
-                </div>
-              )
-            })}
-          </dl>
-        </>
-      )}
-    </Link>
-  )
-}
-export function HoursTable({ hall, dates, rows, today }: { hall: Hall; dates: string[]; rows: Hours[]; today: string }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[540px] border-collapse text-left text-sm">
-        <caption className="sr-only">{hall.name} hours, {formatDay(dates[0])} through {formatDay(dates[dates.length - 1])}</caption>
-        <thead className="bg-surface-2 text-xs uppercase tracking-wider text-muted">
-          <tr>
-            <th scope="col" className="sticky left-0 z-10 bg-surface-2 px-4 py-3 font-semibold">Date</th>
-            {meals.map(meal => <th key={meal} scope="col" className="px-4 py-3 font-semibold"><span className="inline-flex items-center gap-1.5"><MealIcon meal={meal} size={14} />{meal}</span></th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {dates.map(date => (
-            <tr key={date} className={`border-t border-line ${date === today ? 'bg-orange-50/70 dark:bg-orange-400/10' : ''}`}>
-              <th scope="row" className={`sticky left-0 z-10 whitespace-nowrap px-4 py-3 font-medium ${date === today ? 'bg-orange-50 dark:bg-orange-950' : 'bg-surface'}`}>
-                <time dateTime={date}>{formatDay(date)}</time>
-                {date === today && <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-brand-ink">Today</span>}
-              </th>
-              {meals.map(meal => {
-                const row = rows.find(row => row.hall_id === hall.id && row.date === date && row.meal === meal)
-                const label = hoursLabel(row)
-                return <td key={meal} className={`whitespace-nowrap px-4 py-3 tabular-nums ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</td>
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
 }
 export function RatingPill({ avg, count }: { avg: number | null; count: number }) {
   if (!count || avg === null) return null
