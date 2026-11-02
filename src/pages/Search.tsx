@@ -59,9 +59,9 @@ export default function Search() {
                 return (
                   <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)}>
                     {served ? (
-                      <p className="mt-1 flex items-start gap-1 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
+                      <p className="mt-1 flex items-start gap-1.5 text-sm font-medium leading-snug text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
                     ) : (
-                      <p className="mt-1 flex items-start gap-1 text-xs leading-relaxed text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
+                      <p className="mt-1 flex items-start gap-1.5 text-sm leading-snug text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
                         ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
                         : 'Not served yet'}</p>
                     )}

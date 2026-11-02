@@ -90,15 +90,15 @@ function shortRange(label: string): string {
 }
 
 // Exact times for the three meals; the open meal is highlighted.
-function MealTimes({ rows, now }: { rows: Hours[]; now?: number }) {
+function MealTimes({ rows, now, textSize = 'text-xs' }: { rows: Hours[]; now?: number; textSize?: 'text-xs' | 'text-sm' }) {
   return (
-    <dl className="flex flex-wrap justify-between gap-1 text-xs sm:grid sm:grid-cols-3">
+    <dl className={`flex flex-wrap justify-between gap-1 ${textSize} sm:grid sm:grid-cols-3`}>
       {meals.map(meal => {
         const row = rows.find(entry => entry.meal === meal)
         const label = shortRange(hoursLabel(row))
         const live = row !== undefined && now !== undefined && mealStatus(row, now) === 'open'
         return (
-          <div key={meal} className={`flex min-w-0 items-center gap-1.5 rounded-xl px-2 py-1 ${live ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
+          <div key={meal} className={`flex min-w-0 items-center rounded-xl py-1 ${textSize === 'text-sm' ? 'gap-1 px-1.5' : 'gap-1.5 px-2'} ${live ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
             <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"><MealIcon meal={meal} size={14} /><span className="sr-only">{meal}</span></dt>
             <dd className={`whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</dd>
           </div>
@@ -108,24 +108,24 @@ function MealTimes({ rows, now }: { rows: Hours[]; now?: number }) {
   )
 }
 
-// Today for every hall on one shared axis, so "who is open at 9pm?" is a glance.
-export function HoursBoard({ halls, rows, now, heading: Heading = 'h2' }: { halls: Hall[]; rows?: Hours[]; now: number; heading?: 'h2' | 'h3' }) {
+// Today for every hall: status band plus meal times, optionally on one shared timeline axis.
+export function HoursBoard({ halls, rows, now, heading: Heading = 'h2', timeline = true }: { halls: Hall[]; rows?: Hours[]; now: number; heading?: 'h2' | 'h3'; timeline?: boolean }) {
   const range = axisRange(rows ?? [])
   return (
-    <div className="grid gap-3">
+    <div className={`grid ${timeline ? 'gap-3' : 'gap-4'}`}>
       {halls.map(hall => {
         const hallRows = rows?.filter(row => row.hall_id === hall.id)
         return (
           <article key={hall.id} className="overflow-hidden rounded-3xl bg-surface ring-1 ring-line">
-            <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-3 text-white ${hallTone(hall.slug).solid}`}>
+            <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4 text-white ${hallTone(hall.slug).solid}`}>
               <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="after:absolute after:inset-0 hover:underline">{hall.name}</Link></Heading>
               {hallRows && <StatusPill status={hallStatus(hallRows, now)} />}
             </div>
-            <div className="space-y-1.5 px-5 pb-4 pt-4">
+            {timeline ? <div className="space-y-1.5 px-5 pb-4 pt-4">
               <Track rows={hallRows ?? []} range={range} now={now} blank={!hallRows} />
               <HourAxis range={range} />
               {hallRows && <MealTimes rows={hallRows} now={now} />}
-            </div>
+            </div> : hallRows && <div className="px-3 py-3"><MealTimes rows={hallRows} now={now} textSize="text-sm" /></div>}
           </article>
         )
       })}

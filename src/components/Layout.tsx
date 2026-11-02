@@ -33,8 +33,8 @@ export default function Layout() {
           </nav>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 outline-none sm:py-10"><Outlet /></main>
-      <footer className="mt-12 border-t border-line bg-surface/60">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 outline-none sm:py-12"><Outlet /></main>
+      <footer className="mt-16 border-t border-line bg-surface/60">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-muted">
           <p className="flex items-center gap-2"><span aria-hidden="true" className={`h-2 w-2 rounded-full ${tones.lime.dot}`} />Data from UMD Dining. Not affiliated with UMD.</p>
           <nav aria-label="Footer" className="flex gap-4"><Link className="hover:text-ink" to="/privacy">Privacy</Link><Link className="hover:text-ink" to="/terms">Terms</Link><a className="hover:text-ink" href="https://github.com/sbharga/terpsdining" target="_blank" rel="noopener noreferrer">GitHub<span className="sr-only"> (opens in a new tab)</span></a></nav>

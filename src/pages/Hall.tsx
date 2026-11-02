@@ -52,7 +52,8 @@ function HallMenu({ hall }: { hall: Hall }) {
     ...(topRated.length ? [{ id: 'hall-popular', label: 'Top rated' }] : []),
     ...stations.map(([station], index) => ({ id: `station-${index}`, label: station })),
   ] : []
-  const [avoidOpen, setAvoidOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const activeFilters = diet.length + avoid.length
 
   function updateParam(key: string, value: string) {
     setParams(previous => {
@@ -94,84 +95,87 @@ function HallMenu({ hall }: { hall: Hall }) {
 
       <div className="sticky top-14 z-20 -mx-4 mt-4 border-b border-line bg-canvas/90 px-4 py-2 backdrop-blur-md">
         <div role="group" aria-label="Meal" className="grid grid-cols-3 gap-1 rounded-2xl bg-surface-2 p-1">
-          {meals.map(value => {
-            const row = rows.find(row => row.meal === value)
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={meal === value}
-                onClick={() => updateParam('meal', value)}
-                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-sm transition ${meal === value ? `${tones[mealTones[value]].solid} text-white shadow-sm` : 'text-muted hover:bg-surface/60 hover:text-ink'}`}
-              >
-                <span className="flex items-center gap-1.5 font-semibold"><MealIcon meal={value} className={meal === value ? 'text-white' : undefined} />{value}</span>
-                <span className="text-xs tabular-nums opacity-80">{hours.isSuccess ? hoursLabel(row) : '—'}</span>
-              </button>
-            )
-          })}
+          {meals.map(value => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={meal === value}
+              onClick={() => updateParam('meal', value)}
+              className={`flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-sm font-semibold transition ${meal === value ? `${tones[mealTones[value]].solid} text-white shadow-sm` : 'text-muted hover:bg-surface/60 hover:text-ink'}`}
+            ><span className="hidden min-[380px]:inline-flex"><MealIcon meal={value} className={meal === value ? 'text-white' : undefined} /></span>{value}</button>
+          ))}
         </div>
-        {jumps.length > 1 && (
-          <nav aria-label="Jump to section" className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
-            {jumps.map(jump => <button key={jump.id} type="button" onClick={() => jumpTo(jump.id)} className="shrink-0 whitespace-nowrap rounded-full bg-surface px-3 py-1.5 text-sm font-medium text-muted ring-1 ring-line hover:text-ink">{jump.label}</button>)}
-          </nav>
-        )}
       </div>
 
-      <div className="no-scrollbar -mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4">
-        <div role="group" aria-label="Diet" className="flex shrink-0 gap-2">
-          {diets.map(tag => (
-            <button
-              key={tag.value}
-              type="button"
-              aria-pressed={diet.includes(tag.value)}
-              onClick={() => toggleFilter('diet', tag.value)}
-              className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition ${diet.includes(tag.value) ? `${dietTone(tag.value).soft} ${dietTone(tag.value).border}` : 'border-line bg-surface text-muted hover:text-ink'}`}
-            ><DietIcon tag={tag.value} size={14} />{tag.label}</button>
-          ))}
-        </div>
-        {(allergens.length > 0 || avoid.length > 0) && (
-          <>
-            <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
-            <button
-              type="button"
-              aria-expanded={avoidOpen}
-              aria-controls="avoid-panel"
-              onClick={() => setAvoidOpen(!avoidOpen)}
-              className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition ${avoid.length ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200' : 'border-line bg-surface text-muted hover:text-ink'}`}
-            ><Ban size={14} aria-hidden="true" />Avoid{avoid.length > 0 && ` · ${avoid.length}`}<ChevronDown size={14} aria-hidden="true" className={`transition ${avoidOpen ? 'rotate-180' : ''}`} /></button>
-          </>
+      {hours.isSuccess && <p className="mt-5 flex items-center gap-2 text-sm text-muted"><MealIcon meal={meal} /><span><span className="font-semibold text-ink">{meal}</span> · {hoursLabel(rows.find(row => row.meal === meal))}</span></p>}
+
+      <div className="mt-3 flex items-center gap-2">
+        {jumps.length > 1 && (
+          <div className="relative min-w-0 flex-1">
+            <select aria-label="Jump to section" value="" onChange={event => { if (event.target.value) jumpTo(event.target.value) }} className="w-full appearance-none truncate rounded-full border border-line bg-surface py-2 pl-4 pr-10 text-base font-medium text-ink sm:text-sm">
+              <option value="" disabled>Jump to station…</option>
+              {jumps.map(jump => <option key={jump.id} value={jump.id}>{jump.label}</option>)}
+            </select>
+            <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
+          </div>
         )}
-        {(diet.length > 0 || avoid.length > 0) && <button type="button" onClick={clearFilters} className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-brand hover:bg-surface"><X size={14} aria-hidden="true" />Clear</button>}
+        <button type="button" aria-expanded={filtersOpen} aria-controls="filter-panel" onClick={() => setFiltersOpen(!filtersOpen)} className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${activeFilters ? 'border-brand text-brand' : 'border-line bg-surface text-ink hover:bg-surface-2'}`}>
+          <ListFilter size={16} aria-hidden="true" />Filters
+          {activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-semibold text-brand-ink">{activeFilters}<span className="sr-only"> active</span></span>}
+          <ChevronDown size={14} aria-hidden="true" className={`transition ${filtersOpen ? 'rotate-180' : ''}`} />
+        </button>
       </div>
-      {avoidOpen && (
-        <div id="avoid-panel" role="group" aria-label="Avoid allergens" className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-surface p-3 ring-1 ring-line">
-          {[...new Set([...allergens, ...avoid])].map(tag => (
-            <button
-              key={tag}
-              type="button"
-              aria-pressed={avoid.includes(tag)}
-              onClick={() => toggleFilter('avoid', tag)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${avoid.includes(tag) ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200' : 'border-line bg-surface text-muted hover:text-ink'}`}
-            >{avoid.includes(tag) && <Ban size={14} aria-hidden="true" />}{tag.replace(/\b\w/g, letter => letter.toUpperCase())}</button>
-          ))}
+      {filtersOpen && (
+        <div id="filter-panel" className="mt-3 space-y-4 rounded-3xl bg-surface p-4 ring-1 ring-line">
+          <div role="group" aria-labelledby="filter-diet-label">
+            <p id="filter-diet-label" className="text-xs font-semibold uppercase tracking-wider text-muted">Diet</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {diets.map(tag => (
+                <button
+                  key={tag.value}
+                  type="button"
+                  aria-pressed={diet.includes(tag.value)}
+                  onClick={() => toggleFilter('diet', tag.value)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${diet.includes(tag.value) ? `${dietTone(tag.value).soft} ${dietTone(tag.value).border}` : 'border-line bg-surface text-muted hover:text-ink'}`}
+                ><DietIcon tag={tag.value} size={14} />{tag.label}</button>
+              ))}
+            </div>
+          </div>
+          {(allergens.length > 0 || avoid.length > 0) && (
+            <div role="group" aria-labelledby="filter-avoid-label">
+              <p id="filter-avoid-label" className="text-xs font-semibold uppercase tracking-wider text-muted">Avoid allergens</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[...new Set([...allergens, ...avoid])].map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={avoid.includes(tag)}
+                    onClick={() => toggleFilter('avoid', tag)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${avoid.includes(tag) ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200' : 'border-line bg-surface text-muted hover:text-ink'}`}
+                  >{avoid.includes(tag) && <Ban size={14} aria-hidden="true" />}{tag.replace(/\b\w/g, letter => letter.toUpperCase())}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeFilters > 0 && <button type="button" onClick={clearFilters} className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"><X size={14} aria-hidden="true" />Clear all</button>}
         </div>
       )}
 
-      {menu.isError ? <div className="mt-8"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-8"><Loading /></div> : (
+      {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
-          {favoriteItems.length > 0 && <section id="hall-favorites" className="mt-8 scroll-mt-44" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-3"><ItemList>{favoriteItems.map(item => <ItemRow key={item.id} item={item} favorite />)}</ItemList></div></section>}
+          {favoriteItems.length > 0 && <section id="hall-favorites" className="mt-10 scroll-mt-36" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-4"><ItemList>{favoriteItems.map(item => <ItemRow key={item.id} item={item} favorite />)}</ItemList></div></section>}
           {topRated.length > 0 && (
-            <section id="hall-popular" className="mt-8 scroll-mt-44" aria-labelledby="hall-popular-heading">
+            <section id="hall-popular" className="mt-10 scroll-mt-36" aria-labelledby="hall-popular-heading">
               <SectionHeading id="hall-popular-heading" icon={Trophy} tone={tones.citrus}>Top rated</SectionHeading>
-              <div className="mt-3">
+              <div className="mt-4">
                 <ItemList>{topRated.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}</ItemList>
               </div>
             </section>
           )}
           {mealRows.length === 0 ? <EmptyState icon={Soup} title="No menu posted">Try another meal or day.</EmptyState> : stations.length === 0 ? <EmptyState icon={ListFilter} title="No items match filters"><button type="button" onClick={clearFilters} className="font-semibold text-brand underline underline-offset-4">Clear filters</button></EmptyState> : stations.map(([station, items], index) => (
-            <section key={station} id={`station-${index}`} className="mt-8 scroll-mt-44" aria-label={station}>
+            <section key={station} id={`station-${index}`} className="mt-10 scroll-mt-36" aria-label={station}>
               <h2 className="flex items-center gap-2 font-display text-lg font-bold sm:text-xl"><span aria-hidden="true" className={`h-3 w-3 rounded-full ${nameTone(station).dot}`} />{station}<span className="text-sm font-medium text-muted">{items.length}<span className="sr-only"> items</span></span></h2>
-              <div className="mt-3">
+              <div className="mt-4">
                 <ItemList>{items.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}</ItemList>
               </div>
             </section>
@@ -179,7 +183,7 @@ function HallMenu({ hall }: { hall: Hall }) {
         </>
       )}
 
-      <section className="mt-10" aria-labelledby="hall-hours-heading">
+      <section className="mt-12" aria-labelledby="hall-hours-heading">
         <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>{`${hall.name} Dining Hall hours this week`}</SectionHeading>
         {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekChart hall={hall} dates={weekDates} rows={weekHours.data} today={today} now={nowMinutesET()} /></div>}
       </section>
