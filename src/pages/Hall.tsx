@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { ArrowLeft, Ban, ChevronDown, Clock, Heart, ListFilter, Soup, Trophy, X } from 'lucide-react'
 import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
 import { DatePager, DietIcon, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
+import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
 import { addDays, nowMinutesET, parseDateParam, todayET } from '../lib/dates'
@@ -163,12 +164,12 @@ function HallMenu({ hall }: { hall: Hall }) {
 
       {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
-          {favoriteItems.length > 0 && <section id="hall-favorites" className="mt-10 scroll-mt-36" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-4"><ItemList>{favoriteItems.map(item => <ItemRow key={item.id} item={item} favorite />)}</ItemList></div></section>}
+          {favoriteItems.length > 0 && <section id="hall-favorites" className="mt-10 scroll-mt-36" aria-labelledby="hall-favorites-heading"><SectionHeading id="hall-favorites-heading" icon={Heart} tone={tones.berry}>Your favorites</SectionHeading><div className="mt-4"><ItemList>{favoriteItems.map(item => <ItemRow key={item.id} item={item} favorite action={<PlateButton item={item} />} />)}</ItemList></div></section>}
           {topRated.length > 0 && (
             <section id="hall-popular" className="mt-10 scroll-mt-36" aria-labelledby="hall-popular-heading">
               <SectionHeading id="hall-popular-heading" icon={Trophy} tone={tones.citrus}>Top rated</SectionHeading>
               <div className="mt-4">
-                <ItemList>{topRated.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}</ItemList>
+                <ItemList>{topRated.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} action={<PlateButton item={item} />} />)}</ItemList>
               </div>
             </section>
           )}
@@ -176,7 +177,7 @@ function HallMenu({ hall }: { hall: Hall }) {
             <section key={station} id={`station-${index}`} className="mt-10 scroll-mt-36" aria-label={station}>
               <h2 className="flex items-center gap-2 font-display text-lg font-bold sm:text-xl"><span aria-hidden="true" className={`h-3 w-3 rounded-full ${nameTone(station).dot}`} />{station}<span className="text-sm font-medium text-muted">{items.length}<span className="sr-only"> items</span></span></h2>
               <div className="mt-4">
-                <ItemList>{items.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} />)}</ItemList>
+                <ItemList>{items.map(item => <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)} action={<PlateButton item={item} />} />)}</ItemList>
               </div>
             </section>
           ))}
@@ -187,6 +188,7 @@ function HallMenu({ hall }: { hall: Hall }) {
         <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>{`${hall.name} Dining Hall hours this week`}</SectionHeading>
         {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekTable rows={weekHours.data.filter(row => row.hall_id === hall.id)} dates={weekDates} today={today} now={nowMinutesET()} /></div>}
       </section>
+      <PlateBar />
     </>
   )
 }

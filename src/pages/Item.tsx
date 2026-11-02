@@ -4,7 +4,7 @@ import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSes
 import type { ItemHistoryRow } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
 import { Badges, ErrorNote, FoodSwatch, Loading, NotFound, PageTitle, Panel, RatingPill, StarRating } from '../components/UI'
-import type { Json } from '../lib/database.types'
+import { nutritionDetails } from '../lib/nutrition'
 import { formatDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
 import { hallTone, tones } from '../lib/theme'
@@ -25,23 +25,6 @@ function groupHalls(rows: ItemHistoryRow[]): HallMeals[] {
     name: hall.name,
     meals: meals.filter(meal => hall.meals.has(meal)),
   })).sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function nutritionDetails(value: Json) {
-  const nutrition = value !== null && typeof value === 'object' && !Array.isArray(value) ? value : null
-  if (!nutrition) return null
-  const nutrients = Array.isArray(nutrition.nutrients) ? nutrition.nutrients.flatMap(value => {
-    const nutrient = value !== null && typeof value === 'object' && !Array.isArray(value) ? value : null
-    return nutrient && typeof nutrient.name === 'string' && typeof nutrient.amount === 'string'
-      ? [{ name: nutrient.name, amount: nutrient.amount, dv: typeof nutrient.dv === 'string' ? nutrient.dv : null }]
-      : []
-  }) : []
-  return {
-    servings: typeof nutrition.servings === 'string' ? nutrition.servings : null,
-    servingSize: typeof nutrition.serving_size === 'string' ? nutrition.serving_size : null,
-    calories: typeof nutrition.calories === 'number' ? nutrition.calories : null,
-    nutrients,
-  }
 }
 
 export default function Item() {

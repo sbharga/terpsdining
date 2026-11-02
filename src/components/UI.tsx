@@ -107,11 +107,11 @@ export function Badges({ allergens, dietary }: { allergens: string[]; dietary: s
 export function ItemList({ children }: { children: ReactNode }) {
   return <ul className="overflow-hidden rounded-3xl bg-surface ring-1 ring-line divide-y divide-line lg:grid lg:grid-cols-2 lg:gap-px lg:divide-y-0 lg:bg-line lg:[&>li:last-child:nth-child(odd)]:col-span-2">{children}</ul>
 }
-export function ItemRow({ item, children, favorite = false }: { item: CardItem; children?: ReactNode; favorite?: boolean }) {
+export function ItemRow({ item, children, favorite = false, action }: { item: CardItem; children?: ReactNode; favorite?: boolean; action?: ReactNode }) {
   const image = imageUrl(item.image_path, 'thumb')
   const dietary = item.dietary.includes('vegan') ? item.dietary.filter(tag => tag !== 'vegetarian') : item.dietary
   const rated = item.rating_count > 0 && item.rating_avg !== null
-  return <li className="bg-surface"><Link to={`/items/${item.id}`} className="group flex items-center gap-4 px-4 py-4 transition hover:bg-surface-2/60">
+  return <li className="flex items-center bg-surface"><Link to={`/items/${item.id}`} className="group flex min-w-0 flex-1 items-center gap-4 px-4 py-4 transition hover:bg-surface-2/60">
     {image ? <img src={image} alt="" width={64} height={64} loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <FoodSwatch name={item.name} className="h-16 w-16 rounded-2xl text-2xl" />}
     <div className="min-w-0 flex-1">
       <h3 className="font-semibold leading-snug group-hover:text-brand">{item.name}{favorite && <><Heart size={14} fill="currentColor" aria-hidden="true" className="ml-1.5 inline align-[-2px] text-fuchsia-600 dark:text-fuchsia-300" /><span className="sr-only"> (favorite)</span></>}</h3>
@@ -122,7 +122,7 @@ export function ItemRow({ item, children, favorite = false }: { item: CardItem; 
       </p>}
       {children}
     </div>
-  </Link></li>
+  </Link>{action && <div className="shrink-0 pr-4">{action}</div>}</li>
 }
 export function StarRating({ value, onChange, disabled = false }: { value: number | null; onChange: (value: number | null) => void; disabled?: boolean }) {
   return <div><div role="radiogroup" aria-label="Your rating" className="flex gap-2">{[1, 2, 3, 4, 5].map(n => <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={`Rate ${n} stars`} disabled={disabled} onClick={() => onChange(n === value ? null : n)} className="rounded-xl p-1.5 transition hover:scale-110 hover:bg-amber-50 disabled:opacity-50 motion-reduce:hover:scale-100 dark:hover:bg-amber-400/10"><Star size={32} aria-hidden="true" fill={n <= (value ?? 0) ? 'currentColor' : 'none'} className={n <= (value ?? 0) ? 'text-amber-400' : 'text-muted/40'} /></button>)}</div><p className="mt-2 text-sm text-muted">{value ? `You rated this ${value}/5 · tap it again to clear` : 'Tap a star to rate'}</p></div>
