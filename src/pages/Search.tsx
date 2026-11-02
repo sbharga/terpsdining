@@ -4,7 +4,7 @@ import { SEARCH_PAGE_SIZE, useFavoriteIds, useSearch, useSession } from '../api/
 import { SearchBar } from '../components/Layout'
 import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle } from '../components/UI'
 import type { Json } from '../lib/database.types'
-import { todayET } from '../lib/dates'
+import { formatMonthDay, todayET } from '../lib/dates'
 import { meals } from '../lib/hours'
 import { pageWindow } from '../lib/pagination'
 
@@ -36,7 +36,6 @@ export default function Search() {
   const total = results.data?.[0]?.total_count ?? 0
   const totalPages = Math.ceil(total / SEARCH_PAGE_SIZE)
   const pageHref = (n: number) => '/search?' + new URLSearchParams(n > 1 ? { q: query, page: String(n) } : { q: query })
-  const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
   const pageLinkClass = 'grid h-11 min-w-11 place-items-center rounded-full px-3 text-sm font-semibold ring-1 ring-line'
   return (
     <section>
@@ -62,7 +61,7 @@ export default function Search() {
                       <p className="mt-1 flex items-start gap-1.5 text-sm font-medium leading-snug text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
                     ) : (
                       <p className="mt-1 flex items-start gap-1.5 text-sm leading-snug text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
-                        ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
+                        ? `Last served ${formatMonthDay(item.last_seen)}`
                         : 'Not served yet'}</p>
                     )}
                   </ItemRow>

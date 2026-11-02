@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider, dehydrate, hashKey, type DehydratedState, type QueryKey } from '@tanstack/react-query'
 import { renderToString } from 'react-dom/server'
 import { MemoryRouter, Route, Routes } from 'react-router'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { Database } from '../src/lib/database.types'
 import { addDays, todayET } from '../src/lib/dates'
@@ -26,6 +26,10 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false,
 const today = todayET()
 const endOfWeek = addDays(today, 6)
 const shell = await readFile(join(process.cwd(), 'dist/index.html'), 'utf8')
+const fontPreloads = (await readdir(join(process.cwd(), 'dist/assets')))
+  .filter(file => file.endsWith('.woff2'))
+  .map(file => `<link rel="preload" href="/assets/${file}" as="font" type="font/woff2" crossorigin>`)
+  .join('\n')
 
 async function fetchCatalog(): Promise<ItemRow[]> {
   const all: ItemRow[] = []
@@ -59,7 +63,7 @@ function withSeo(path: string, title: string | undefined, content: string, state
   const cleanShell = shell.replace(/<title>[\s\S]*?<\/title>/i, '').replace(/<meta\s+name="description"[^>]*\/?\s*>/i, '')
   if (!cleanShell.includes('</head>')) throw new Error('Built index.html has no closing </head>')
   const cache = state ? `<script id="query-state" type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>` : ''
-  return cleanShell.replace('</head>', `${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root">${content}</div>${cache}`)
+  return cleanShell.replace('</head>', `${fontPreloads}\n${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root">${content}</div>${cache}`)
 }
 async function writePage(path: string, pathname: string, title?: string, seoPath = pathname, keys: QueryKey[] = []) {
   const markup = renderToString(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[pathname]}>{routeSet}</MemoryRouter></QueryClientProvider>)

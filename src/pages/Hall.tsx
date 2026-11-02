@@ -6,7 +6,7 @@ import { DatePager, DietIcon, EmptyState, ErrorNote, ItemList, ItemRow, Loading,
 import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
-import { addDays, nowMinutesET, parseDateParam, todayET } from '../lib/dates'
+import { addDays, parseDateParam, todayET, useNowMinutesET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
 import { dietTone, hallTone, mealTones, nameTone, tones } from '../lib/theme'
 import { filterItems, groupByStation, pickFavorites, rankTopRated } from '../lib/menu'
@@ -32,13 +32,14 @@ function HallMenu({ hall }: { hall: Hall }) {
   const { session } = useSession()
   const favoriteIds = useFavoriteIds(session?.user.id)
   const today = todayET()
+  const now = useNowMinutesET()
   const date = parseDateParam(params.get('date'), today)
   const hours = useHours(date, date)
   const weekDates = Array.from({ length: 7 }, (_, index) => addDays(today, index))
   const weekHours = useHours(today, weekDates[6])
   const menu = useHallMenu(hall.id, date)
   const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
-  const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, nowMinutesET(), date === today)
+  const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, now ?? 0, date === today)
   const diet = (params.get('diet') ?? '').split(',').filter(Boolean)
   const avoid = (params.get('avoid') ?? '').split(',').filter(Boolean)
   const mealRows = (menu.data ?? []).flatMap(row => row.meal === meal && row.item ? [{ station: row.station, item: row.item }] : [])
@@ -87,7 +88,7 @@ function HallMenu({ hall }: { hall: Hall }) {
         <div className="relative">
           <Link to="/" className="inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
           <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">{`${hall.name} Dining Hall`}</h1>
-          {date === today && hours.isSuccess && <div className="mt-3"><StatusPill status={hallStatus(rows, nowMinutesET())} /></div>}
+          {date === today && hours.isSuccess && now !== undefined && <div className="mt-3"><StatusPill status={hallStatus(rows, now)} /></div>}
           <div className="mt-4"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
         </div>
       </header>
@@ -186,7 +187,7 @@ function HallMenu({ hall }: { hall: Hall }) {
 
       <section className="mt-12" aria-labelledby="hall-hours-heading">
         <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>{`${hall.name} Dining Hall hours this week`}</SectionHeading>
-        {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekTable rows={weekHours.data.filter(row => row.hall_id === hall.id)} dates={weekDates} today={today} now={nowMinutesET()} /></div>}
+        {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekTable rows={weekHours.data.filter(row => row.hall_id === hall.id)} dates={weekDates} today={today} now={now} /></div>}
       </section>
       <PlateBar />
     </>

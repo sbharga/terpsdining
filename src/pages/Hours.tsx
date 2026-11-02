@@ -3,12 +3,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHours } from '../api/queries'
 import { ErrorNote, Loading, PageTitle } from '../components/UI'
 import { HoursBoard } from '../components/HoursViz'
-import { addDays, diffDays, formatDay, formatMonthDay, formatWeekday, nowMinutesET, parseDateParam, relativeDay, todayET } from '../lib/dates'
+import { addDays, diffDays, formatDay, formatMonthDay, formatWeekday, parseDateParam, relativeDay, todayET, useNowMinutesET } from '../lib/dates'
 import { halls } from '../lib/halls'
 export default function Hours() {
   const [params, setParams] = useSearchParams()
   const today = todayET()
-  const now = nowMinutesET()
+  const now = useNowMinutesET()
   const date = parseDateParam(params.get('date'), today)
   const weekStart = addDays(today, 7 * Math.floor(diffDays(today, date) / 7))
   const dates = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index))

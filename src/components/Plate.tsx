@@ -4,22 +4,21 @@ import { useQueries } from '@tanstack/react-query'
 import { Calculator, ChevronDown, ChevronUp, Minus, Plus, X } from 'lucide-react'
 import { itemQuery } from '../api/queries'
 import { findNutrient, formatAmount, nutritionDetails, plateTotals } from '../lib/nutrition'
-import { MAX_SERVINGS, setServings, updatePlate, usePlate, type PlateEntry } from '../lib/plate'
+import { MAX_SERVINGS, readPlate, setServings, updatePlate, usePlate, usePlateServings, type PlateEntry } from '../lib/plate'
 import { tones } from '../lib/theme'
 import { ErrorNote, Loading } from './UI'
 
 export function PlateButton({ item }: { item: { id: string; name: string } }) {
-  const plate = usePlate()
-  const servings = plate.find(entry => entry.id === item.id)?.servings ?? 0
+  const servings = usePlateServings(item.id)
   if (servings === 0) {
-    return <button type="button" aria-label={`Add ${item.name} to plate`} onClick={() => updatePlate(setServings(plate, item, 1))} className="inline-flex h-9 items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-semibold text-brand transition hover:bg-surface-2"><Plus size={16} aria-hidden="true" />Add</button>
+    return <button type="button" aria-label={`Add ${item.name} to plate`} onClick={() => updatePlate(setServings(readPlate(), item, 1))} className="inline-flex h-9 items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-semibold text-brand transition hover:bg-surface-2"><Plus size={16} aria-hidden="true" />Add</button>
   }
   const stepClass = 'grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-surface disabled:opacity-40'
   return (
     <div role="group" aria-label={`${item.name} servings`} className="inline-flex items-center rounded-full bg-surface-2 p-0.5">
-      <button type="button" aria-label={`Remove one serving of ${item.name}`} onClick={() => updatePlate(setServings(plate, item, servings - 1))} className={stepClass}><Minus size={16} aria-hidden="true" /></button>
+      <button type="button" aria-label={`Remove one serving of ${item.name}`} onClick={() => updatePlate(setServings(readPlate(), item, servings - 1))} className={stepClass}><Minus size={16} aria-hidden="true" /></button>
       <span aria-live="polite" className="w-6 text-center text-sm font-semibold tabular-nums">{servings}</span>
-      <button type="button" aria-label={`Add one serving of ${item.name}`} disabled={servings >= MAX_SERVINGS} onClick={() => updatePlate(setServings(plate, item, servings + 1))} className={stepClass}><Plus size={16} aria-hidden="true" /></button>
+      <button type="button" aria-label={`Add one serving of ${item.name}`} disabled={servings >= MAX_SERVINGS} onClick={() => updatePlate(setServings(readPlate(), item, servings + 1))} className={stepClass}><Plus size={16} aria-hidden="true" /></button>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import type { Session } from '@supabase/auth-js'
 import { QueryClient, keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { auth, db } from '../lib/supabase'
+import { authStorageKey, db, hasAuthState, loadAuth } from '../lib/supabase'
 import type { Meal } from '../lib/hours'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
 export type ItemHistoryRow = { date: string; meal: Meal; station: string; hall: { slug: string; name: string } | null }
@@ -62,6 +62,10 @@ export function useSearch(q: string, page: number, date: string) {
 }
 export function useItem(id: string) { return useQuery(itemQuery(id)) }
 export function useItemHistory(id: string) { return useQuery(historyQuery(id)) }
+export function prefetchItem(client: QueryClient, id: string) {
+  void client.prefetchQuery(itemQuery(id))
+  void client.prefetchQuery(historyQuery(id))
+}
 
 type SessionState = { session: Session | null; error: Error | null; loading: boolean }
 const serverSessionState: SessionState = { session: null, error: null, loading: true }
@@ -72,15 +76,27 @@ function setSessionState(next: SessionState) {
   sessionState = next
   sessionListeners.forEach(listener => listener())
 }
+let authStarted = false
+function startAuth() {
+  if (authStarted) return
+  authStarted = true
+  loadAuth().then(auth => {
+    auth.onAuthStateChange((_event, session) => setSessionState({ session, error: null, loading: false }))
+    return auth.getSession().then(({ data, error }) => {
+      if (error) setSessionState({ session: null, error, loading: false })
+      else if (sessionState.loading) setSessionState({ session: data.session, error: null, loading: false })
+    })
+  }).catch(error => setSessionState({ session: null, error, loading: false }))
+}
 function subscribeSession(listener: () => void) {
   sessionListeners.add(listener)
   if (!sessionStarted) {
     sessionStarted = true
-    auth.onAuthStateChange((_event, session) => setSessionState({ session, error: null, loading: false }))
-    auth.getSession().then(({ data, error }) => {
-      if (error) setSessionState({ session: null, error, loading: false })
-      else if (sessionState.loading) setSessionState({ session: data.session, error: null, loading: false })
-    }).catch(error => setSessionState({ session: null, error, loading: false }))
+    if (hasAuthState()) startAuth()
+    else {
+      setSessionState({ session: null, error: null, loading: false })
+      window.addEventListener('storage', event => { if (event.key === authStorageKey && event.newValue !== null) startAuth() })
+    }
   }
   return () => { sessionListeners.delete(listener) }
 }
@@ -149,6 +165,6 @@ export function useDeleteAccount() {
   return useMutation({ mutationFn: async () => {
     const { error } = await db.rpc('delete_account')
     if (error) throw error
-    await auth.signOut({ scope: 'local' })
+    await (await loadAuth()).signOut({ scope: 'local' })
   }, onSuccess: async () => { await client.invalidateQueries() } })
 }

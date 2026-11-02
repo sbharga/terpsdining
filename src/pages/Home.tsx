@@ -1,7 +1,7 @@
 import { useFavoriteIds, useFavoriteItems, useHours, usePopular, useSession } from '../api/queries'
 import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle, SectionHeading } from '../components/UI'
 import { HoursBoard } from '../components/HoursViz'
-import { formatDay, nowMinutesET, todayET } from '../lib/dates'
+import { formatDay, todayET, useNowMinutesET } from '../lib/dates'
 import { halls } from '../lib/halls'
 import { tones } from '../lib/theme'
 import { Heart, Star, Trophy } from 'lucide-react'
@@ -20,7 +20,7 @@ export default function Home() {
   const favorites = useFavoriteItems(today, session?.user.id)
   const hours = useHours(today, today)
   const popular = usePopular(today)
-  const now = nowMinutesET()
+  const now = useNowMinutesET()
 
   return (
     <>

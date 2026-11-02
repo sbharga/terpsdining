@@ -38,19 +38,19 @@ const listeners = new Set<() => void>()
 function readStorage() {
   try { return window.localStorage.getItem(STORAGE_KEY) } catch { return null }
 }
-function getSnapshot() { return plate ??= parsePlate(readStorage()) }
+export function readPlate() { return plate ??= parsePlate(readStorage()) }
 function getServerSnapshot() { return empty }
+function onStorage(event: StorageEvent) {
+  if (event.key !== STORAGE_KEY && event.key !== null) return
+  plate = parsePlate(readStorage())
+  listeners.forEach(l => l())
+}
 function subscribe(listener: () => void) {
+  if (listeners.size === 0) window.addEventListener('storage', onStorage)
   listeners.add(listener)
-  const onStorage = (event: StorageEvent) => {
-    if (event.key !== STORAGE_KEY && event.key !== null) return
-    plate = parsePlate(readStorage())
-    listeners.forEach(l => l())
-  }
-  window.addEventListener('storage', onStorage)
   return () => {
     listeners.delete(listener)
-    window.removeEventListener('storage', onStorage)
+    if (listeners.size === 0) window.removeEventListener('storage', onStorage)
   }
 }
 
@@ -64,5 +64,9 @@ export function updatePlate(next: PlateEntry[]) {
 }
 
 export function usePlate(): PlateEntry[] {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  return useSyncExternalStore(subscribe, readPlate, getServerSnapshot)
+}
+
+export function usePlateServings(id: string): number {
+  return useSyncExternalStore(subscribe, () => readPlate().find(entry => entry.id === id)?.servings ?? 0, () => 0)
 }

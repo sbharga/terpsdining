@@ -72,7 +72,7 @@ export function HoursBoard({ halls, rows, now, heading: Heading = 'h2', list = f
 const weekColumns = 'sm:grid-cols-[9rem_minmax(0,1fr)]'
 
 // One hall's coming week: days with identical hours share a row, today always stands alone.
-export function WeekTable({ rows, dates, today, now }: { rows: Hours[]; dates: string[]; today: string; now: number }) {
+export function WeekTable({ rows, dates, today, now }: { rows: Hours[]; dates: string[]; today: string; now?: number }) {
   return (
     <div>
       <div aria-hidden="true" className="hidden grid-cols-[9rem_repeat(3,minmax(0,1fr))] gap-4 border-b border-line px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted sm:grid">
@@ -91,7 +91,7 @@ export function WeekTable({ rows, dates, today, now }: { rows: Hours[]; dates: s
                 {meals.map(meal => {
                   const row = group.rows.find(entry => entry.meal === meal)
                   const hours = hoursLabel(row)
-                  const live = isToday && row !== undefined && mealStatus(row, now) === 'open'
+                  const live = isToday && row !== undefined && now !== undefined && mealStatus(row, now) === 'open'
                   return (
                     <div key={meal} className="flex min-w-0 items-center justify-between gap-3 sm:justify-start sm:gap-2">
                       <dt className="flex items-center gap-2 text-muted"><MealIcon meal={meal} size={16} /><span className="sm:sr-only">{meal}</span></dt>
