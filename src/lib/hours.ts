@@ -4,7 +4,7 @@ export type Meal = Database['public']['Enums']['meal']
 export const meals: Meal[] = ['Breakfast', 'Lunch', 'Dinner']
 export type MealStatus = 'open' | 'upcoming' | 'past' | 'closed' | 'tbd'
 export type HallState = 'open' | 'upcoming' | 'closed' | 'tbd'
-export function formatTime(time: string): string {
+function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number)
   return `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''}${h < 12 ? 'am' : 'pm'}`
 }
