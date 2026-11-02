@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays, todayET, nowMinutesET } from './dates'
-import { defaultMeal, hallStatus, mealStatus, type Hours } from './hours'
+import { defaultMeal, groupDays, hallStatus, mealStatus, type Hours } from './hours'
 import { filterItems, pickFavorites, rankTopRated } from './menu'
 import { pageWindow } from './pagination'
 const lunch: Hours = { hall_id: 19, date: '2026-10-02', meal: 'Lunch', status: 'open', label: '10:30am-4pm', opens: '10:30:00', closes: '16:00:00' }
@@ -20,6 +20,12 @@ describe('dining hours', () => {
   })
   it('keeps Dinner selected after closing', () => {
     expect(defaultMeal([{ ...lunch, meal: 'Dinner', opens: '16:00:00', closes: '21:00:00' }], 1290, true)).toBe('Dinner')
+  })
+  it('merges consecutive identical days but keeps today and changed days apart', () => {
+    const day = (date: string, closes = '16:00:00') => ({ ...lunch, date, closes })
+    const dates = ['2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06']
+    const rows = [day('2026-10-02'), day('2026-10-03'), day('2026-10-04'), day('2026-10-05', '15:00:00'), day('2026-10-06')]
+    expect(groupDays(dates, rows, '2026-10-02').map(group => group.dates)).toEqual([['2026-10-02'], ['2026-10-03', '2026-10-04'], ['2026-10-05'], ['2026-10-06']])
   })
 })
 it('excludes avoided allergens and requires all diets', () => {

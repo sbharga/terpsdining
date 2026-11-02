@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { ArrowLeft, Ban, ChevronDown, Clock, Heart, ListFilter, Soup, Trophy, X } from 'lucide-react'
 import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
 import { DatePager, DietIcon, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
-import { WeekChart } from '../components/HoursViz'
+import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
 import { addDays, nowMinutesET, parseDateParam, todayET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
@@ -185,7 +185,7 @@ function HallMenu({ hall }: { hall: Hall }) {
 
       <section className="mt-12" aria-labelledby="hall-hours-heading">
         <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>{`${hall.name} Dining Hall hours this week`}</SectionHeading>
-        {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekChart hall={hall} dates={weekDates} rows={weekHours.data} today={today} now={nowMinutesET()} /></div>}
+        {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className="mt-4 overflow-hidden rounded-3xl bg-surface ring-1 ring-line"><WeekTable rows={weekHours.data.filter(row => row.hall_id === hall.id)} dates={weekDates} today={today} now={nowMinutesET()} /></div>}
       </section>
     </>
   )

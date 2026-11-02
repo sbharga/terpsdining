@@ -35,3 +35,18 @@ export function defaultMeal(rows: Hours[], nowMin: number, isToday: boolean): Me
     ?? [...rows].sort((a, b) => meals.indexOf(a.meal) - meals.indexOf(b.meal)).find(row => mealStatus(row, nowMin) === 'upcoming')?.meal
     ?? 'Dinner'
 }
+// Consecutive days with identical meal hours share one group; today always stands alone.
+export function groupDays(dates: string[], rows: Hours[], today: string): { dates: string[]; rows: Hours[] }[] {
+  const key = (date: string) => meals.map(meal => {
+    const row = rows.find(entry => entry.date === date && entry.meal === meal)
+    return row ? `${row.status}|${row.opens}|${row.closes}` : '-'
+  }).join(',')
+  const groups: { dates: string[]; rows: Hours[]; key: string }[] = []
+  for (const date of dates) {
+    const dateKey = key(date)
+    const last = groups[groups.length - 1]
+    if (last && date !== today && last.dates[0] !== today && last.key === dateKey) last.dates.push(date)
+    else groups.push({ dates: [date], rows: rows.filter(row => row.date === date), key: dateKey })
+  }
+  return groups.map(({ dates, rows }) => ({ dates, rows }))
+}

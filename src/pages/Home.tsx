@@ -34,7 +34,7 @@ export default function Home() {
       <section aria-label="Dining halls">
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
-        <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} timeline={false} />
+        <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} />
       </section>
       {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-12" aria-labelledby="favorites-heading">
         <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>

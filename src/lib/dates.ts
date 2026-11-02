@@ -18,6 +18,15 @@ export function addDays(iso: string, n: number): string {
 export function formatDay(iso: string): string {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(`${iso}T12:00:00Z`))
 }
+export function formatWeekday(iso: string): string {
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short' }).format(new Date(`${iso}T12:00:00Z`))
+}
+export function formatMonthDay(iso: string): string {
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(`${iso}T12:00:00Z`))
+}
+export function diffDays(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000)
+}
 export function relativeDay(iso: string, today: string): string {
   if (iso === today) return 'Today'
   if (iso === addDays(today, -1)) return 'Yesterday'
