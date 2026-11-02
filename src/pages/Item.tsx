@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, ExternalLink, Flame, Heart, LoaderCircle, MapPin, Star, Wheat } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronRight, ExternalLink, Flame, Heart, LoaderCircle, Star, Wheat } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
 import type { ItemHistoryRow } from '../api/queries'
@@ -86,44 +86,47 @@ export default function Item() {
       <PageTitle title={item.name} />
       <header className="grid gap-6 rounded-3xl bg-surface p-5 ring-1 ring-line sm:grid-cols-[auto_1fr] sm:items-center sm:p-6">
         {image ? (
-          <img src={image} alt="" width={176} height={176} loading="eager" fetchPriority="high" decoding="async" className="h-44 w-full rounded-2xl object-cover sm:w-44" />
+          <img src={image} alt="" width={176} height={176} loading="eager" fetchPriority="high" decoding="async" className="h-52 w-full rounded-2xl object-cover sm:h-44 sm:w-44" />
         ) : (
-          <FoodSwatch name={item.name} className="h-44 w-full rounded-2xl text-7xl sm:w-44" />
+          <FoodSwatch name={item.name} className="h-52 w-full rounded-2xl text-7xl sm:h-44 sm:w-44" />
         )}
         <div>
-          <h1 className="mb-3 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{item.name}</h1>
+          <h1 className="mb-3 font-display text-2xl font-extrabold tracking-tight sm:text-4xl">{item.name}</h1>
           <Badges allergens={item.allergens} dietary={item.dietary} />
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {item.rating_count > 0 && item.rating_avg !== null
               ? <RatingPill avg={item.rating_avg} count={item.rating_count} />
               : <p className="text-sm text-muted">No ratings yet</p>}
+            {session && <button type="button" aria-pressed={isFavorite} disabled={favorites.isPending || favorites.isError || toggleFavorite.isPending} onClick={() => toggleFavorite.mutate(!isFavorite)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60 ${isFavorite ? `${tones.berry.soft} ${tones.berry.border}` : 'border-line text-muted hover:text-ink'}`}><Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />{isFavorite ? 'Favorited' : 'Add to favorites'}</button>}
           </div>
-          {session && <><button type="button" aria-pressed={isFavorite} disabled={favorites.isPending || favorites.isError || toggleFavorite.isPending} onClick={() => toggleFavorite.mutate(!isFavorite)} className={`mt-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition disabled:opacity-60 ${isFavorite ? `${tones.berry.soft} ${tones.berry.border}` : 'border-line text-muted hover:text-ink'}`}><Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />{isFavorite ? 'Favorited' : 'Add to favorites'}</button>{(toggleFavorite.isError || favorites.isError) && <p role="alert" className="mt-2 text-sm text-muted">Couldn't update favorite.</p>}</>}
+          {session && (toggleFavorite.isError || favorites.isError) && <p role="alert" className="mt-2 text-sm text-muted">Couldn't update favorite.</p>}
+          <div className="mt-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">Today</p>
+            <div className="mt-1.5">
+              {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : todayHalls.length > 0 ? (
+                <ul className="flex flex-wrap gap-2">
+                  {todayHalls.map(hall => (
+                    <li key={hall.slug}>
+                      <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
+                        {hall.name} · {hall.meals.join(', ')}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted">
+                  {item.last_seen
+                    ? `Not served today · Last served ${relativeDay(item.last_seen, today)}${lastHalls.length ? ` at ${lastHalls.map(hall => hall.name).join(', ')}` : ''}`
+                    : 'Not served yet'}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <aside className="space-y-6 lg:order-last">
-          <Panel id="item-today" title="Today" icon={MapPin} tone={tones.tomato}>
-            {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : todayHalls.length > 0 ? (
-              <ul className="flex flex-wrap gap-2">
-                {todayHalls.map(hall => (
-                  <li key={hall.slug}>
-                    <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
-                      {hall.name} · {hall.meals.join(', ')}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted">
-                {item.last_seen
-                  ? `Not served today · Last served ${relativeDay(item.last_seen, today)}${lastHalls.length ? ` at ${lastHalls.map(hall => hall.name).join(', ')}` : ''}`
-                  : 'Not served yet'}
-              </p>
-            )}
-          </Panel>
-
           <Panel id="item-rating" title="Your rating" icon={Star} tone={tones.citrus}>
             {sessionError ? <ErrorNote retry={() => window.location.reload()} /> : session ? (
               <>
@@ -166,22 +169,27 @@ export default function Item() {
                   {[nutrition.servingSize ? `Serving ${nutrition.servingSize}` : null, nutrition.calories !== null ? `${nutrition.calories} cal` : null].filter(Boolean).join(' · ') || 'Serving not available.'}
                 </p>
                 {nutrition.servings && <p className="mt-1 text-sm text-muted">{nutrition.servings}</p>}
-                <dl className="mt-4 grid gap-x-8 sm:grid-cols-2">
-                  {nutrition.nutrients.map((nutrient, index) => (
-                    <div key={`${nutrient.name}-${index}`} className="flex justify-between gap-4 border-b border-line py-2 text-sm">
-                      <dt>{nutrient.name}</dt>
-                      <dd className="shrink-0 text-muted">{nutrient.amount}{nutrient.dv ? ` · ${nutrient.dv}` : ''}</dd>
-                    </div>
-                  ))}
-                </dl>
+                {nutrition.nutrients.length > 0 && (
+                  <details className="group mt-4">
+                    <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand [&::-webkit-details-marker]:hidden">All nutrition facts ({nutrition.nutrients.length})<ChevronDown size={16} aria-hidden="true" className="transition group-open:rotate-180" /></summary>
+                    <dl className="mt-2 grid gap-x-8 sm:grid-cols-2">
+                      {nutrition.nutrients.map((nutrient, index) => (
+                        <div key={`${nutrient.name}-${index}`} className="flex justify-between gap-4 border-b border-line py-2 text-sm">
+                          <dt>{nutrient.name}</dt>
+                          <dd className="shrink-0 text-muted">{nutrient.amount}{nutrient.dv ? ` · ${nutrient.dv}` : ''}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                )}
               </>
             ) : <p className="text-muted">Nutrition not available.</p>}
           </Panel>
 
           <div>
             <details className="group rounded-3xl bg-surface p-5 ring-1 ring-line sm:p-6">
-              <summary className="flex cursor-pointer list-none items-center gap-3 font-display text-lg font-bold [&::-webkit-details-marker]:hidden">
-                <span className={`grid h-9 w-9 place-items-center rounded-xl ${tones.citrus.soft}`}><Wheat size={18} aria-hidden="true" /></span>
+              <summary className="flex cursor-pointer list-none items-center gap-2.5 font-display text-xl font-bold sm:text-2xl [&::-webkit-details-marker]:hidden">
+                <Wheat size={20} aria-hidden="true" className={tones.citrus.text} />
                 Ingredients
                 <ChevronRight size={18} className="ml-auto text-muted transition group-open:rotate-90" aria-hidden="true" />
               </summary>

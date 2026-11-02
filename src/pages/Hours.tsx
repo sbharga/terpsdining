@@ -26,10 +26,10 @@ export default function Hours() {
   return (
     <>
       <PageTitle title="Hours" />
-      <h1 className="font-display text-4xl font-extrabold tracking-tight">UMD dining hall hours</h1>
-      <p className="mt-2 text-muted">Meal times for every dining hall, a week at a glance.</p>
+      <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">UMD dining hall hours</h1>
+      <p className="mt-2 hidden text-muted sm:block">Meal times for every dining hall, a week at a glance.</p>
 
-      <section className="mt-8" aria-labelledby="hours-today-heading">
+      <section className="mt-6" aria-labelledby="hours-today-heading">
         <SectionHeading id="hours-today-heading" icon={Clock} tone={tones.citrus}>Today · {formatDay(today)}</SectionHeading>
         {todayHours.isError && <ErrorNote retry={todayHours.refetch} />}
         <div className="mt-4"><HoursBoard halls={halls} rows={todayHours.isSuccess ? todayHours.data : undefined} now={now} heading="h3" /></div>
@@ -47,8 +47,8 @@ export default function Hours() {
 
         {hours.isSuccess && halls.map(hall => (
           <section key={hall.id} className="mt-8 overflow-hidden rounded-3xl bg-surface ring-1 ring-line" aria-labelledby={`hours-${hall.slug}`}>
-            <h3 id={`hours-${hall.slug}`} className="flex items-center gap-3 px-5 pt-4 font-display text-xl font-bold">
-              <span aria-hidden="true" className={`h-3 w-3 rounded-full ${hallTone(hall.slug).dot}`} /><Link to={`/halls/${hall.slug}`} className="hover:text-brand">{hall.name}</Link>
+            <h3 id={`hours-${hall.slug}`} className={`px-5 py-3 font-display text-xl font-bold text-white ${hallTone(hall.slug).solid}`}>
+              <Link to={`/halls/${hall.slug}`} className="hover:underline">{hall.name}</Link>
             </h3>
             <WeekChart hall={hall} dates={dates} rows={hours.data} today={today} now={now} />
           </section>

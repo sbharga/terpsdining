@@ -1,7 +1,8 @@
 import { Link, useSearchParams } from 'react-router'
 import { ChevronLeft, ChevronRight, CircleCheck, Clock, Search as SearchIcon, SearchX } from 'lucide-react'
 import { SEARCH_PAGE_SIZE, useFavoriteIds, useSearch, useSession } from '../api/queries'
-import { EmptyState, ErrorNote, ItemCard, Loading, PageTitle } from '../components/UI'
+import { SearchBar } from '../components/Layout'
+import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle } from '../components/UI'
 import type { Json } from '../lib/database.types'
 import { todayET } from '../lib/dates'
 import { meals } from '../lib/hours'
@@ -40,7 +41,8 @@ export default function Search() {
   return (
     <section>
       <PageTitle title="Search" />
-      <h1 className="font-display text-4xl font-extrabold tracking-tight">Search</h1>
+      <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Search</h1>
+      <div className="mt-4"><SearchBar large /></div>
       {query.trim().length >= 2 && results.data && <p className="mt-2 text-muted">{total} {total === 1 ? 'result' : 'results'} for “{query.trim()}”{totalPages > 1 && <> · Page {page} of {totalPages}</>}</p>}
       {query.trim().length < 2 ? (
         <EmptyState icon={SearchIcon} title="Find a dish">Type 2+ characters to search every hall's menu.</EmptyState>
@@ -50,21 +52,23 @@ export default function Search() {
         <Loading />
       ) : results.data?.length ? (
         <>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2" aria-busy={results.isFetching}>
-            {results.data.map(item => {
-              const served = todayStatus(item.halls)
-              return (
-                <ItemCard key={item.id} item={item} favorite={favoriteIds.has(item.id)}>
-                  {served ? (
-                    <p className="mt-2 flex items-start gap-1 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
-                  ) : (
-                    <p className="mt-2 flex items-start gap-1 text-xs leading-relaxed text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
-                      ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
-                      : 'Not served yet'}</p>
-                  )}
-                </ItemCard>
-              )
-            })}
+          <div className="mt-6" aria-busy={results.isFetching}>
+            <ItemList>
+              {results.data.map(item => {
+                const served = todayStatus(item.halls)
+                return (
+                  <ItemRow key={item.id} item={item} favorite={favoriteIds.has(item.id)}>
+                    {served ? (
+                      <p className="mt-1 flex items-start gap-1 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300"><CircleCheck size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{served}</p>
+                    ) : (
+                      <p className="mt-1 flex items-start gap-1 text-xs leading-relaxed text-muted"><Clock size={14} className="mt-0.5 shrink-0" aria-hidden="true" />{item.last_seen
+                        ? `Last served ${shortDate.format(new Date(`${item.last_seen}T12:00:00Z`))}`
+                        : 'Not served yet'}</p>
+                    )}
+                  </ItemRow>
+                )
+              })}
+            </ItemList>
           </div>
           {totalPages > 1 && <nav aria-label="Search pages" className="mt-8 flex flex-wrap items-center justify-center gap-2">
             {page > 1

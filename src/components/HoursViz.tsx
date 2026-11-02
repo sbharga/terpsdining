@@ -1,10 +1,9 @@
 import { Link } from 'react-router'
-import { ChevronRight } from 'lucide-react'
 import { formatDay } from '../lib/dates'
 import type { Hall } from '../lib/halls'
-import { hallStatus, hoursLabel, meals, mealStatus, type HallState, type Hours } from '../lib/hours'
-import { mealTones, tones } from '../lib/theme'
-import { MealIcon } from './UI'
+import { hallStatus, hoursLabel, meals, mealStatus, type Hours } from '../lib/hours'
+import { hallTone, mealTones, tones } from '../lib/theme'
+import { MealIcon, StatusPill } from './UI'
 
 type Range = { start: number; end: number }
 
@@ -91,17 +90,17 @@ function shortRange(label: string): string {
 }
 
 // Exact times for the three meals; the open meal is highlighted.
-function MealTimes({ rows, now, names = false }: { rows: Hours[]; now?: number; names?: boolean }) {
+function MealTimes({ rows, now }: { rows: Hours[]; now?: number }) {
   return (
-    <dl className={`text-[11px] ${names ? 'grid grid-cols-3 gap-1 sm:text-sm' : 'flex flex-wrap justify-between gap-1 sm:grid sm:grid-cols-3 sm:text-xs'}`}>
+    <dl className="flex flex-wrap justify-between gap-1 text-xs sm:grid sm:grid-cols-3">
       {meals.map(meal => {
         const row = rows.find(entry => entry.meal === meal)
         const label = shortRange(hoursLabel(row))
         const live = row !== undefined && now !== undefined && mealStatus(row, now) === 'open'
         return (
-          <div key={meal} className={`min-w-0 rounded-xl px-1.5 py-1.5 sm:px-2 ${names ? '' : 'flex shrink-0 items-center gap-1.5 sm:shrink'} ${live ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
-            <dt className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted ${names ? '' : 'sm:sr-only'}`}><MealIcon meal={meal} size={14} /><span className={names ? '' : 'sr-only'}>{meal}</span></dt>
-            <dd className={`whitespace-nowrap tabular-nums ${names ? 'mt-0.5' : ''} ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</dd>
+          <div key={meal} className={`flex min-w-0 items-center gap-1.5 rounded-xl px-2 py-1 ${live ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
+            <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"><MealIcon meal={meal} size={14} /><span className="sr-only">{meal}</span></dt>
+            <dd className={`whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</dd>
           </div>
         )
       })}
@@ -109,36 +108,27 @@ function MealTimes({ rows, now, names = false }: { rows: Hours[]; now?: number; 
   )
 }
 
-function StatusLine({ status }: { status: { label: string; state: HallState } }) {
-  const color = status.state === 'open' ? 'text-emerald-700 dark:text-emerald-300' : status.state === 'upcoming' ? 'text-amber-700 dark:text-amber-300' : 'text-muted'
-  const dot = status.state === 'open' ? 'bg-emerald-500 motion-safe:animate-pulse' : status.state === 'upcoming' ? 'bg-amber-500' : 'bg-muted/60'
-  return <p className={`flex items-start gap-2 text-sm font-medium ${color}`}><span aria-hidden="true" className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />{status.label}</p>
-}
-
 // Today for every hall on one shared axis, so "who is open at 9pm?" is a glance.
 export function HoursBoard({ halls, rows, now, heading: Heading = 'h2' }: { halls: Hall[]; rows?: Hours[]; now: number; heading?: 'h2' | 'h3' }) {
   const range = axisRange(rows ?? [])
   return (
-    <div className="rounded-3xl bg-surface px-5 pt-4 ring-1 ring-line sm:px-6">
-      <div className="hidden gap-x-6 sm:grid sm:grid-cols-[12rem_minmax(0,1fr)]"><span /><HourAxis range={range} /></div>
-      <div className="divide-y divide-line">
-        {halls.map(hall => {
-          const hallRows = rows?.filter(row => row.hall_id === hall.id)
-          return (
-            <div key={hall.id} className="grid gap-x-6 gap-y-3 py-5 sm:grid-cols-[12rem_minmax(0,1fr)]">
-              <div>
-                <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="group inline-flex items-center gap-1 hover:text-brand">{hall.name}<ChevronRight size={18} aria-hidden="true" className="text-muted transition group-hover:translate-x-0.5 group-hover:text-brand" /></Link></Heading>
-                {hallRows && <div className="mt-1"><StatusLine status={hallStatus(hallRows, now)} /></div>}
-              </div>
-              <div className="min-w-0 space-y-1">
-                <Track rows={hallRows ?? []} range={range} now={now} blank={!hallRows} />
-                <HourAxis range={range} className="sm:hidden" />
-                {hallRows && <MealTimes rows={hallRows} now={now} names />}
-              </div>
+    <div className="grid gap-3">
+      {halls.map(hall => {
+        const hallRows = rows?.filter(row => row.hall_id === hall.id)
+        return (
+          <article key={hall.id} className="overflow-hidden rounded-3xl bg-surface ring-1 ring-line">
+            <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-3 text-white ${hallTone(hall.slug).solid}`}>
+              <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="after:absolute after:inset-0 hover:underline">{hall.name}</Link></Heading>
+              {hallRows && <StatusPill status={hallStatus(hallRows, now)} />}
             </div>
-          )
-        })}
-      </div>
+            <div className="space-y-1.5 px-5 pb-4 pt-4">
+              <Track rows={hallRows ?? []} range={range} now={now} blank={!hallRows} />
+              <HourAxis range={range} />
+              {hallRows && <MealTimes rows={hallRows} now={now} />}
+            </div>
+          </article>
+        )
+      })}
     </div>
   )
 }

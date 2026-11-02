@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { Heart, Star, TriangleAlert, UserRound } from 'lucide-react'
 import { useDeleteAccount, useFavoriteIds, useFavorites, useMyRatings, useSession } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
-import { EmptyState, ErrorNote, ItemCard, Loading, PageTitle, Panel } from '../components/UI'
+import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle, Panel } from '../components/UI'
 import { nameTone, tones } from '../lib/theme'
 
 export default function Account() {
@@ -24,14 +24,14 @@ export default function Account() {
   return <>{title}
     <header className="flex items-center gap-4 rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8">
       <span aria-hidden="true" className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-xl font-bold text-white ${nameTone(name).solid}`}>{name[0]}</span>
-      <div className="min-w-0"><h1 className="break-words font-display text-3xl font-extrabold">{name}</h1><p className="break-words text-muted">{session.user.email}</p></div>
+      <div className="min-w-0"><h1 className="break-words font-display text-2xl font-extrabold sm:text-3xl">{name}</h1><p className="break-words text-muted">{session.user.email}</p></div>
     </header>
     <div className="mt-6 space-y-6">
       <Panel id="account-favorites" title="Your favorites" icon={Heart} tone={tones.berry}>
-        {favorites.isError ? <ErrorNote retry={favorites.refetch} /> : favorites.isPending ? <Loading inline /> : !favorites.data.length ? <p className="text-muted">No favorites yet. Tap the heart on any dish to save it.</p> : <div className="grid gap-4 sm:grid-cols-2">{favorites.data.map(row => row.item && <ItemCard key={row.item_id} item={row.item} favorite />)}</div>}
+        {favorites.isError ? <ErrorNote retry={favorites.refetch} /> : favorites.isPending ? <Loading inline /> : !favorites.data.length ? <p className="text-muted">No favorites yet. Tap the heart on any dish to save it.</p> : <ItemList>{favorites.data.map(row => row.item && <ItemRow key={row.item_id} item={row.item} favorite />)}</ItemList>}
       </Panel>
       <Panel id="account-ratings" title="Your ratings" icon={Star} tone={tones.citrus}>
-        {ratings.isError ? <ErrorNote retry={ratings.refetch} /> : ratings.isPending ? <Loading inline /> : !visibleRatings.length ? <p className="text-muted">You haven't rated anything yet.</p> : <><p className="mb-4 text-sm text-muted">{visibleRatings.length} {visibleRatings.length === 1 ? 'rating' : 'ratings'}</p><div className="grid gap-4 sm:grid-cols-2">{visibleRatings.map(row => row.item && <ItemCard key={row.item.id} item={row.item} favorite={favoriteIds.has(row.item.id)}><p className="mt-2 flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300"><Star size={12} fill="currentColor" aria-hidden="true" />You rated {row.rating}/5</p></ItemCard>)}</div></>}
+        {ratings.isError ? <ErrorNote retry={ratings.refetch} /> : ratings.isPending ? <Loading inline /> : !visibleRatings.length ? <p className="text-muted">You haven't rated anything yet.</p> : <><p className="mb-4 text-sm text-muted">{visibleRatings.length} {visibleRatings.length === 1 ? 'rating' : 'ratings'}</p><ItemList>{visibleRatings.map(row => row.item && <ItemRow key={row.item.id} item={row.item} favorite={favoriteIds.has(row.item.id)}><p className="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-300"><Star size={12} fill="currentColor" aria-hidden="true" />You rated {row.rating}/5</p></ItemRow>)}</ItemList></>}
       </Panel>
       <Panel id="account-delete" title="Delete account" icon={TriangleAlert} tone={tones.tomato}>
         <p className="text-muted">Permanently deletes your account, your ratings, and your favorites. Item averages update to remove your ratings. This can't be undone.</p>
