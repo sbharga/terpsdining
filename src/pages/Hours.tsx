@@ -54,7 +54,7 @@ export default function Hours() {
         <h2 id="hours-day-heading" className="font-display text-xl font-bold sm:text-2xl">{dayName}{dayName !== formatDay(date) && <span className="font-sans text-base font-medium text-muted"> · {formatDay(date)}</span>}</h2>
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
-        <div className="mt-4"><HoursBoard halls={halls} rows={hours.isSuccess ? hours.data.filter(row => row.date === date) : undefined} now={date === today ? now : undefined} heading="h3" list /></div>
+        <div className="mt-4"><HoursBoard halls={halls} rows={hours.isSuccess ? hours.data.filter(row => row.date === date) : undefined} now={date === today ? now : undefined} heading="h3" /></div>
       </section>
     </>
   )

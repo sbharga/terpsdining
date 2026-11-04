@@ -23,11 +23,11 @@ export function mealStatus(row: Hours, nowMin: number): MealStatus {
 export function hallStatus(rows: Hours[], nowMin: number): { label: string; state: HallState } {
   const ordered = [...rows].sort((a, b) => meals.indexOf(a.meal) - meals.indexOf(b.meal))
   const open = ordered.find(row => mealStatus(row, nowMin) === 'open')
-  if (open) return { label: `Open · ${open.meal} until ${formatTime(open.closes!)}`, state: 'open' }
+  if (open) return { label: 'Open now', state: 'open' }
   const next = ordered.find(row => mealStatus(row, nowMin) === 'upcoming')
-  if (next) return { label: `Opens ${formatTime(next.opens!)} · ${next.meal}`, state: 'upcoming' }
+  if (next) return { label: 'Opens later', state: 'upcoming' }
   if (!rows.length || rows.some(row => row.status === 'tbd')) return { label: 'Hours TBD', state: 'tbd' }
-  return { label: rows.some(row => row.status === 'open') ? 'Closed for today' : 'Closed today', state: 'closed' }
+  return { label: 'Closed', state: 'closed' }
 }
 export function defaultMeal(rows: Hours[], nowMin: number, isToday: boolean): Meal {
   if (!isToday) return meals.find(meal => rows.some(row => row.meal === meal && row.status === 'open')) ?? 'Breakfast'

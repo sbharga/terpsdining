@@ -5,31 +5,6 @@ import { groupDays, hallStatus, hoursLabel, meals, mealStatus, type Hours } from
 import { hallTone } from '../lib/theme'
 import { MealIcon, StatusPill } from './UI'
 
-// "10am–10:30am" -> "10–10:30am": drop the first meridiem when both ends share it.
-function shortRange(label: string): string {
-  const [from, to] = label.split('–')
-  return to && from.slice(-2) === to.slice(-2) ? `${from.slice(0, -2)}–${to}` : label
-}
-
-// Exact times for the three meals; the open meal is highlighted.
-function MealTimes({ rows, now }: { rows: Hours[]; now?: number }) {
-  return (
-    <dl className="flex flex-wrap justify-between gap-1 text-sm sm:grid sm:grid-cols-3">
-      {meals.map(meal => {
-        const row = rows.find(entry => entry.meal === meal)
-        const label = shortRange(hoursLabel(row))
-        const live = row !== undefined && now !== undefined && mealStatus(row, now) === 'open'
-        return (
-          <div key={meal} className={`flex min-w-0 items-center gap-1 rounded-xl px-1.5 py-1 ${live ? 'bg-emerald-50 dark:bg-emerald-400/10' : ''}`}>
-            <dt className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"><MealIcon meal={meal} size={14} /><span className="sr-only">{meal}</span></dt>
-            <dd className={`whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{label}</dd>
-          </div>
-        )
-      })}
-    </dl>
-  )
-}
-
 // The three meals as full-width rows: the open meal is highlighted, past meals are muted.
 function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
   return (
@@ -49,10 +24,10 @@ function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
   )
 }
 
-// Status band for every hall, with meal times as one compact row (Home) or a full list (Hours).
-export function HoursBoard({ halls, rows, now, heading: Heading = 'h2', list = false }: { halls: Hall[]; rows?: Hours[]; now?: number; heading?: 'h2' | 'h3'; list?: boolean }) {
+// Status band for every hall with its meal times as a full list.
+export function HoursBoard({ halls, rows, now, heading: Heading = 'h2' }: { halls: Hall[]; rows?: Hours[]; now?: number; heading?: 'h2' | 'h3' }) {
   return (
-    <div className={`grid gap-4 ${list ? 'lg:grid-cols-3' : ''}`}>
+    <div className="grid gap-4 lg:grid-cols-3">
       {halls.map(hall => {
         const hallRows = rows?.filter(row => row.hall_id === hall.id)
         return (
@@ -61,7 +36,7 @@ export function HoursBoard({ halls, rows, now, heading: Heading = 'h2', list = f
               <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="after:absolute after:inset-0 hover:underline">{hall.name}</Link></Heading>
               {hallRows && now !== undefined && <StatusPill status={hallStatus(hallRows, now)} />}
             </div>
-            {hallRows && (list ? <MealList rows={hallRows} now={now} /> : <div className="px-3 py-3"><MealTimes rows={hallRows} now={now} /></div>)}
+            {hallRows && <MealList rows={hallRows} now={now} />}
           </article>
         )
       })}
