@@ -37,7 +37,7 @@ export default function Layout() {
       <footer className="mt-16 border-t border-line bg-surface/60">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-safe py-4 text-sm text-muted">
           <p className="flex items-center gap-2"><span aria-hidden="true" className={`h-2 w-2 rounded-full ${tones.lime.dot}`} />Data from UMD Dining. Not affiliated with UMD.</p>
-          <nav aria-label="Footer" className="flex gap-2"><Link className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" to="/privacy">Privacy</Link><Link className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" to="/terms">Terms</Link><a className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" href="https://github.com/sbharga/terpsdining" target="_blank" rel="noopener noreferrer">GitHub<span className="sr-only"> (opens in a new tab)</span></a></nav>
+          <nav aria-label="Footer" className="flex gap-2"><Link className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" to="/privacy">Privacy</Link><Link className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" to="/terms">Terms</Link><a className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" href="https://status.terpsdining.app" target="_blank" rel="noopener noreferrer">Status<span className="sr-only"> (opens in a new tab)</span></a><a className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-ink" href="https://github.com/sbharga/terpsdining" target="_blank" rel="noopener noreferrer">GitHub<span className="sr-only"> (opens in a new tab)</span></a></nav>
         </div>
       </footer>
     </div>

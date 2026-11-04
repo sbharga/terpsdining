@@ -113,6 +113,7 @@ Replace project-specific values before publishing your own copy:
 - [ ] Project ID in the `db:types` script in `package.json`.
 - [ ] Contact address `hello@shreyas.com` in `src/pages/Privacy.tsx` and `src/pages/Terms.tsx`.
 - [ ] Repository URL in the footer of `src/components/Layout.tsx`.
+- [ ] Status page URL in the footer of `src/components/Layout.tsx`.
 - [ ] Scraper `USER_AGENT` in `scraper/src/terpsdining_scraper/config.py`, which links to the repository.
 - [ ] Hall metadata in `src/lib/halls.ts`, and `hallTones` in `src/lib/theme.ts`.
 - [ ] Google consent-screen logo `docs/google-oauth-logo.png`, if you use your own branding.
