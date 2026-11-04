@@ -57,6 +57,17 @@ The rebuild step calls `VERCEL_DEPLOY_HOOK_URL`. If the secret is unset, the reb
 
 CI (`ci.yml`) runs on every push and pull request: `bun run lint`, `typecheck`, `test`, and `build` for the frontend, and `ruff check` and `pytest` for the scraper.
 
+## Health endpoint
+
+`GET /api/health` is a Vercel function (`api/health.ts`) for status pages and uptime monitors. It reads one row from `halls` through Supabase's REST API with the publishable key, using the `VITE_SUPABASE_*` variables from the Vercel project, and times out after five seconds.
+
+- Healthy: HTTP 200 with `{"status":"ok","checks":{"database":"ok"},"latencyMs":123}`.
+- Unhealthy (Supabase unreachable, slow, erroring, empty, or the variables are missing): HTTP 503 with `{"status":"down","checks":{"database":"fail"},...}`.
+- Responses are `Cache-Control: no-store`. Error details are not exposed.
+- It does not check scraper freshness. Stale menus still report healthy.
+
+Point your status page at `https://<your-domain>/api/health` and alert on a non-200 status.
+
 ## Build, prerendering, and caching
 
 - The build fetches public Supabase data and prerenders pages into `dist/`. It requires the frontend environment variables and network access. Data-fetch errors fail the build rather than generating empty pages.
