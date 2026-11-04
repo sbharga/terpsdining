@@ -1,5 +1,5 @@
 import { useFavoriteIds, useFavoriteItems, useHours, usePopular, useSession } from '../api/queries'
-import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle, SectionHeading } from '../components/UI'
+import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageHeader, PageTitle, SectionHeading } from '../components/UI'
 import { HoursBoard } from '../components/HoursViz'
 import { formatDay, todayET, useNowMinutesET } from '../lib/dates'
 import { halls } from '../lib/halls'
@@ -25,18 +25,14 @@ export default function Home() {
   return (
     <>
       <PageTitle title="Today" />
-      <header className="mb-8">
-        <p className="text-sm font-medium text-muted"><time dateTime={today}>{formatDay(today)}</time></p>
-        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">What's cooking at UMD <span className="text-brand">today</span></h1>
-        <p className="mt-2 hidden text-muted sm:block">Hours, menus, and top-rated eats across UMD's dining halls.</p>
-      </header>
+      <PageHeader eyebrow={<time dateTime={today}>{formatDay(today)}</time>} title={<>What's cooking at UMD <span className="text-brand">today</span></>} lead="Hours, menus, and top-rated eats across UMD's dining halls." />
 
       <section aria-label="Dining halls">
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
         <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} />
       </section>
-      {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-12" aria-labelledby="favorites-heading">
+      {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-10" aria-labelledby="favorites-heading">
         <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>
         <div className="mt-4">{favorites.isError ? <ErrorNote retry={favorites.refetch} /> : favorites.isPending ? <Loading inline /> : <ItemList>{favorites.data.map(item => {
           const names = hallNames(item.halls)
@@ -44,7 +40,7 @@ export default function Home() {
         })}</ItemList>}</div>
       </section>}
 
-      <section className="mt-12" aria-labelledby="popular-heading">
+      <section className="mt-10" aria-labelledby="popular-heading">
         <SectionHeading id="popular-heading" icon={Trophy} tone={tones.citrus}>Top rated today</SectionHeading>
         <div className="mt-4">
           {popular.isError ? <ErrorNote retry={popular.refetch} /> : popular.isPending ? <Loading /> : popular.data?.length ? (

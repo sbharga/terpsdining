@@ -1,0 +1,108 @@
+# Deployment
+
+A hosted TerpsDining has three parts: a Supabase project (database, storage, and Google sign-in), a Vercel site that prerenders and serves the frontend, and GitHub Actions workflows that scrape UMD data. For local development, see the [README](../README.md#quick-start).
+
+## Supabase project
+
+1. Create a Supabase project.
+2. Apply every file in `supabase/migrations/`, in filename order.
+3. Configure Google OAuth in Supabase. The authorized Google callback is your Supabase project's `/auth/v1/callback` URL. Supabase's redirect allowlist must include your frontend URL.
+4. Use `docs/google-oauth-logo.png` as the logo on the Google consent screen.
+5. The `db:types` script regenerates `src/lib/database.types.ts` from the Supabase project ID written in `package.json`. Change that ID before using the script with another project.
+
+## Environment variables
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | Vercel; CI repository variable | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Vercel; CI repository variable | Publishable key |
+| `SUPABASE_URL` | GitHub Actions secret; `scraper/.env` | Supabase project URL for the scraper |
+| `SUPABASE_SECRET_KEY` | GitHub Actions secret; `scraper/.env` | Secret key for the scraper |
+
+- The frontend build and prerendering need only the publishable key.
+- Never put a Supabase secret key or the Google client secret in a `VITE_` variable. Vite embeds `VITE_` variables in the public bundle.
+- Never commit credentials. Environment files are ignored by Git.
+
+## Vercel
+
+Create a project from the repository with these settings:
+
+- Framework preset: Vite
+- Root directory: repository root
+- Install command: `bun install --frozen-lockfile`
+- Build command: `bun run build`
+- Output directory: `dist`
+
+Configure the frontend environment variables for the deployment.
+
+Create a Deploy Hook for the production branch. Store its URL as the GitHub Actions secret `VERCEL_DEPLOY_HOOK_URL` (see below).
+
+## GitHub Actions
+
+Repository variables and secrets:
+
+- **Variables** (used by CI builds): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- **Secrets** (used by the scraper and rebuild steps): `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `VERCEL_DEPLOY_HOOK_URL`.
+
+Independent deployments must supply their own scraper credentials through these secrets, never through source files.
+
+### Scheduling
+
+There is no built-in GitHub schedule. Both dining-data workflows run through `workflow_dispatch` and are triggered externally, for example by cron-job.org. Authenticate every request with a fine-grained GitHub token restricted to this repository with Actions write permission. Store the token in the cron-job.org `Authorization` header, never in source files.
+
+- **Daily scrape** (`scrape.yml`, "Daily dining data"): POST `{"ref":"main"}` to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/scrape.yml/dispatches` daily at 3:00 a.m. in `America/New_York`. Use the America/New_York time zone so the schedule follows daylight saving time. The workflow accepts optional `date` (YYYY-MM-DD) and `days` inputs, which default to today and 1. It runs `terpsdining-scrape` and then requests a rebuild after the scrape, including after partial menu failures. Menus update after the scrape and site rebuild finish.
+- **Hours refresh** (`hours.yml`, "Hours refresh"): runs `terpsdining-scrape --hours-only`. It rebuilds the site only when a row in the next seven days changed. Add a second cron-job.org job that POSTs `{"ref":"main"}` every 15 minutes to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/hours.yml/dispatches`.
+
+The rebuild step calls `VERCEL_DEPLOY_HOOK_URL`. If the secret is unset, the rebuild step is skipped. The browser also refetches hours when its copy is more than five minutes old.
+
+CI (`ci.yml`) runs on every push and pull request: `bun run lint`, `typecheck`, `test`, and `build` for the frontend, and `ruff check` and `pytest` for the scraper.
+
+## Build, prerendering, and caching
+
+- The build fetches public Supabase data and prerenders pages into `dist/`. It requires the frontend environment variables and network access. Data-fetch errors fail the build rather than generating empty pages.
+- Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages, and `/robots.txt` advertises it. Search and missing pages are marked `noindex`. Canonicals omit query parameters. Search engines determine indexing and rankings.
+- Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render.
+- Fresh queries do not refetch immediately: hours and history stay fresh for six hours, menus for 30 minutes, and other queries for five minutes.
+- Newly scraped items remain accessible before the next deployment, but they need a rebuild to appear in initial HTML and the sitemap.
+- Hashed `/assets/` files have a one-year immutable cache policy. Food objects use a seven-day cache policy.
+- Only the Latin subsets of the two bundled fonts are shipped.
+
+## Deploy order
+
+1. Apply the search and history migrations, `20261005000000_search_pages_item_histories.sql` and `20261006000000_search_all_words.sql`, before deploying the frontend.
+2. Backfill existing card thumbnails with the scraper's secret-key environment, then require `failures=0`:
+
+   ```sh
+   cd scraper && uv run --env-file .env terpsdining-thumbnails
+   ```
+
+3. Deploy the thumbnail-enabled frontend.
+4. Apply `20261007000000_prune_history.sql` before deploying the updated scraper. Without it, the pruning RPC returns 404 and the scrape job fails.
+
+See [scraper.md](scraper.md) for what each command does and what its output means.
+
+## Hall metadata
+
+Hall metadata lives in `src/lib/halls.ts`. Update it whenever the database seed adds or renames a hall. Hall colors live in `hallTones` in `src/lib/theme.ts`.
+
+The hall "Top rated" list uses Bayesian ranking within the selected meal and dietary/allergen filters.
+
+## Policies
+
+The hosted site publishes a [privacy policy](https://terpsdining.app/privacy) and [terms of use](https://terpsdining.app/terms). Questions and account-data requests go to **support@docet.org**.
+
+For independent deployments, review the policies and replace the contact details with your own before publishing.
+
+## Forking checklist
+
+Replace project-specific values before publishing your own copy:
+
+- [ ] `SITE_URL` in `src/lib/seo.ts`.
+- [ ] Social preview image `public/social.png`, and any site URL shown in it.
+- [ ] Project ID in the `db:types` script in `package.json`.
+- [ ] Contact address `support@docet.org` in `src/pages/Privacy.tsx` and `src/pages/Terms.tsx`.
+- [ ] Repository URL in the footer of `src/components/Layout.tsx`.
+- [ ] Scraper `USER_AGENT` in `scraper/src/terpsdining_scraper/config.py`, which links to the repository.
+- [ ] Hall metadata in `src/lib/halls.ts`, and `hallTones` in `src/lib/theme.ts`.
+- [ ] Google consent-screen logo `docs/google-oauth-logo.png`, if you use your own branding.
+- [ ] Scraper credentials, configured as GitHub Actions secrets for your own project.

@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router'
 import { useSession } from '../api/queries'
 import { loadAuth } from '../lib/supabase'
 import { ChevronDown, LogOut, UserRound } from 'lucide-react'
-import { nameTone } from '../lib/theme'
+import { Avatar } from './UI'
+import { buttonClass } from '../lib/theme'
 export function SignInButton({ children = 'Sign in' }: { children?: ReactNode }) {
   const [error, setError] = useState(false)
   const [pending, setPending] = useState(false)
@@ -15,7 +16,7 @@ export function SignInButton({ children = 'Sign in' }: { children?: ReactNode })
     } catch { setError(true) }
     setPending(false)
   }
-  return <div><button disabled={pending} onClick={() => void signIn()} className="rounded-full bg-brand px-4 py-2 text-sm font-semibold text-brand-ink shadow-sm transition hover:brightness-110 disabled:opacity-60">{children}</button>{error && <p role="alert" className="mt-2 text-xs text-brand">Couldn't sign in. Try again.</p>}</div>
+  return <div><button disabled={pending} onClick={() => void signIn()} className={buttonClass('primary')}>{children}</button>{error && <p role="alert" className="mt-2 text-xs text-danger">Couldn't sign in. Try again.</p>}</div>
 }
 export function AuthButton() {
   const { session, error: sessionError } = useSession()
@@ -43,18 +44,18 @@ export function AuthButton() {
       document.removeEventListener('keydown', escape)
     }
   }, [visible])
-  if (sessionError) return <button onClick={() => window.location.reload()} className="rounded-full px-3 py-2 text-sm font-semibold text-brand">Couldn't load. Retry</button>
+  if (sessionError) return <button onClick={() => window.location.reload()} className={buttonClass('ghost')}>Couldn't load. Retry</button>
   if (!session) return <SignInButton />
   const name = session.user.user_metadata.full_name || session.user.email || '?'
   return <div ref={rootRef} className="relative">
-    <button ref={triggerRef} type="button" aria-haspopup="menu" aria-expanded={visible} aria-label="Account menu" className="flex items-center gap-2 rounded-full p-1 text-muted hover:bg-surface hover:text-ink" onClick={() => { setOpen(!visible); setOpenPath(pathname); setError(false) }}>
-      <span aria-hidden="true" className={`grid h-8 w-8 place-items-center rounded-full text-sm font-bold text-white ${nameTone(name).solid}`}>{name[0]}</span><ChevronDown size={14} aria-hidden="true" className={`transition ${visible ? 'rotate-180' : ''}`} />
+    <button ref={triggerRef} type="button" aria-haspopup="menu" aria-expanded={visible} aria-label="Account menu" className="flex h-11 items-center gap-1 rounded-full pl-1 pr-2 text-muted hover:bg-surface-2 hover:text-ink" onClick={() => { setOpen(!visible); setOpenPath(pathname); setError(false) }}>
+      <Avatar name={name} /><ChevronDown size={14} aria-hidden="true" className={`transition ${visible ? 'rotate-180' : ''}`} />
     </button>
     {visible && <div role="menu" className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl bg-surface p-1 shadow-lg ring-1 ring-line">
       <div className="px-3 py-2"><p className="truncate font-semibold">{name}</p><p className="truncate text-xs text-muted">{session.user.email}</p></div>
-      <Link ref={firstItemRef} role="menuitem" to="/account" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={() => setOpen(false)}><UserRound size={16} aria-hidden="true" />My account</Link>
-      <button type="button" role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={async () => { const { error } = await (await loadAuth()).signOut(); setError(!!error); if (!error) setOpen(false) }}><LogOut size={16} aria-hidden="true" />Sign out</button>
-      {error && <p role="alert" className="px-3 py-1 text-xs text-brand">Couldn't sign out. Try again.</p>}
+      <Link ref={firstItemRef} role="menuitem" to="/account" className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={() => setOpen(false)}><UserRound size={16} aria-hidden="true" />My account</Link>
+      <button type="button" role="menuitem" className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2" onClick={async () => { const { error } = await (await loadAuth()).signOut(); setError(!!error); if (!error) setOpen(false) }}><LogOut size={16} aria-hidden="true" />Sign out</button>
+      {error && <p role="alert" className="px-3 py-1 text-xs text-danger">Couldn't sign out. Try again.</p>}
     </div>}
   </div>
 }

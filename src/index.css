@@ -22,17 +22,31 @@
   --color-line: var(--line);
   --color-brand: var(--brand);
   --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-star: var(--star);
 }
 :root {
   color-scheme: light dark;
   --canvas: #fffaf3; --surface: #ffffff; --surface-2: #f6efe6; --ink: #1c1917; --muted: #6b625a; --line: #ece3d8;
   --brand: #d63a1a; --brand-ink: #ffffff;
+  --success: #007a55; --warning: #973c00; --danger: #c10007; --star: #fe9a00;
+  --brand-soft: color-mix(in oklab, var(--brand) 10%, var(--surface));
+  --success-soft: color-mix(in oklab, var(--success) 10%, var(--surface));
+  --warning-soft: color-mix(in oklab, var(--warning) 10%, var(--surface));
+  --danger-soft: color-mix(in oklab, var(--danger) 10%, var(--surface));
   color: var(--ink); background: var(--canvas); font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --canvas: #14100e; --surface: #1f1a17; --surface-2: #2a2420; --ink: #f5efe8; --muted: #a8a29e; --line: #3a322c;
     --brand: #ff7a5c; --brand-ink: #1a1412;
+    --success: #5ee9b5; --warning: #ffd230; --danger: #ffa2a2; --star: #ffb900;
   }
 }
 body {
@@ -46,3 +60,6 @@ button:disabled { cursor: wait; }
 ::selection { background: color-mix(in oklab, var(--brand) 25%, transparent); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 @utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+@utility hit { position: relative; &::after { content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); } }
+@utility px-safe { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+@utility pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }

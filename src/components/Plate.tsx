@@ -5,15 +5,15 @@ import { Calculator, ChevronDown, ChevronUp, Minus, Plus, X } from 'lucide-react
 import { itemQuery } from '../api/queries'
 import { findNutrient, formatAmount, nutritionDetails, plateTotals } from '../lib/nutrition'
 import { MAX_SERVINGS, readPlate, setServings, updatePlate, usePlate, usePlateServings, type PlateEntry } from '../lib/plate'
-import { tones } from '../lib/theme'
-import { ErrorNote, Loading } from './UI'
+import { cardClass, linkClass, tones } from '../lib/theme'
+import { Button, Disclosure, ErrorNote, Loading, StatGrid } from './UI'
 
 export function PlateButton({ item }: { item: { id: string; name: string } }) {
   const servings = usePlateServings(item.id)
   if (servings === 0) {
-    return <button type="button" aria-label={`Add ${item.name} to plate`} onClick={() => updatePlate(setServings(readPlate(), item, 1))} className="inline-flex h-9 items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-semibold text-brand transition hover:bg-surface-2"><Plus size={16} aria-hidden="true" />Add</button>
+    return <Button size="sm" aria-label={`Add ${item.name} to plate`} onClick={() => updatePlate(setServings(readPlate(), item, 1))}><Plus size={16} aria-hidden="true" />Add</Button>
   }
-  const stepClass = 'grid h-8 w-8 place-items-center rounded-full text-ink transition hover:bg-surface disabled:opacity-40'
+  const stepClass = 'hit grid h-9 w-9 place-items-center rounded-full text-ink transition hover:bg-surface disabled:opacity-40'
   return (
     <div role="group" aria-label={`${item.name} servings`} className="inline-flex items-center rounded-full bg-surface-2 p-0.5">
       <button type="button" aria-label={`Remove one serving of ${item.name}`} onClick={() => updatePlate(setServings(readPlate(), item, servings - 1))} className={stepClass}><Minus size={16} aria-hidden="true" /></button>
@@ -59,19 +59,10 @@ function PlateSummary({ plate }: { plate: PlateEntry[] }) {
   ] as const
 
   return (
-    <section aria-label="Your plate" className="sticky bottom-0 z-20 -mx-4 mt-8 border-t border-line bg-canvas/90 px-4 py-3 backdrop-blur-md">
+    <section aria-label="Your plate" className="sticky bottom-0 z-20 -mx-4 mt-8 border-t border-line bg-canvas/90 px-safe pt-3 pb-safe backdrop-blur-md">
       {open && (
-        <div id="plate-panel" className="mb-3 max-h-[60dvh] overflow-y-auto rounded-3xl bg-surface p-4 ring-1 ring-line">
-          {failed.length ? <ErrorNote retry={() => failed.forEach(result => void result.refetch())} /> : pending ? <Loading inline /> : (
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {tiles.map(([label, value, tone]) => (
-                <div key={label} className={`rounded-2xl p-3 ${tone.soft}`}>
-                  <dt className="text-xs font-semibold uppercase tracking-wider opacity-80">{label}</dt>
-                  <dd className="mt-1 font-display text-2xl font-extrabold tabular-nums">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
+        <div id="plate-panel" className={`mb-3 max-h-[60dvh] overflow-y-auto ${cardClass} p-4`}>
+          {failed.length ? <ErrorNote retry={() => failed.forEach(result => void result.refetch())} /> : pending ? <Loading inline /> : <StatGrid stats={tiles} />}
           <ul className="mt-4 divide-y divide-line">
             {plate.map((entry, i) => {
               const calories = details[i]?.calories
@@ -87,8 +78,7 @@ function PlateSummary({ plate }: { plate: PlateEntry[] }) {
             })}
           </ul>
           {ready && totals.nutrients.length > 0 && (
-            <details className="group mt-4">
-              <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand [&::-webkit-details-marker]:hidden">All nutrition facts ({totals.nutrients.length})<ChevronDown size={16} aria-hidden="true" className="transition group-open:rotate-180" /></summary>
+            <Disclosure className="mt-4" summary={`All nutrition facts (${totals.nutrients.length})`}>
               <dl className="mt-2 grid gap-x-8 sm:grid-cols-2">
                 {totals.nutrients.map(nutrient => (
                   <div key={`${nutrient.name}|${nutrient.unit}`} className="flex justify-between gap-4 border-b border-line py-2 text-sm">
@@ -97,21 +87,21 @@ function PlateSummary({ plate }: { plate: PlateEntry[] }) {
                   </div>
                 ))}
               </dl>
-            </details>
+            </Disclosure>
           )}
           <p className="mt-4 text-xs text-muted">
             {totals.missing > 0 && `${totals.missing} ${totals.missing === 1 ? 'item has' : 'items have'} no nutrition info and ${totals.missing === 1 ? "isn't" : "aren't"} counted. `}
             Totals use the labeled serving size for each serving; actual portions vary.
           </p>
-          <button type="button" onClick={() => updatePlate([])} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"><X size={14} aria-hidden="true" />Clear plate</button>
+          <button type="button" onClick={() => updatePlate([])} className={`hit mt-3 inline-flex items-center gap-1 text-sm ${linkClass}`}><X size={14} aria-hidden="true" />Clear plate</button>
         </div>
       )}
       <div className="flex items-center gap-3">
         <Calculator size={20} aria-hidden="true" className={tones.lime.text} />
         <p className="min-w-0 flex-1 truncate text-sm"><span className="font-semibold text-ink">Your plate</span> · {n} {n === 1 ? 'item' : 'items'} · {summary}</p>
-        <button type="button" aria-expanded={open} aria-controls="plate-panel" onClick={() => setOpen(!open)} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-line bg-surface px-3 py-1.5 text-sm font-semibold transition hover:bg-surface-2">
+        <Button size="sm" aria-expanded={open} aria-controls="plate-panel" onClick={() => setOpen(!open)}>
           {open ? 'Hide' : 'Details'}{open ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronUp size={14} aria-hidden="true" />}
-        </button>
+        </Button>
       </div>
     </section>
   )

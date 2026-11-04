@@ -2,7 +2,6 @@
 name = "terpsdining-scraper"
 version = "0.1.0"
 description = "UMD dining menus, nutrition, hours, and food images"
-readme = "README.md"
 authors = [
     { name = "sbharga", email = "hello@shreyas.com" }
 ]

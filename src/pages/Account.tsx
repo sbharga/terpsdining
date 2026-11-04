@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router'
 import { Heart, Star, TriangleAlert, UserRound } from 'lucide-react'
 import { useDeleteAccount, useFavoriteIds, useFavorites, useMyRatings, useSession } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
-import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle, Panel } from '../components/UI'
-import { nameTone, tones } from '../lib/theme'
+import { Avatar, Button, EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageTitle, Panel } from '../components/UI'
+import { cardClass, titleClass, tones } from '../lib/theme'
 
 export default function Account() {
   const { session, error, loading } = useSession()
@@ -22,21 +22,21 @@ export default function Account() {
   const name = session.user.user_metadata.full_name || session.user.email || '?'
   const visibleRatings = (ratings.data ?? []).filter(row => row.item !== null)
   return <>{title}
-    <header className="flex items-center gap-4 rounded-3xl bg-surface p-6 ring-1 ring-line sm:p-8">
-      <span aria-hidden="true" className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-xl font-bold text-white ${nameTone(name).solid}`}>{name[0]}</span>
-      <div className="min-w-0"><h1 className="break-words font-display text-2xl font-extrabold sm:text-3xl">{name}</h1><p className="break-words text-muted">{session.user.email}</p></div>
+    <header className={`flex items-center gap-4 ${cardClass} p-5 sm:p-6`}>
+      <Avatar name={name} size="lg" />
+      <div className="min-w-0"><h1 className={`break-words ${titleClass}`}>{name}</h1><p className="break-words text-muted">{session.user.email}</p></div>
     </header>
     <div className="mt-6 space-y-6">
       <Panel id="account-favorites" title="Your favorites" icon={Heart} tone={tones.berry}>
         {favorites.isError ? <ErrorNote retry={favorites.refetch} /> : favorites.isPending ? <Loading inline /> : !favorites.data.length ? <p className="text-muted">No favorites yet. Tap the heart on any dish to save it.</p> : <ItemList>{favorites.data.map(row => row.item && <ItemRow key={row.item_id} item={row.item} favorite />)}</ItemList>}
       </Panel>
       <Panel id="account-ratings" title="Your ratings" icon={Star} tone={tones.citrus}>
-        {ratings.isError ? <ErrorNote retry={ratings.refetch} /> : ratings.isPending ? <Loading inline /> : !visibleRatings.length ? <p className="text-muted">You haven't rated anything yet.</p> : <><p className="mb-4 text-sm text-muted">{visibleRatings.length} {visibleRatings.length === 1 ? 'rating' : 'ratings'}</p><ItemList>{visibleRatings.map(row => row.item && <ItemRow key={row.item.id} item={row.item} favorite={favoriteIds.has(row.item.id)}><p className="mt-1 flex items-center gap-1 text-sm font-medium text-amber-700 dark:text-amber-300"><Star size={13} fill="currentColor" aria-hidden="true" />You rated {row.rating}/5</p></ItemRow>)}</ItemList></>}
+        {ratings.isError ? <ErrorNote retry={ratings.refetch} /> : ratings.isPending ? <Loading inline /> : !visibleRatings.length ? <p className="text-muted">You haven't rated anything yet.</p> : <><p className="mb-4 text-sm text-muted">{visibleRatings.length} {visibleRatings.length === 1 ? 'rating' : 'ratings'}</p><ItemList>{visibleRatings.map(row => row.item && <ItemRow key={row.item.id} item={row.item} favorite={favoriteIds.has(row.item.id)}><p className="mt-1 flex items-center gap-1 text-sm font-medium text-ink"><Star size={13} fill="currentColor" aria-hidden="true" className="text-star" />You rated {row.rating}/5</p></ItemRow>)}</ItemList></>}
       </Panel>
       <Panel id="account-delete" title="Delete account" icon={TriangleAlert} tone={tones.tomato}>
         <p className="text-muted">Permanently deletes your account, your ratings, and your favorites. Item averages update to remove your ratings. This can't be undone.</p>
-        {confirming ? <div className="mt-4"><p className="font-semibold">Are you sure?</p><div className="mt-3 flex flex-wrap gap-3"><button type="button" disabled={deleteAccount.isPending} className="rounded-full bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-60" onClick={() => deleteAccount.mutate(undefined, { onSuccess: () => navigate('/', { replace: true }) })}>{deleteAccount.isPending ? 'Deleting…' : 'Yes, delete my account'}</button><button type="button" disabled={deleteAccount.isPending} className="rounded-full border border-line px-4 py-2 font-semibold disabled:opacity-60" onClick={() => { setConfirming(false); deleteAccount.reset() }}>Cancel</button></div></div> : <button type="button" className="mt-4 rounded-full border border-red-600 px-4 py-2 font-semibold text-red-600 dark:text-red-300" onClick={() => setConfirming(true)}>Delete account</button>}
-        {deleteAccount.isError && <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-300">Couldn't delete your account. Try again.</p>}
+        {confirming ? <div className="mt-4"><p className="font-semibold">Are you sure?</p><div className="mt-3 flex flex-wrap gap-3"><Button variant="danger" disabled={deleteAccount.isPending} onClick={() => deleteAccount.mutate(undefined, { onSuccess: () => navigate('/', { replace: true }) })}>{deleteAccount.isPending ? 'Deleting…' : 'Yes, delete my account'}</Button><Button disabled={deleteAccount.isPending} onClick={() => { setConfirming(false); deleteAccount.reset() }}>Cancel</Button></div></div> : <Button variant="danger" className="mt-4" onClick={() => setConfirming(true)}>Delete account</Button>}
+        {deleteAccount.isError && <p role="alert" className="mt-2 text-sm text-danger">Couldn't delete your account. Try again.</p>}
       </Panel>
     </div>
   </>

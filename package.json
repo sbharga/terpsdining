@@ -2,11 +2,17 @@
   "name": "terpsdining",
   "private": true,
   "version": "0.0.0",
+  "description": "UMD dining hall menus, hours, nutrition, and ratings",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sbharga/terpsdining.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && bun run scripts/prerender.tsx",
-    "lint": "oxlint",
+    "lint": "oxlint && bun run scripts/check-design.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
