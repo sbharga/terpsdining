@@ -69,4 +69,4 @@ TerpsDining is an independent project and is not affiliated with UMD. Menus and 
 
 ## License
 
-[MIT](LICENSE). Questions: support@docet.org.
+[MIT](LICENSE). Questions: hello@shreyas.com.

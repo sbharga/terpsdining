@@ -6,7 +6,7 @@ Security fixes apply to the `main` branch and to the production site at https://
 
 ## Reporting a vulnerability
 
-Report vulnerabilities privately by email to **support@docet.org** with the subject line "Security". Do not open a public GitHub issue or pull request for a suspected vulnerability.
+Report vulnerabilities privately by email to **hello@shreyas.com** with the subject line "Security". Do not open a public GitHub issue or pull request for a suspected vulnerability.
 
 Include:
 

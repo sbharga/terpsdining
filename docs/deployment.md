@@ -89,7 +89,7 @@ The hall "Top rated" list uses Bayesian ranking within the selected meal and die
 
 ## Policies
 
-The hosted site publishes a [privacy policy](https://terpsdining.app/privacy) and [terms of use](https://terpsdining.app/terms). Questions and account-data requests go to **support@docet.org**.
+The hosted site publishes a [privacy policy](https://terpsdining.app/privacy) and [terms of use](https://terpsdining.app/terms). Questions and account-data requests go to **hello@shreyas.com**.
 
 For independent deployments, review the policies and replace the contact details with your own before publishing.
 
@@ -100,7 +100,7 @@ Replace project-specific values before publishing your own copy:
 - [ ] `SITE_URL` in `src/lib/seo.ts`.
 - [ ] Social preview image `public/social.png`, and any site URL shown in it.
 - [ ] Project ID in the `db:types` script in `package.json`.
-- [ ] Contact address `support@docet.org` in `src/pages/Privacy.tsx` and `src/pages/Terms.tsx`.
+- [ ] Contact address `hello@shreyas.com` in `src/pages/Privacy.tsx` and `src/pages/Terms.tsx`.
 - [ ] Repository URL in the footer of `src/components/Layout.tsx`.
 - [ ] Scraper `USER_AGENT` in `scraper/src/terpsdining_scraper/config.py`, which links to the repository.
 - [ ] Hall metadata in `src/lib/halls.ts`, and `hallTones` in `src/lib/theme.ts`.
