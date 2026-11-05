@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { addDays, todayET, nowMinutesET } from './dates'
 import { defaultMeal, groupDays, hallStatus, mealStatus, type Hours } from './hours'
 import { filterItems, pickFavorites, rankTopRated } from './menu'
-import { pageWindow } from './pagination'
+import { pageRange, pageWindow } from './pagination'
 const lunch: Hours = { hall_id: 19, date: '2026-10-02', meal: 'Lunch', status: 'open', label: '10:30am-4pm', opens: '10:30:00', closes: '16:00:00' }
 describe('Eastern calendar', () => {
   it('keeps UTC midnight on the previous Eastern day', () => {
@@ -58,5 +58,10 @@ describe('search pagination window', () => {
     expect(pageWindow(1, 10)).toEqual([1, 2, 'gap', 10])
     expect(pageWindow(2, 3)).toEqual([1, 2, 3])
     expect(pageWindow(1, 1)).toEqual([1])
+  })
+  it('reports the 1-based range of results on a page, clamped to the total', () => {
+    expect(pageRange(1, 60, 142)).toEqual([1, 60])
+    expect(pageRange(2, 60, 142)).toEqual([61, 120])
+    expect(pageRange(3, 60, 142)).toEqual([121, 142])
   })
 })

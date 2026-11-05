@@ -4,3 +4,7 @@ export function pageWindow(current: number, total: number): (number | 'gap')[] {
   const pages = [...visible].filter(page => page >= 1 && page <= total).sort((a, b) => a - b)
   return pages.flatMap((page, index) => index > 0 && page - pages[index - 1] > 1 ? ['gap', page] : [page])
 }
+
+export function pageRange(page: number, size: number, total: number): [number, number] {
+  return [Math.min((page - 1) * size + 1, total), Math.min(page * size, total)]
+}

@@ -5,7 +5,7 @@ import { authStorageKey, db, hasAuthState, loadAuth } from '../lib/supabase'
 import type { Meal } from '../lib/hours'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
 export type ItemHistoryRow = { date: string; meal: Meal; station: string; hall: { slug: string; name: string } | null }
-export const SEARCH_PAGE_SIZE = 30
+export const SEARCH_PAGE_SIZE = 60
 
 export const hoursQuery = (from: string, to: string) => queryOptions({
   queryKey: ['hours', from, to] as const,
@@ -53,9 +53,9 @@ export const historyQuery = (id: string) => queryOptions({
 export function useHours(from: string, to: string) { return useQuery(hoursQuery(from, to)) }
 export function useHallMenu(hallId: number, date: string) { return useQuery(hallMenuQuery(hallId, date)) }
 export function usePopular(date: string) { return useQuery(popularQuery(date)) }
-export function useSearch(q: string, page: number, date: string) {
-  return useQuery({ queryKey: ['search', q, page, date], enabled: q.trim().length >= 2, placeholderData: keepPreviousData, queryFn: async () => {
-    const { data, error } = await db.rpc('search_items', { p_query: q, p_date: date, p_limit: SEARCH_PAGE_SIZE, p_offset: (page - 1) * SEARCH_PAGE_SIZE })
+export function useSearch(q: string, page: number, date: string, filters: { diet: string[]; avoid: string[] }) {
+  return useQuery({ queryKey: ['search', q, page, date, filters.diet, filters.avoid], enabled: q.trim().length >= 2, placeholderData: keepPreviousData, queryFn: async () => {
+    const { data, error } = await db.rpc('search_items', { p_query: q, p_date: date, p_limit: SEARCH_PAGE_SIZE, p_offset: (page - 1) * SEARCH_PAGE_SIZE, p_diet: filters.diet, p_avoid: filters.avoid })
     if (error) throw error
     return data
   } })

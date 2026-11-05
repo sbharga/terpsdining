@@ -1,21 +1,17 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ArrowLeft, Ban, ChevronDown, Clock, Heart, ListFilter, Soup, Trophy, X } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Clock, Heart, ListFilter, Soup, Trophy } from 'lucide-react'
 import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
-import { Button, Chip, DatePager, DietIcon, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
+import { DatePager, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
+import { FiltersButton, FiltersPanel } from '../components/Filters'
 import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
 import { addDays, parseDateParam, todayET, useNowMinutesET } from '../lib/dates'
 import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
-import { cardClass, dietTone, hallTone, linkClass, mealTones, nameTone, overlineClass, titleClass, tones } from '../lib/theme'
+import { cardClass, hallTone, linkClass, mealTones, nameTone, titleClass, tones } from '../lib/theme'
+import { useFilterParams } from '../lib/filters'
 import { filterItems, groupByStation, pickFavorites, rankTopRated } from '../lib/menu'
-
-const diets = [
-  { value: 'vegan', label: 'Vegan' },
-  { value: 'vegetarian', label: 'Vegetarian' },
-  { value: 'halal', label: 'Halal' },
-]
 
 export default function Hall() {
   const { slug } = useParams()
@@ -40,11 +36,10 @@ function HallMenu({ hall }: { hall: Hall }) {
   const menu = useHallMenu(hall.id, date)
   const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
   const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, now ?? 0, date === today)
-  const diet = (params.get('diet') ?? '').split(',').filter(Boolean)
-  const avoid = (params.get('avoid') ?? '').split(',').filter(Boolean)
+  const filters = useFilterParams()
   const mealRows = (menu.data ?? []).flatMap(row => row.meal === meal && row.item ? [{ station: row.station, item: row.item }] : [])
   const allergens = [...new Set(mealRows.flatMap(row => row.item.allergens))].sort((a, b) => a.localeCompare(b))
-  const filteredItems = filterItems(mealRows.map(row => row.item), { diet, avoid })
+  const filteredItems = filterItems(mealRows.map(row => row.item), { diet: filters.diet, avoid: filters.avoid })
   const favoriteItems = pickFavorites(filteredItems, favoriteIds)
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
@@ -55,27 +50,12 @@ function HallMenu({ hall }: { hall: Hall }) {
     ...stations.map(([station], index) => ({ id: `station-${index}`, label: station })),
   ] : []
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const activeFilters = diet.length + avoid.length
 
   function updateParam(key: string, value: string) {
     setParams(previous => {
       const next = new URLSearchParams(previous)
       if (value) next.set(key, value)
       else next.delete(key)
-      return next
-    }, { preventScrollReset: true })
-  }
-
-  function toggleFilter(key: 'diet' | 'avoid', value: string) {
-    const selected = key === 'diet' ? diet : avoid
-    updateParam(key, (selected.includes(value) ? selected.filter(tag => tag !== value) : [...selected, value]).join(','))
-  }
-
-  function clearFilters() {
-    setParams(previous => {
-      const next = new URLSearchParams(previous)
-      next.delete('diet')
-      next.delete('avoid')
       return next
     }, { preventScrollReset: true })
   }
@@ -118,31 +98,9 @@ function HallMenu({ hall }: { hall: Hall }) {
             <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
           </div>
         )}
-        <Button aria-expanded={filtersOpen} aria-controls="filter-panel" onClick={() => setFiltersOpen(!filtersOpen)}>
-          <ListFilter size={16} aria-hidden="true" />Filters
-          {activeFilters > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-xs font-semibold text-brand-ink">{activeFilters}<span className="sr-only"> active</span></span>}
-          <ChevronDown size={14} aria-hidden="true" className={`transition ${filtersOpen ? 'rotate-180' : ''}`} />
-        </Button>
+        <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />
       </div>
-      {filtersOpen && (
-        <div id="filter-panel" className={`mt-3 space-y-4 ${cardClass} p-4`}>
-          <div role="group" aria-labelledby="filter-diet-label">
-            <p id="filter-diet-label" className={overlineClass}>Diet</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {diets.map(tag => <Chip key={tag.value} tone={dietTone(tag.value)} pressed={diet.includes(tag.value)} onClick={() => toggleFilter('diet', tag.value)}><DietIcon tag={tag.value} size={14} />{tag.label}</Chip>)}
-            </div>
-          </div>
-          {(allergens.length > 0 || avoid.length > 0) && (
-            <div role="group" aria-labelledby="filter-avoid-label">
-              <p id="filter-avoid-label" className={overlineClass}>Avoid allergens</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[...new Set([...allergens, ...avoid])].map(tag => <Chip key={tag} tone="danger" pressed={avoid.includes(tag)} onClick={() => toggleFilter('avoid', tag)}>{avoid.includes(tag) && <Ban size={14} aria-hidden="true" />}{tag.replace(/\b\w/g, letter => letter.toUpperCase())}</Chip>)}
-              </div>
-            </div>
-          )}
-          {activeFilters > 0 && <button type="button" onClick={clearFilters} className={`hit inline-flex items-center gap-1 text-sm ${linkClass}`}><X size={14} aria-hidden="true" />Clear all</button>}
-        </div>
-      )}
+      {filtersOpen && <FiltersPanel allergens={allergens} filters={filters} />}
 
       {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
@@ -155,7 +113,7 @@ function HallMenu({ hall }: { hall: Hall }) {
               </div>
             </section>
           )}
-          {mealRows.length === 0 ? <EmptyState icon={Soup} title="No menu posted">Try another meal or day.</EmptyState> : stations.length === 0 ? <EmptyState icon={ListFilter} title="No items match filters"><button type="button" onClick={clearFilters} className={`hit ${linkClass}`}>Clear filters</button></EmptyState> : stations.map(([station, items], index) => (
+          {mealRows.length === 0 ? <EmptyState icon={Soup} title="No menu posted">Try another meal or day.</EmptyState> : stations.length === 0 ? <EmptyState icon={ListFilter} title="No items match filters"><button type="button" onClick={filters.clear} className={`hit ${linkClass}`}>Clear filters</button></EmptyState> : stations.map(([station, items], index) => (
             <section key={station} id={`station-${index}`} className="mt-10 scroll-mt-36" aria-labelledby={`station-${index}-heading`}>
               <SectionHeading id={`station-${index}-heading`} dot={nameTone(station).dot} count={items.length}>{station}</SectionHeading>
               <div className="mt-4">

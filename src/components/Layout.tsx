@@ -3,6 +3,12 @@ import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from
 import { AuthButton } from './AuthButton'
 import { Clock, Search } from 'lucide-react'
 import { buttonClass, tones } from '../lib/theme'
+function searchHref(base: URLSearchParams | undefined, value: string) {
+  const next = new URLSearchParams(base)
+  next.set('q', value)
+  next.delete('page')
+  return `/search?${next}`
+}
 export function SearchBar({ large = false }: { large?: boolean }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -10,12 +16,13 @@ export function SearchBar({ large = false }: { large?: boolean }) {
   const query = params.get('q') ?? ''
   const [draft, setDraft] = useState({ query, value: query })
   const text = draft.query === query ? draft.value : query
+  const base = location.pathname === '/search' ? params : undefined
   useEffect(() => {
     if (location.pathname !== '/search' || text === query) return
-    const timer = window.setTimeout(() => navigate(`/search?q=${encodeURIComponent(text)}`, { replace: true, preventScrollReset: true }), 250)
+    const timer = window.setTimeout(() => navigate(searchHref(base, text), { replace: true, preventScrollReset: true }), 250)
     return () => window.clearTimeout(timer)
-  }, [text, query, location.pathname, navigate])
-  return <form className={large ? 'w-full' : 'w-full sm:max-w-xs'} onSubmit={event => { event.preventDefault(); navigate(`/search?q=${encodeURIComponent(text)}`) }}><div className="relative"><Search size={large ? 18 : 16} aria-hidden="true" className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted ${large ? 'left-4' : 'left-3.5'}`} /><input aria-label="Search food" type="search" placeholder="Search dishes, e.g. tacos" value={text} autoFocus={large && !query} onChange={event => setDraft({ query, value: event.target.value })} className={`w-full rounded-full border border-line bg-surface pr-4 text-base placeholder:text-muted focus:border-brand ${large ? 'h-12 pl-11' : 'h-11 pl-10 sm:text-sm'}`} /></div></form>
+  }, [text, query, location.pathname, base, navigate])
+  return <form className={large ? 'w-full' : 'w-full sm:max-w-xs'} onSubmit={event => { event.preventDefault(); navigate(searchHref(base, text)) }}><div className="relative"><Search size={large ? 18 : 16} aria-hidden="true" className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted ${large ? 'left-4' : 'left-3.5'}`} /><input aria-label="Search food" type="search" placeholder="Search dishes, e.g. tacos" value={text} autoFocus={large && !query} onChange={event => setDraft({ query, value: event.target.value })} className={`w-full rounded-full border border-line bg-surface pr-4 text-base placeholder:text-muted focus:border-brand ${large ? 'h-12 pl-11' : 'h-11 pl-10 sm:text-sm'}`} /></div></form>
 }
 export default function Layout() {
   const { pathname } = useLocation()

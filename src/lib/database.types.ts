@@ -309,7 +309,9 @@ export type Database = {
       }
       search_items: {
         Args: {
+          p_avoid?: string[]
           p_date: string
+          p_diet?: string[]
           p_limit?: number
           p_offset?: number
           p_query: string
