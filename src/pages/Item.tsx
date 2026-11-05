@@ -5,6 +5,7 @@ import type { ItemHistoryRow } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
 import { Badges, Chip, Disclosure, ErrorNote, FoodSwatch, Loading, NotFound, PageTitle, Panel, RatingPill, StarRating, StatGrid } from '../components/UI'
 import { nutritionDetails } from '../lib/nutrition'
+import { markAllergens } from '../lib/allergens'
 import { formatDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
 import { cardClass, hallTone, linkClass, overlineClass, titleClass, tones } from '../lib/theme'
@@ -179,7 +180,7 @@ export default function Item() {
           <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
             {item.ingredients ? (
               <Disclosure summary="Show ingredients">
-                <p className="mt-2 text-sm leading-relaxed text-muted">{item.ingredients}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{markAllergens(item.ingredients).map((part, index) => part.allergen ? <strong key={index} className="font-semibold text-ink">{part.text}</strong> : part.text)}</p>
               </Disclosure>
             ) : <p className="text-muted">Ingredients not available.</p>}
             {item.label_allergens && <p className="mt-3 text-sm text-muted">Allergens: {item.label_allergens}</p>}
