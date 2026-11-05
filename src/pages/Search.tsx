@@ -58,16 +58,12 @@ export default function Search() {
     <section>
       <PageTitle title="Search" />
       <PageHeader title="Search" />
-      <SearchBar large />
-      {query.trim().length >= 2 && (
-        <>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            {results.data && <p id="search-results" className="scroll-mt-20 text-muted">{totalPages > 1 ? <>Showing {from}–{to} of {total} results for “{query.trim()}”</> : <>{total} {total === 1 ? 'result' : 'results'} for “{query.trim()}”</>}</p>}
-            <span className="ml-auto"><FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} /></span>
-          </div>
-          {filtersOpen && <FiltersPanel allergens={allergens} filters={filters} />}
-        </>
-      )}
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1"><SearchBar large /></div>
+        <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />
+      </div>
+      {filtersOpen && <FiltersPanel allergens={allergens} filters={filters} />}
+      {query.trim().length >= 2 && results.data && <p id="search-results" className="mt-3 scroll-mt-20 text-muted">{totalPages > 1 ? <>Showing {from}–{to} of {total} results for “{query.trim()}”</> : <>{total} {total === 1 ? 'result' : 'results'} for “{query.trim()}”</>}</p>}
       {query.trim().length < 2 ? (
         <EmptyState icon={SearchIcon} title="Find a dish">Type 2+ characters to search every hall's menu.</EmptyState>
       ) : results.isError ? (
