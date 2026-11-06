@@ -69,4 +69,4 @@ TerpsDining is an independent project and is not affiliated with UMD. Menus and 
 
 ## License
 
-[MIT](LICENSE). Questions: hello@shreyas.com.
+The source code is [MIT](LICENSE) licensed. The license covers the code only. Dining data, nutrition labels, and food images belong to their respective sources and are not licensed by this project. Questions: hello@shreyas.com.
