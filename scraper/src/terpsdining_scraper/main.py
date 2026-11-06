@@ -9,10 +9,11 @@ from datetime import UTC, date, datetime, timedelta
 
 import httpx
 from ddgs.exceptions import RatelimitException
+from storage3.exceptions import StorageException
 from supabase import Client
 
 from . import db
-from .config import HALL_IDS, MEALS, SHEET_URL, TZ, USER_AGENT
+from .config import BUCKET, HALL_IDS, MEALS, SHEET_URL, TZ, USER_AGENT
 from .hours import count_changed_hours, parse_sheet
 from .images import fetch_and_store_image
 from .label import parse_label
@@ -46,6 +47,12 @@ def _arguments() -> argparse.Namespace:
         metavar="ID",
         help="Replace images for these food IDs only; skip hours, menus, and nutrition",
     )
+    parser.add_argument(
+        "--clear-images",
+        nargs="+",
+        metavar="ID",
+        help="Remove stored images for these food IDs so the daily scrape searches again",
+    )
     args = parser.parse_args()
     if args.regenerate_images and args.skip_images:
         parser.error("--regenerate-images cannot be combined with --skip-images")
@@ -53,6 +60,8 @@ def _arguments() -> argparse.Namespace:
         parser.error(
             "--hours-only cannot be combined with --skip-hours or --regenerate-images"
         )
+    if args.clear_images and (args.regenerate_images or args.hours_only):
+        parser.error("--clear-images cannot be combined with --regenerate-images or --hours-only")
     return args
 
 
@@ -105,6 +114,43 @@ def _regenerate_images(http: httpx.Client, sb: Client, item_ids: list[str]) -> i
     return 1 if failures else 0
 
 
+def _clear_images(sb: Client, item_ids: list[str]) -> int:
+    item_ids = list(dict.fromkeys(item_ids))
+    items = {}
+    for start in range(0, len(item_ids), 500):
+        rows = (
+            sb.table("items")
+            .select("id,image_path")
+            .in_("id", item_ids[start : start + 500])
+            .execute()
+            .data
+        )
+        items.update((item["id"], item) for item in rows)
+
+    missing = [item_id for item_id in item_ids if item_id not in items]
+    for item_id in missing:
+        logger.error("Unknown food ID: %s", item_id)
+    failures = len(missing)
+    cleared = 0
+    storage = sb.storage.from_(BUCKET)
+    for item_id in item_ids:
+        if item_id not in items:
+            continue
+        path = items[item_id]["image_path"]
+        db.update_item(item_id, {"image_path": None, "image_checked_at": None})
+        if path is not None:
+            try:
+                storage.remove([path, f"thumbs/{path}"])
+            except StorageException as exc:
+                logger.error("Image delete failed for %s: %s", item_id, exc)
+                failures += 1
+                continue
+        cleared += 1
+
+    print(f"cleared={cleared} failures={failures}")
+    return 1 if failures else 0
+
+
 def _refresh_hours(http: httpx.Client, sb: Client) -> list[dict]:
     halls = sb.table("halls").select("id,sheet_name").execute().data
     hall_ids_by_sheet_name = {hall["sheet_name"]: hall["id"] for hall in halls}
@@ -127,6 +173,8 @@ def main() -> int:
     with httpx.Client(
         headers={"User-Agent": USER_AGENT}, timeout=30, follow_redirects=True
     ) as http:
+        if args.clear_images:
+            return _clear_images(sb, args.clear_images)
         if args.regenerate_images:
             return _regenerate_images(http, sb, args.regenerate_images)
         if args.hours_only:

@@ -46,8 +46,9 @@ The process exits nonzero when a menu request failed.
 | `--skip-hours` | Skip the hours sheet. |
 | `--hours-only` | Refresh hours only; skip menus, nutrition, images, and pruning. Prints `hours=<n> changed=<n>` and writes `changed=<n>` to `$GITHUB_OUTPUT` when it is set. |
 | `--regenerate-images ID …` | Replace images for the listed food IDs only (see [Images](#images)). |
+| `--clear-images ID …` | Remove stored images for the listed food IDs so the daily scrape searches again (see [Images](#clearing-images)). |
 
-Invalid combinations are rejected: `--regenerate-images` cannot be combined with `--skip-images`, and `--hours-only` cannot be combined with `--skip-hours` or `--regenerate-images`.
+Invalid combinations are rejected: `--regenerate-images` cannot be combined with `--skip-images`, `--hours-only` cannot be combined with `--skip-hours` or `--regenerate-images`, and `--clear-images` cannot be combined with `--regenerate-images` or `--hours-only`.
 
 ## Failure semantics
 
@@ -62,6 +63,7 @@ Invalid combinations are rejected: `--regenerate-images` cannot be combined with
 - Image searches use Bing only, through DDGS. There is no fallback to another search engine.
 - Full-size images are stored in the `food-images` bucket as 480px WebP. Card thumbnails are 160px WebP under `thumbs/`.
 - Uploads use a seven-day cache lifetime. Items whose image search found nothing are retried after seven days.
+- A search result is used only if its title shares at least one word with the item name (case-insensitive, plural "s" ignored, words under three letters and "and", "with", "the", "food" ignored). Names with no usable words accept any result.
 - Images are illustrative, not official dining hall photos.
 
 ### Regenerating images
@@ -78,9 +80,21 @@ uv run --env-file .env terpsdining-scrape --regenerate-images 151365 040065
 - Unknown IDs, failed replacements, and rate limiting are counted as failures. The run prints `images=<count> failures=<count>` and exits nonzero if `failures` is greater than zero.
 - Storage objects keep the same URLs with a seven-day cache lifetime, so cached copies may not update immediately.
 
+### Clearing images
+
+Remove stored images for specific food IDs (for example, images that do not show food) so the daily scrape searches for them again:
+
+```sh
+uv run --env-file .env terpsdining-scrape --clear-images 115154
+```
+
+- Each ID has `image_path` and `image_checked_at` set to null, and its full-size and thumbnail objects are deleted from storage. The database is updated first so the site never points at a deleted object.
+- The next daily runs pick the items up, most recently served first, up to `--image-limit` per run.
+- This mode does not contact Bing or UMD. Unknown IDs and failed storage deletes are counted as failures. The run prints `cleared=<count> failures=<count>` and exits nonzero if `failures` is greater than zero. Rerunning is safe.
+
 ## History pruning
 
-Every run that is neither `--hours-only` nor `--regenerate-images` ends by calling the `prune_history` database function. It deletes offerings and hours dated more than one year before today (America/New_York). Items, ratings, favorites, and `first_seen`/`last_seen` are kept. The deleted count is reported as `pruned=`.
+Every run that is not `--hours-only`, `--regenerate-images`, or `--clear-images` ends by calling the `prune_history` database function. It deletes offerings and hours dated more than one year before today (America/New_York). Items, ratings, favorites, and `first_seen`/`last_seen` are kept. The deleted count is reported as `pruned=`.
 
 The function is defined in `supabase/migrations/20261007000000_prune_history.sql`. Apply that migration before running the updated scraper; otherwise the RPC returns 404 and the job fails.
 

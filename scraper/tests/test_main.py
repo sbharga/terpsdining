@@ -16,6 +16,14 @@ class ItemStore:
             "000003": {"id": "000003", "name": "Bread", "image_path": "bread.webp"},
         }
         self.ids = []
+        self.removed = []
+        self.storage = SimpleNamespace(
+            from_=lambda bucket: SimpleNamespace(remove=self.remove)
+        )
+
+    def remove(self, paths):
+        self.removed.append(paths)
+        return []
 
     def table(self, name):
         assert name == "items"
@@ -70,6 +78,18 @@ def test_failed_regeneration_and_unknown_id_preserve_existing_image(store, monke
     assert result == 1
     assert store.rows["040065"] == before
     assert capsys.readouterr().out == "images=0 failures=2\n"
+
+
+def test_clear_images_resets_fields_and_deletes_objects(store, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["scraper", "--clear-images", "040065", "040065", "missing"])
+    assert main.main() == 1
+    assert store.rows["040065"]["image_path"] is None
+    assert store.rows["040065"]["image_checked_at"] is None
+    assert store.removed == [["old.webp", "thumbs/old.webp"]]
+    assert store.rows["000002"] == {
+        "id": "000002", "name": "Soup", "image_path": "soup.webp"
+    }
+    assert capsys.readouterr().out == "cleared=1 failures=1\n"
 
 
 def test_rate_limit_counts_unprocessed_ids_and_preserves_them(store, monkeypatch, capsys):

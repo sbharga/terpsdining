@@ -37,11 +37,28 @@ def make_thumbnail(data: bytes) -> bytes:
 
 logger = logging.getLogger(__name__)
 
+STOPWORDS = frozenset({"and", "with", "the", "food"})
+
+
+def title_words(text: str) -> set[str]:
+    return {
+        word.removesuffix("s")
+        for word in re.findall(r"[a-z]+", text.lower())
+        if len(word) > 2 and word not in STOPWORDS
+    }
+
+
+def title_matches(name_words: set[str], title: str | None) -> bool:
+    return not name_words or bool(name_words & title_words(title or ""))
+
+
 
 def fetch_and_store_image(
     client: httpx.Client, sb: Client, item_id: str, name: str
 ) -> str | None:
-    query = re.sub(r"\s*\([^)]*\)", "", name).strip() + " food"
+    cleaned = re.sub(r"\s*\([^)]*\)", "", name).strip()
+    query = cleaned + " food"
+    name_words = title_words(cleaned)
     try:
         results = DDGS().images(
             query, max_results=5, safesearch="moderate", backend="bing"
@@ -53,6 +70,8 @@ def fetch_and_store_image(
         return None
 
     for result in results:
+        if not title_matches(name_words, result.get("title")):
+            continue
         for field in ("thumbnail", "image"):
             url = result.get(field)
             if not url:
