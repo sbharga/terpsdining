@@ -71,7 +71,7 @@ Point your status page at `https://<your-domain>/api/health` and alert on a non-
 ## Build, prerendering, and caching
 
 - The build fetches public Supabase data and prerenders pages into `dist/`. It requires the frontend environment variables and network access. Data-fetch errors fail the build rather than generating empty pages.
-- Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages, and `/robots.txt` advertises it. Search and missing pages are marked `noindex`. Canonicals omit query parameters. Search engines determine indexing and rankings.
+- Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages without `<lastmod>`, because the content changes daily and a build-date `lastmod` makes search results show a stale “N days ago” date. `/robots.txt` advertises the sitemap. Search and missing pages are marked `noindex`. Canonicals omit query parameters. The home page marks its date and live hours and ratings with `data-nosnippet` so search snippets use the meta description instead of today’s hours. Search engines determine indexing and rankings.
 - Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render.
 - Fresh queries do not refetch immediately: hours and history stay fresh for six hours, menus for 30 minutes, and other queries for five minutes.
 - Newly scraped items remain accessible before the next deployment, but they need a rebuild to appear in initial HTML and the sitemap.

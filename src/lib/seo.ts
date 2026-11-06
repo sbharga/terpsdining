@@ -14,7 +14,7 @@ export type PageSeo = {
 const DEFAULT_IMAGE = `${SITE_URL}/social.png`
 const DEFAULT_IMAGE_ALT = 'TerpsDining — University of Maryland dining menus and hours'
 const SITE_TITLE = 'TerpsDining'
-const HOME_DESCRIPTION = 'Today’s UMD dining hall menus and hours for Yahentamitsi, South Campus, and 251 North, with nutrition facts, allergens, dietary filters, and student ratings.'
+const HOME_DESCRIPTION = 'Menus, hours, nutrition facts, and allergens for UMD’s dining halls (Yahentamitsi, South Campus, 251 North), with student ratings on every dish.'
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({

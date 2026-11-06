@@ -25,9 +25,9 @@ export default function Home() {
   return (
     <>
       <PageTitle title="Today" />
-      <PageHeader eyebrow={<time dateTime={today}>{formatDay(today)}</time>} title={<>What's cooking at UMD <span className="text-brand">today</span></>} lead="Hours, menus, and top-rated eats across UMD's dining halls." />
+      <PageHeader eyebrow={<time dateTime={today} data-nosnippet>{formatDay(today)}</time>} title={<>What's cooking at UMD <span className="text-brand">today</span></>} lead="Hours, menus, and top-rated eats across UMD's dining halls." />
 
-      <section aria-label="Dining halls">
+      <section aria-label="Dining halls" data-nosnippet>
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
         <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} />
@@ -40,7 +40,7 @@ export default function Home() {
         })}</ItemList>}</div>
       </section>}
 
-      <section className="mt-10" aria-labelledby="popular-heading">
+      <section className="mt-10" aria-labelledby="popular-heading" data-nosnippet>
         <SectionHeading id="popular-heading" icon={Trophy} tone={tones.citrus}>Top rated today</SectionHeading>
         <div className="mt-4">
           {popular.isError ? <ErrorNote retry={popular.refetch} /> : popular.isPending ? <Loading /> : popular.data?.length ? (
