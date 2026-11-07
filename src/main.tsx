@@ -1,13 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
-import { hydrate, QueryClientProvider } from '@tanstack/react-query'
+import { type DehydratedState, hydrate, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router'
 import { queryClient } from './api/queries'
 import { router } from './router'
 
 const state = document.getElementById('query-state')?.textContent
-if (state) hydrate(queryClient, JSON.parse(state))
+if (state) {
+  const dehydrated = JSON.parse(state) as DehydratedState
+  const loadedAt = Date.now()
+  hydrate(queryClient, { ...dehydrated, queries: dehydrated.queries.map(query => ({ ...query, state: { ...query.state, dataUpdatedAt: loadedAt } })) })
+}
 
 const app = (
   <StrictMode>

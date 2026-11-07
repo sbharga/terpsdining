@@ -30,7 +30,7 @@ Run commands from `scraper/`. Without `--date`, the scraper uses today's date in
 The run prints one summary line:
 
 ```text
-hours=<n> items=<n> offerings=<n> nutrition=<n> images=<n> pruned=<n> failures=<n>
+hours=<n> items=<n> merged=<n> offerings=<n> nutrition=<n> images=<n> pruned=<n> failures=<n>
 ```
 
 The process exits nonzero when a menu request failed.
@@ -91,6 +91,16 @@ uv run --env-file .env terpsdining-scrape --clear-images 115154
 - Each ID has `image_path` and `image_checked_at` set to null, and its full-size and thumbnail objects are deleted from storage. The database is updated first so the site never points at a deleted object.
 - The next daily runs pick the items up, most recently served first, up to `--image-limit` per run.
 - This mode does not contact Bing or UMD. Unknown IDs and failed storage deletes are counted as failures. The run prints `cleared=<count> failures=<count>` and exits nonzero if `failures` is greater than zero. Rerunning is safe.
+
+## Duplicate items
+
+UMD sometimes gives one dish several recipe IDs. After upserting items, every run calls the `merge_items` database function (`supabase/migrations/20261107000000_merge_duplicate_items.sql`), which merges items whose names match after lowercasing and collapsing whitespace. The newly merged count is reported as `merged=`.
+
+- The main item is the one with the earliest `first_seen` (nulls last), then the lowest ID. Others get `canonical_id` set to the main item's ID and are called aliases. Merges are permanent: a later rename never splits a group.
+- Ratings, favorites, and offerings move to the main item. If a user rated several recipes, only their most recently updated rating is kept.
+- The scraper writes each recipe's own tags to `recipe_allergens` and `recipe_dietary`. `merge_items` derives `allergens` (union) and `dietary` (intersection) on the main item. Aliases keep their own tags in `allergens`/`dietary`.
+- `replace_offerings` maps alias IDs to the main item, so menus show a dish once. Aliases keep their nutrition fetch but never trigger image searches.
+- The site redirects alias URLs to the main item, whose page lists each recipe's nutrition and ingredients.
 
 ## History pruning
 

@@ -127,6 +127,7 @@ export type Database = {
       items: {
         Row: {
           allergens: string[]
+          canonical_id: string | null
           created_at: string
           dietary: string[]
           first_seen: string | null
@@ -143,9 +144,12 @@ export type Database = {
           rating_avg: number | null
           rating_count: number
           rating_sum: number
+          recipe_allergens: string[]
+          recipe_dietary: string[]
         }
         Insert: {
           allergens?: string[]
+          canonical_id?: string | null
           created_at?: string
           dietary?: string[]
           first_seen?: string | null
@@ -162,9 +166,12 @@ export type Database = {
           rating_avg?: number | null
           rating_count?: number
           rating_sum?: number
+          recipe_allergens?: string[]
+          recipe_dietary?: string[]
         }
         Update: {
           allergens?: string[]
+          canonical_id?: string | null
           created_at?: string
           dietary?: string[]
           first_seen?: string | null
@@ -181,8 +188,18 @@ export type Database = {
           rating_avg?: number | null
           rating_count?: number
           rating_sum?: number
+          recipe_allergens?: string[]
+          recipe_dietary?: string[]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "items_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       offerings: {
         Row: {
@@ -284,6 +301,8 @@ export type Database = {
           item_id: string
         }[]
       }
+      item_name_key: { Args: { p_name: string }; Returns: string }
+      merge_items: { Args: never; Returns: number }
       popular_items: {
         Args: { p_date: string; p_hall?: number; p_limit?: number }
         Returns: {

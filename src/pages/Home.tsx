@@ -1,7 +1,7 @@
 import { useFavoriteIds, useFavoriteItems, useHours, usePopular, useSession } from '../api/queries'
 import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageHeader, PageTitle, SectionHeading } from '../components/UI'
 import { HoursBoard } from '../components/HoursViz'
-import { formatDay, todayET, useNowMinutesET } from '../lib/dates'
+import { addDays, formatDay, todayET, useNowMinutesET } from '../lib/dates'
 import { halls } from '../lib/halls'
 import { tones } from '../lib/theme'
 import { Heart, Star, Trophy } from 'lucide-react'
@@ -18,7 +18,7 @@ export default function Home() {
   const { session } = useSession()
   const favoriteIds = useFavoriteIds(session?.user.id)
   const favorites = useFavoriteItems(today, session?.user.id)
-  const hours = useHours(today, today)
+  const hours = useHours(today, addDays(today, 6))
   const popular = usePopular(today)
   const now = useNowMinutesET()
 
@@ -30,7 +30,7 @@ export default function Home() {
       <section aria-label="Dining halls" data-nosnippet>
         {hours.isError && <ErrorNote retry={hours.refetch} />}
         {hours.isPending && <Loading inline />}
-        <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data : undefined} now={now} />
+        <HoursBoard halls={halls} rows={hours.isSuccess ? hours.data.filter(row => row.date === today) : undefined} now={now} />
       </section>
       {session && !(favorites.isSuccess && favorites.data.length === 0) && <section className="mt-10" aria-labelledby="favorites-heading">
         <SectionHeading id="favorites-heading" icon={Heart} tone={tones.berry}>Your favorites today</SectionHeading>

@@ -1,5 +1,5 @@
 import { CalendarDays, ExternalLink, Flame, Heart, LoaderCircle, Star, Wheat } from 'lucide-react'
-import { Link, useParams } from 'react-router'
+import { Link, Navigate, useParams } from 'react-router'
 import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
 import type { ItemHistoryRow } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
@@ -8,9 +8,11 @@ import { nutritionDetails } from '../lib/nutrition'
 import { markAllergens } from '../lib/allergens'
 import { formatDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
+import type { Database } from '../lib/database.types'
 import { cardClass, hallTone, linkClass, overlineClass, titleClass, tones } from '../lib/theme'
 import { meals } from '../lib/hours'
 
+type ItemRow = Database['public']['Tables']['items']['Row']
 type HallMeals = { slug: string; name: string; meals: string[] }
 
 function groupHalls(rows: ItemHistoryRow[]): HallMeals[] {
@@ -45,6 +47,52 @@ function HistoryList({ dates, byDate }: { dates: string[]; byDate: Map<string, I
   )
 }
 
+function RecipeNutrition({ recipe }: { recipe: ItemRow }) {
+  const nutrition = recipe.nutrition === null ? null : nutritionDetails(recipe.nutrition)
+  if (!nutrition) return <p className="text-muted">Nutrition not available.</p>
+  const stats = ([
+    ['Calories', nutrition.calories === null ? null : String(nutrition.calories), tones.tomato],
+    ['Protein', nutrition.nutrients.find(nutrient => nutrient.name === 'Protein')?.amount ?? null, tones.berry],
+    ['Carbs', nutrition.nutrients.find(nutrient => nutrient.name === 'Total Carbohydrate')?.amount ?? null, tones.sky],
+    ['Fat', nutrition.nutrients.find(nutrient => nutrient.name === 'Total Fat')?.amount ?? null, tones.citrus],
+  ] as const).flatMap(([label, value, tone]) => value === null ? [] : [[label, value, tone] as const])
+  return (
+    <>
+      {stats.length > 0 && <StatGrid stats={stats} className="mb-5" />}
+      <p className="text-muted">
+        {[nutrition.servingSize ? `Serving ${nutrition.servingSize}` : null, nutrition.calories !== null ? `${nutrition.calories} cal` : null].filter(Boolean).join(' · ') || 'Serving not available.'}
+      </p>
+      {nutrition.servings && <p className="mt-1 text-sm text-muted">{nutrition.servings}</p>}
+      {nutrition.nutrients.length > 0 && (
+        <Disclosure className="mt-4" summary={`All nutrition facts (${nutrition.nutrients.length})`}>
+          <dl className="mt-2 grid gap-x-8 sm:grid-cols-2">
+            {nutrition.nutrients.map((nutrient, index) => (
+              <div key={`${nutrient.name}-${index}`} className="flex justify-between gap-4 border-b border-line py-2 text-sm">
+                <dt>{nutrient.name}</dt>
+                <dd className="shrink-0 text-muted">{nutrient.amount}{nutrient.dv ? ` · ${nutrient.dv}` : ''}</dd>
+              </div>
+            ))}
+          </dl>
+        </Disclosure>
+      )}
+    </>
+  )
+}
+
+function RecipeIngredients({ recipe }: { recipe: ItemRow }) {
+  return (
+    <>
+      {recipe.ingredients ? (
+        <Disclosure summary="Show ingredients">
+          <p className="mt-2 text-sm leading-relaxed text-muted">{markAllergens(recipe.ingredients).map((part, index) => part.allergen ? <strong key={index} className="font-semibold text-ink">{part.text}</strong> : part.text)}</p>
+        </Disclosure>
+      ) : <p className="text-muted">Ingredients not available.</p>}
+      {recipe.label_allergens && <p className="mt-3 text-sm text-muted">Allergens: {recipe.label_allergens}</p>}
+      {recipe.label_url && <a href={recipe.label_url} target="_blank" rel="noopener noreferrer" className={`hit mt-4 inline-flex items-center gap-1 text-sm ${linkClass}`}>Official label <ExternalLink size={14} aria-hidden="true" /></a>}
+    </>
+  )
+}
+
 export default function Item() {
   const { id = '' } = useParams()
   const itemQuery = useItem(id)
@@ -61,9 +109,9 @@ export default function Item() {
   if (itemQuery.isPending) return <><PageTitle title="Item" /><Loading /></>
   const item = itemQuery.data
   if (!item) return <NotFound />
+  if (item.canonical_id) return <Navigate to={`/items/${item.canonical_id}`} replace />
 
   const image = imageUrl(item.image_path)
-  const nutrition = item.nutrition === null ? null : nutritionDetails(item.nutrition)
   const history = historyQuery.data ?? []
   const todayHalls = groupHalls(history.filter(row => row.date === today))
   const lastHalls = groupHalls(history.filter(row => row.date === item.last_seen))
@@ -74,13 +122,7 @@ export default function Item() {
     byDate.set(row.date, rows)
   }
   const dates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a))
-
-  const stats = nutrition ? ([
-    ['Calories', nutrition.calories === null ? null : String(nutrition.calories), tones.tomato],
-    ['Protein', nutrition.nutrients.find(nutrient => nutrient.name === 'Protein')?.amount ?? null, tones.berry],
-    ['Carbs', nutrition.nutrients.find(nutrient => nutrient.name === 'Total Carbohydrate')?.amount ?? null, tones.sky],
-    ['Fat', nutrition.nutrients.find(nutrient => nutrient.name === 'Total Fat')?.amount ?? null, tones.citrus],
-  ] as const).flatMap(([label, value, tone]) => value === null ? [] : [[label, value, tone] as const]) : []
+  const recipes = [item, ...item.aliases]
 
   return (
     <article>
@@ -154,37 +196,28 @@ export default function Item() {
 
         <div className="space-y-6 lg:col-span-2">
           <Panel id="item-nutrition" title="Nutrition" icon={Flame} tone={tones.lime}>
-            {nutrition ? (
+            {recipes.length === 1 ? <RecipeNutrition recipe={item} /> : (
               <>
-                {stats.length > 0 && <StatGrid stats={stats} className="mb-5" />}
-                <p className="text-muted">
-                  {[nutrition.servingSize ? `Serving ${nutrition.servingSize}` : null, nutrition.calories !== null ? `${nutrition.calories} cal` : null].filter(Boolean).join(' · ') || 'Serving not available.'}
-                </p>
-                {nutrition.servings && <p className="mt-1 text-sm text-muted">{nutrition.servings}</p>}
-                {nutrition.nutrients.length > 0 && (
-                  <Disclosure className="mt-4" summary={`All nutrition facts (${nutrition.nutrients.length})`}>
-                    <dl className="mt-2 grid gap-x-8 sm:grid-cols-2">
-                      {nutrition.nutrients.map((nutrient, index) => (
-                        <div key={`${nutrient.name}-${index}`} className="flex justify-between gap-4 border-b border-line py-2 text-sm">
-                          <dt>{nutrient.name}</dt>
-                          <dd className="shrink-0 text-muted">{nutrient.amount}{nutrient.dv ? ` · ${nutrient.dv}` : ''}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </Disclosure>
-                )}
+                <p className="mb-5 text-sm text-muted">UMD lists {recipes.length} recipes under this name. Allergen and diet tags above include every recipe.</p>
+                <div className="space-y-6">
+                  {recipes.map(recipe => <section key={recipe.id}><h3 className={`mb-3 ${overlineClass}`}>Recipe {recipe.id}</h3><RecipeNutrition recipe={recipe} /></section>)}
+                </div>
               </>
-            ) : <p className="text-muted">Nutrition not available.</p>}
+            )}
           </Panel>
 
           <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
-            {item.ingredients ? (
-              <Disclosure summary="Show ingredients">
-                <p className="mt-2 text-sm leading-relaxed text-muted">{markAllergens(item.ingredients).map((part, index) => part.allergen ? <strong key={index} className="font-semibold text-ink">{part.text}</strong> : part.text)}</p>
-              </Disclosure>
-            ) : <p className="text-muted">Ingredients not available.</p>}
-            {item.label_allergens && <p className="mt-3 text-sm text-muted">Allergens: {item.label_allergens}</p>}
-            {item.label_url && <a href={item.label_url} target="_blank" rel="noopener noreferrer" className={`hit mt-4 inline-flex items-center gap-1 text-sm ${linkClass}`}>Official label <ExternalLink size={14} aria-hidden="true" /></a>}
+            {recipes.length === 1 ? <RecipeIngredients recipe={item} /> : (
+              <div className="space-y-6">
+                {recipes.map(recipe => (
+                  <section key={recipe.id}>
+                    <h3 className={`mb-3 ${overlineClass}`}>Recipe {recipe.id}</h3>
+                    <div className="mb-3"><Badges allergens={recipe.recipe_allergens} dietary={recipe.recipe_dietary} /></div>
+                    <RecipeIngredients recipe={recipe} />
+                  </section>
+                ))}
+              </div>
+            )}
           </Panel>
 
           <Panel id="item-history" title="History" icon={CalendarDays} tone={tones.grape}>

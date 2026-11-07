@@ -1,4 +1,4 @@
-import { useEffect, type ComponentProps, type ReactNode } from 'react'
+import { useEffect, useRef, type ComponentProps, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation } from 'react-router'
 import { prefetchItem } from '../api/queries'
@@ -129,10 +129,12 @@ export function ItemList({ children }: { children: ReactNode }) {
 }
 export function ItemRow({ item, children, favorite = false, action }: { item: CardItem; children?: ReactNode; favorite?: boolean; action?: ReactNode }) {
   const client = useQueryClient()
+  const prefetchTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(prefetchTimer.current), [])
   const image = imageUrl(item.image_path, 'thumb')
   const dietary = item.dietary.includes('vegan') ? item.dietary.filter(tag => tag !== 'vegetarian') : item.dietary
   const rated = item.rating_count > 0 && item.rating_avg !== null
-  return <li className="flex items-center bg-surface"><Link to={`/items/${item.id}`} onPointerEnter={() => prefetchItem(client, item.id)} onFocus={() => prefetchItem(client, item.id)} className="group flex min-w-0 flex-1 items-center gap-4 px-4 py-4 transition hover:bg-surface-2/60">
+  return <li className="flex items-center bg-surface"><Link to={`/items/${item.id}`} onPointerEnter={() => { window.clearTimeout(prefetchTimer.current); prefetchTimer.current = window.setTimeout(() => prefetchItem(client, item.id), 150) }} onPointerLeave={() => window.clearTimeout(prefetchTimer.current)} onFocus={() => prefetchItem(client, item.id)} className="group flex min-w-0 flex-1 items-center gap-4 px-4 py-4 transition hover:bg-surface-2/60">
     {image ? <img src={image} alt="" width={64} height={64} loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <FoodSwatch name={item.name} className="h-16 w-16 rounded-2xl text-2xl" />}
     <div className="min-w-0 flex-1">
       <h3 className="font-semibold leading-snug group-hover:text-brand">{item.name}{favorite && <><Heart size={14} fill="currentColor" aria-hidden="true" className={`ml-1.5 inline align-[-2px] ${tones.berry.text}`} /><span className="sr-only"> (favorite)</span></>}</h3>

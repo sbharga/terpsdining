@@ -8,7 +8,7 @@ import { addDays, todayET } from '../src/lib/dates'
 import { getPageSeo, renderSeoHead, SITE_URL } from '../src/lib/seo'
 import { db } from '../src/lib/supabase'
 import { halls } from '../src/lib/halls'
-import { hoursQuery, popularQuery, hallMenuQuery, itemQuery, historyQuery, type ItemHistoryRow } from '../src/api/queries'
+import { hoursQuery, popularQuery, hallMenuQuery, itemQuery, historyQuery, type ItemHistoryRow, type ItemWithAliases } from '../src/api/queries'
 import Layout from '../src/components/Layout'
 import { NotFound } from '../src/components/UI'
 import Home from '../src/pages/Home'
@@ -57,28 +57,33 @@ const routeSet = <Routes>
   </Route>
 </Routes>
 
-function withSeo(path: string, title: string | undefined, content: string, state: DehydratedState | null) {
+function withSeo(path: string, title: string | undefined, content: string, state: DehydratedState | null, redirect?: string) {
   const seo = getPageSeo(path, title)
   const head = renderSeoHead(seo)
   const cleanShell = shell.replace(/<title>[\s\S]*?<\/title>/i, '').replace(/<meta\s+name="description"[^>]*\/?\s*>/i, '')
   if (!cleanShell.includes('</head>')) throw new Error('Built index.html has no closing </head>')
   const cache = state ? `<script id="query-state" type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>` : ''
-  return cleanShell.replace('</head>', `${fontPreloads}\n${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root">${content}</div>${cache}`)
+  const refresh = redirect ? `<meta http-equiv="refresh" content="0; url=${redirect}">\n` : ''
+  return cleanShell.replace('</head>', `${fontPreloads}\n${refresh}${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root">${content}</div>${cache}`)
 }
-async function writePage(path: string, pathname: string, title?: string, seoPath = pathname, keys: QueryKey[] = []) {
+async function writePage(path: string, pathname: string, title?: string, seoPath = pathname, keys: QueryKey[] = [], redirect?: string) {
   const markup = renderToString(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[pathname]}>{routeSet}</MemoryRouter></QueryClientProvider>)
   const file = join(process.cwd(), 'dist', path)
   await mkdir(dirname(file), { recursive: true })
   const hashes = new Set(keys.map(key => hashKey(key)))
   const state = keys.length ? dehydrate(queryClient, { shouldDehydrateQuery: query => hashes.has(query.queryHash) }) : null
-  await writeFile(file, withSeo(seoPath, title, markup, state))
+  await writeFile(file, withSeo(seoPath, title, markup, state, redirect))
 }
 
-const hours = await queryClient.fetchQuery(hoursQuery(today, endOfWeek))
+await queryClient.fetchQuery(hoursQuery(today, endOfWeek))
 const catalog = await fetchCatalog()
+const aliasesByMain = new Map<string, ItemRow[]>()
+for (const item of catalog) if (item.canonical_id !== null) aliasesByMain.set(item.canonical_id, [...(aliasesByMain.get(item.canonical_id) ?? []), item])
+const byId = new Map(catalog.map(item => [item.id, item]))
+const mainItems = catalog.filter(item => item.canonical_id === null)
+const withAliases = (item: ItemRow, aliases: ItemRow[]): ItemWithAliases => ({ ...item, aliases })
 await queryClient.fetchQuery(popularQuery(today))
-queryClient.setQueryData(hoursQuery(today, today).queryKey, hours.filter(row => row.date === today))
-await writePage('index.html', '/', undefined, '/', [hoursQuery(today, today).queryKey, popularQuery(today).queryKey])
+await writePage('index.html', '/', undefined, '/', [hoursQuery(today, endOfWeek).queryKey, popularQuery(today).queryKey])
 await writePage('hours.html', '/hours', undefined, '/hours', [hoursQuery(today, endOfWeek).queryKey])
 await writePage('privacy.html', '/privacy')
 await writePage('terms.html', '/terms')
@@ -88,24 +93,32 @@ await writePage('account.html', '/account')
 const sitemap: string[] = [`${SITE_URL}/`, `${SITE_URL}/hours`, `${SITE_URL}/privacy`, `${SITE_URL}/terms`]
 for (const hall of halls) {
   await queryClient.fetchQuery(hallMenuQuery(hall.id, today))
-  await writePage(`halls/${encodeURIComponent(hall.slug)}.html`, `/halls/${hall.slug}`, hall.name, `/halls/${hall.slug}`, [hoursQuery(today, today).queryKey, hoursQuery(today, endOfWeek).queryKey, hallMenuQuery(hall.id, today).queryKey])
+  await writePage(`halls/${encodeURIComponent(hall.slug)}.html`, `/halls/${hall.slug}`, hall.name, `/halls/${hall.slug}`, [hoursQuery(today, endOfWeek).queryKey, hallMenuQuery(hall.id, today).queryKey])
   sitemap.push(`${SITE_URL}/halls/${encodeURIComponent(hall.slug)}`)
   queryClient.removeQueries({ queryKey: ['hallMenu', hall.id, today] })
 }
 
-for (let start = 0; start < catalog.length; start += 100) {
-  const batch = catalog.slice(start, start + 100)
+for (let start = 0; start < mainItems.length; start += 100) {
+  const batch = mainItems.slice(start, start + 100)
   const { data, error } = await db.rpc('item_histories', { p_ids: batch.map(item => item.id) })
   if (error) throw new Error(`Failed to fetch histories at row ${start}: ${error.message}`)
   const histories = new Map((data ?? []).map(row => [row.item_id, row.history as ItemHistoryRow[]]))
   for (const item of batch) {
-    queryClient.setQueryData(itemQuery(item.id).queryKey, item)
+    queryClient.setQueryData(itemQuery(item.id).queryKey, withAliases(item, aliasesByMain.get(item.id) ?? []))
     queryClient.setQueryData(historyQuery(item.id).queryKey, histories.get(item.id) ?? [])
     await writePage(`items/${encodeURIComponent(item.id)}.html`, `/items/${item.id}`, item.name, `/items/${item.id}`, [itemQuery(item.id).queryKey, historyQuery(item.id).queryKey])
     sitemap.push(`${SITE_URL}/items/${encodeURIComponent(item.id)}`)
     queryClient.removeQueries({ queryKey: ['item', item.id] })
     queryClient.removeQueries({ queryKey: ['history', item.id] })
   }
+}
+
+for (const alias of catalog) {
+  if (alias.canonical_id === null) continue
+  const main = byId.get(alias.canonical_id)!
+  queryClient.setQueryData(itemQuery(alias.id).queryKey, withAliases(alias, []))
+  await writePage(`items/${encodeURIComponent(alias.id)}.html`, `/items/${alias.id}`, main.name, `/items/${main.id}`, [itemQuery(alias.id).queryKey], `/items/${encodeURIComponent(main.id)}`)
+  queryClient.removeQueries({ queryKey: ['item', alias.id] })
 }
 
 queryClient.clear()

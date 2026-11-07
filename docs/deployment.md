@@ -53,7 +53,7 @@ There is no built-in GitHub schedule. Both dining-data workflows run through `wo
 - **Daily scrape** (`scrape.yml`, "Daily dining data"): POST `{"ref":"main"}` to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/scrape.yml/dispatches` daily at 3:00 a.m. in `America/New_York`. Use the America/New_York time zone so the schedule follows daylight saving time. The workflow accepts optional `date` (YYYY-MM-DD) and `days` inputs, which default to today and 1. It runs `terpsdining-scrape` and then requests a rebuild after the scrape, including after partial menu failures. Menus update after the scrape and site rebuild finish.
 - **Hours refresh** (`hours.yml`, "Hours refresh"): runs `terpsdining-scrape --hours-only`. It rebuilds the site only when a row in the next seven days changed. Add a second cron-job.org job that POSTs `{"ref":"main"}` every 15 minutes to `https://api.github.com/repos/sbharga/terpsdining/actions/workflows/hours.yml/dispatches`.
 
-The rebuild step calls `VERCEL_DEPLOY_HOOK_URL`. If the secret is unset, the rebuild step is skipped. The browser also refetches hours when its copy is more than five minutes old.
+The rebuild step calls `VERCEL_DEPLOY_HOOK_URL`. If the secret is unset, the rebuild step is skipped. The browser also refetches hours when its copy is more than 15 minutes old.
 
 CI (`ci.yml`) runs on every push and pull request: `bun run lint`, `typecheck`, `test`, and `build` for the frontend, and `ruff check` and `pytest` for the scraper.
 
@@ -73,7 +73,7 @@ Point your status page at `https://<your-domain>/api/health` and alert on a non-
 - The build fetches public Supabase data and prerenders pages into `dist/`. It requires the frontend environment variables and network access. Data-fetch errors fail the build rather than generating empty pages.
 - Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. `/sitemap.xml` lists indexable pages without `<lastmod>`, because the content changes daily and a build-date `lastmod` makes search results show a stale “N days ago” date. `/robots.txt` advertises the sitemap. Search and missing pages are marked `noindex`. Canonicals omit query parameters. The home page marks its date and live hours and ratings with `data-nosnippet` so search snippets use the meta description instead of today’s hours. Search engines determine indexing and rankings.
 - Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render.
-- Fresh queries do not refetch immediately: hours and history stay fresh for six hours, menus for 30 minutes, and other queries for five minutes.
+- Embedded query data counts as fresh when the page loads, however old the build is, so landing on a prerendered page makes no data requests. Each query then stays fresh for its own time: hours 15 minutes, menus 30 minutes, history six hours, and other queries five minutes. Ratings shown on first view can be up to one build old; a signed-in user's own rating is fetched live.
 - Newly scraped items remain accessible before the next deployment, but they need a rebuild to appear in initial HTML and the sitemap.
 - Hashed `/assets/` files have a one-year immutable cache policy. Food objects use a seven-day cache policy.
 - Only the Latin subsets of the two bundled fonts are shipped.

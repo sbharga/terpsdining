@@ -166,7 +166,7 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     sb = db.client()
     counts = dict.fromkeys(
-        ("hours", "items", "offerings", "nutrition", "images", "pruned", "failures"), 0
+        ("hours", "items", "merged", "offerings", "nutrition", "images", "pruned", "failures"), 0
     )
     menu_failed = False
 
@@ -234,13 +234,14 @@ def main() -> int:
                 "id": item["id"],
                 "name": item["name"],
                 "label_url": item["label_url"],
-                "allergens": sorted(item["allergens"]),
-                "dietary": sorted(item["dietary"]),
+                "recipe_allergens": sorted(item["allergens"]),
+                "recipe_dietary": sorted(item["dietary"]),
             }
             for item in items.values()
         ]
         db.upsert_items(item_rows)
         counts["items"] = len(item_rows)
+        counts["merged"] = db.merge_items()
         for hall_id, day_iso, meal, offerings in slots:
             db.replace_offerings(hall_id, day_iso, meal, offerings)
             counts["offerings"] += len(offerings)

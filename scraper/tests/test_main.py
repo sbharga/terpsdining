@@ -115,6 +115,7 @@ def test_daily_scrape_prunes_history_with_images_skipped(monkeypatch, capsys):
     monkeypatch.setattr(main.db, "client", lambda: None)
     monkeypatch.setattr(main.db, "upsert_hours", lambda rows: None)
     monkeypatch.setattr(main.db, "upsert_items", lambda rows: None)
+    monkeypatch.setattr(main.db, "merge_items", lambda: 0)
     monkeypatch.setattr(main.db, "replace_offerings", lambda *args: None)
     monkeypatch.setattr(main.db, "items_needing_nutrition", lambda limit: [])
     monkeypatch.setattr(main, "fetch_menu", lambda *args: "")

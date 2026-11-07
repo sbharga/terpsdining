@@ -4,6 +4,7 @@ import os
 from datetime import UTC, datetime, timedelta
 from functools import cache
 
+from postgrest import ReturnMethod
 from supabase import Client, create_client
 
 
@@ -22,7 +23,9 @@ def client() -> Client:
 def upsert_hours(rows: list[dict]) -> None:
     for start in range(0, len(rows), 500):
         client().table("hours").upsert(
-            rows[start : start + 500], on_conflict="hall_id,date,meal"
+            rows[start : start + 500],
+            on_conflict="hall_id,date,meal",
+            returning=ReturnMethod.minimal,
         ).execute()
 
 
@@ -39,12 +42,14 @@ def hours_between(start: str, end: str) -> list[dict]:
 
 
 def upsert_items(rows: list[dict]) -> None:
-    keys = ("id", "name", "allergens", "dietary", "label_url")
+    keys = ("id", "name", "recipe_allergens", "recipe_dietary", "label_url")
     for start in range(0, len(rows), 500):
         payload = [
             {key: row[key] for key in keys} for row in rows[start : start + 500]
         ]
-        client().table("items").upsert(payload, on_conflict="id").execute()
+        client().table("items").upsert(
+            payload, on_conflict="id", returning=ReturnMethod.minimal
+        ).execute()
 
 
 def replace_offerings(
@@ -58,6 +63,10 @@ def replace_offerings(
 
 def prune_history() -> int:
     return client().rpc("prune_history").execute().data
+
+
+def merge_items() -> int:
+    return client().rpc("merge_items").execute().data
 
 
 def items_needing_nutrition(limit: int) -> list[dict]:
@@ -80,6 +89,7 @@ def items_needing_images(limit: int) -> list[dict]:
         .table("items")
         .select("id,name")
         .is_("image_path", "null")
+        .is_("canonical_id", "null")
         .or_(f"image_checked_at.is.null,image_checked_at.lt.{retry_before}")
         .order("last_seen", desc=True)
         .limit(limit)
@@ -109,4 +119,4 @@ def image_paths() -> list[str]:
 
 
 def update_item(id: str, fields: dict) -> None:
-    client().table("items").update(fields).eq("id", id).execute()
+    client().table("items").update(fields, returning=ReturnMethod.minimal).eq("id", id).execute()

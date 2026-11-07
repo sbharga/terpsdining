@@ -30,11 +30,13 @@ function HallMenu({ hall }: { hall: Hall }) {
   const today = todayET()
   const now = useNowMinutesET()
   const date = parseDateParam(params.get('date'), today)
-  const hours = useHours(date, date)
   const weekDates = Array.from({ length: 7 }, (_, index) => addDays(today, index))
+  const inWeek = date >= today && date <= weekDates[6]
   const weekHours = useHours(today, weekDates[6])
+  const dayHours = useHours(date, date, !inWeek)
+  const hours = inWeek ? weekHours : dayHours
   const menu = useHallMenu(hall.id, date)
-  const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id)
+  const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id && row.date === date)
   const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, now ?? 0, date === today)
   const filters = useFilterParams()
   const mealRows = (menu.data ?? []).flatMap(row => row.meal === meal && row.item ? [{ station: row.station, item: row.item }] : [])

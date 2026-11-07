@@ -3,13 +3,17 @@ import type { Session } from '@supabase/auth-js'
 import { QueryClient, keepPreviousData, queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authStorageKey, db, hasAuthState, loadAuth } from '../lib/supabase'
 import type { Meal } from '../lib/hours'
+import type { Database } from '../lib/database.types'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
 export type ItemHistoryRow = { date: string; meal: Meal; station: string; hall: { slug: string; name: string } | null }
+type ItemRow = Database['public']['Tables']['items']['Row']
+export type ItemWithAliases = ItemRow & { aliases: ItemRow[] }
 export const SEARCH_PAGE_SIZE = 60
 
 export const hoursQuery = (from: string, to: string) => queryOptions({
   queryKey: ['hours', from, to] as const,
-  refetchInterval: 5 * 60_000,
+  staleTime: 15 * 60_000,
+  refetchInterval: 15 * 60_000,
   queryFn: async () => {
     const { data, error } = await db.from('hours').select('*').gte('date', from).lte('date', to)
     if (error) throw error
@@ -35,10 +39,12 @@ export const popularQuery = (date: string) => queryOptions({
 })
 export const itemQuery = (id: string) => queryOptions({
   queryKey: ['item', id] as const,
-  queryFn: async () => {
-    const { data, error } = await db.from('items').select('*').eq('id', id).maybeSingle()
+  queryFn: async (): Promise<ItemWithAliases | null> => {
+    const quoted = `"${id.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`
+    const { data, error } = await db.from('items').select('*').or(`id.eq.${quoted},canonical_id.eq.${quoted}`).order('id')
     if (error) throw error
-    return data
+    const item = data.find(row => row.id === id)
+    return item ? { ...item, aliases: data.filter(row => row.canonical_id === id) } : null
   },
 })
 export const historyQuery = (id: string) => queryOptions({
@@ -50,7 +56,7 @@ export const historyQuery = (id: string) => queryOptions({
     return data
   },
 })
-export function useHours(from: string, to: string) { return useQuery(hoursQuery(from, to)) }
+export function useHours(from: string, to: string, enabled = true) { return useQuery({ ...hoursQuery(from, to), enabled }) }
 export function useHallMenu(hallId: number, date: string) { return useQuery(hallMenuQuery(hallId, date)) }
 export function usePopular(date: string) { return useQuery(popularQuery(date)) }
 export function useSearch(q: string, page: number, date: string, filters: { diet: string[]; avoid: string[] }) {
@@ -104,11 +110,11 @@ function getSessionSnapshot() { return sessionState }
 function getServerSessionSnapshot() { return serverSessionState }
 export function useSession() { return useSyncExternalStore(subscribeSession, getSessionSnapshot, getServerSessionSnapshot) }
 export function useMyRating(itemId: string, userId?: string) {
-  return useQuery({ queryKey: ['myRating', itemId, userId], enabled: !!userId, queryFn: async () => {
-    const { data, error } = await db.from('reviews').select('rating').eq('item_id', itemId).eq('user_id', userId!).maybeSingle()
+  return useQuery({ queryKey: ['ratingByItem', userId], enabled: !!userId, queryFn: async () => {
+    const { data, error } = await db.from('reviews').select('item_id,rating').eq('user_id', userId!)
     if (error) throw error
-    return data?.rating ?? null
-  } })
+    return Object.fromEntries(data.map(row => [row.item_id, row.rating])) as Record<string, number>
+  }, select: ratings => ratings[itemId] ?? null })
 }
 export function useRateItem(itemId: string, userId?: string) {
   const client = useQueryClient()
@@ -119,7 +125,13 @@ export function useRateItem(itemId: string, userId?: string) {
       : await db.from('reviews').upsert({ item_id: itemId, rating }, { onConflict: 'user_id,item_id' })
     if (error) throw error
   }, onSuccess: async (_, rating) => {
-    client.setQueryData(['myRating', itemId, userId], rating)
+    client.setQueryData<Record<string, number>>(['ratingByItem', userId], ratings => {
+      if (!ratings) return ratings
+      const next = { ...ratings }
+      if (rating === null) delete next[itemId]
+      else next[itemId] = rating
+      return next
+    })
     await Promise.all([['item', itemId], ['myRatings'], ['favorites'], ['favoriteItems'], ['popular'], ['hallMenu'], ['search']].map(queryKey => client.invalidateQueries({ queryKey })))
   } })
 }
