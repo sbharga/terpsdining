@@ -5,10 +5,11 @@ import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { Database } from '../src/lib/database.types'
 import { addDays, todayET } from '../src/lib/dates'
-import { getPageSeo, renderSeoHead, SITE_URL } from '../src/lib/seo'
+import { getPageSeo, itemDescription, renderSeoHead, SITE_URL } from '../src/lib/seo'
 import { db } from '../src/lib/supabase'
 import { halls } from '../src/lib/halls'
-import { hoursQuery, popularQuery, hallMenuQuery, itemQuery, historyQuery, type ItemHistoryRow, type ItemWithAliases } from '../src/api/queries'
+import { groupByInitial } from '../src/lib/directory'
+import { directoryQuery, hoursQuery, popularQuery, hallMenuQuery, itemQuery, historyQuery, type ItemHistoryRow, type ItemWithAliases } from '../src/api/queries'
 import Layout from '../src/components/Layout'
 import { NotFound } from '../src/components/UI'
 import Home from '../src/pages/Home'
@@ -57,8 +58,8 @@ const routeSet = <Routes>
   </Route>
 </Routes>
 
-function withSeo(path: string, title: string | undefined, content: string, state: DehydratedState | null, redirect?: string) {
-  const seo = getPageSeo(path, title)
+function withSeo(path: string, title: string | undefined, content: string, state: DehydratedState | null, redirect?: string, description?: string) {
+  const seo = getPageSeo(path, title, description)
   const head = renderSeoHead(seo)
   const cleanShell = shell.replace(/<title>[\s\S]*?<\/title>/i, '').replace(/<meta\s+name="description"[^>]*\/?\s*>/i, '')
   if (!cleanShell.includes('</head>')) throw new Error('Built index.html has no closing </head>')
@@ -66,13 +67,13 @@ function withSeo(path: string, title: string | undefined, content: string, state
   const refresh = redirect ? `<meta http-equiv="refresh" content="0; url=${redirect}">\n` : ''
   return cleanShell.replace('</head>', `${fontPreloads}\n${refresh}${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root">${content}</div>${cache}`)
 }
-async function writePage(path: string, pathname: string, title?: string, seoPath = pathname, keys: QueryKey[] = [], redirect?: string) {
+async function writePage(path: string, pathname: string, title?: string, seoPath = pathname, keys: QueryKey[] = [], redirect?: string, description?: string) {
   const markup = renderToString(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[pathname]}>{routeSet}</MemoryRouter></QueryClientProvider>)
   const file = join(process.cwd(), 'dist', path)
   await mkdir(dirname(file), { recursive: true })
   const hashes = new Set(keys.map(key => hashKey(key)))
   const state = keys.length ? dehydrate(queryClient, { shouldDehydrateQuery: query => hashes.has(query.queryHash) }) : null
-  await writeFile(file, withSeo(seoPath, title, markup, state, redirect))
+  await writeFile(file, withSeo(seoPath, title, markup, state, redirect, description))
 }
 
 await queryClient.fetchQuery(hoursQuery(today, endOfWeek))
@@ -87,10 +88,11 @@ await writePage('index.html', '/', undefined, '/', [hoursQuery(today, endOfWeek)
 await writePage('hours.html', '/hours', undefined, '/hours', [hoursQuery(today, endOfWeek).queryKey])
 await writePage('privacy.html', '/privacy')
 await writePage('terms.html', '/terms')
-await writePage('search.html', '/search')
+queryClient.setQueryData(directoryQuery().queryKey, groupByInitial(mainItems.map(({ id, name }) => ({ id, name }))))
+await writePage('search.html', '/search', undefined, '/search', [directoryQuery().queryKey])
 await writePage('account.html', '/account')
 
-const sitemap: string[] = [`${SITE_URL}/`, `${SITE_URL}/hours`, `${SITE_URL}/privacy`, `${SITE_URL}/terms`]
+const sitemap: string[] = [`${SITE_URL}/`, `${SITE_URL}/hours`, `${SITE_URL}/search`, `${SITE_URL}/privacy`, `${SITE_URL}/terms`]
 for (const hall of halls) {
   await queryClient.fetchQuery(hallMenuQuery(hall.id, today))
   await writePage(`halls/${encodeURIComponent(hall.slug)}.html`, `/halls/${hall.slug}`, hall.name, `/halls/${hall.slug}`, [hoursQuery(today, endOfWeek).queryKey, hallMenuQuery(hall.id, today).queryKey])
@@ -106,7 +108,7 @@ for (let start = 0; start < mainItems.length; start += 100) {
   for (const item of batch) {
     queryClient.setQueryData(itemQuery(item.id).queryKey, withAliases(item, aliasesByMain.get(item.id) ?? []))
     queryClient.setQueryData(historyQuery(item.id).queryKey, histories.get(item.id) ?? [])
-    await writePage(`items/${encodeURIComponent(item.id)}.html`, `/items/${item.id}`, item.name, `/items/${item.id}`, [itemQuery(item.id).queryKey, historyQuery(item.id).queryKey])
+    await writePage(`items/${encodeURIComponent(item.id)}.html`, `/items/${item.id}`, item.name, `/items/${item.id}`, [itemQuery(item.id).queryKey, historyQuery(item.id).queryKey], undefined, itemDescription(item))
     sitemap.push(`${SITE_URL}/items/${encodeURIComponent(item.id)}`)
     queryClient.removeQueries({ queryKey: ['item', item.id] })
     queryClient.removeQueries({ queryKey: ['history', item.id] })

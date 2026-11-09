@@ -9,10 +9,10 @@ import { imageUrl } from '../lib/supabase'
 import { ArrowLeft, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { HallState, Meal } from '../lib/hours'
 import { buttonClass, cardClass, dietTone, mealTones, nameTone, statusStyle, titleClass, tones, type ButtonSize, type ButtonVariant, type Tone } from '../lib/theme'
-export function PageTitle({ title }: { title: string }) {
+export function PageTitle({ title, description }: { title: string; description?: string }) {
   const { pathname, search } = useLocation()
   useEffect(() => {
-    const seo = getPageSeo(pathname, title)
+    const seo = getPageSeo(pathname, title, description)
     document.title = seo.title
     const tags: Array<[string, string]> = [
       ['meta[name="description"]', seo.description],
@@ -56,7 +56,7 @@ export function PageTitle({ title }: { title: string }) {
     script.setAttribute('type', 'application/ld+json')
     script.setAttribute('data-terpsdining-seo', '')
     script.textContent = renderSeoJsonLd()
-  }, [pathname, search, title])
+  }, [pathname, search, title, description])
   return null
 }
 export function Button({ variant = 'secondary', size = 'md', className = '', type = 'button', ...props }: ComponentProps<'button'> & { variant?: ButtonVariant; size?: ButtonSize }) {

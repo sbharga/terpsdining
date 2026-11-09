@@ -11,6 +11,7 @@ import { imageUrl } from '../lib/supabase'
 import type { Database } from '../lib/database.types'
 import { cardClass, hallTone, linkClass, overlineClass, titleClass, tones } from '../lib/theme'
 import { meals } from '../lib/hours'
+import { itemDescription } from '../lib/seo'
 
 type ItemRow = Database['public']['Tables']['items']['Row']
 type HallMeals = { slug: string; name: string; meals: string[] }
@@ -126,7 +127,7 @@ export default function Item() {
 
   return (
     <article>
-      <PageTitle title={item.name} />
+      <PageTitle title={item.name} description={itemDescription(item)} />
       <header className={`grid gap-6 ${cardClass} p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:p-6`}>
         {image ? (
           <img src={image} alt="" width={176} height={176} loading="eager" fetchPriority="high" decoding="async" className="h-52 w-full rounded-2xl object-cover sm:h-44 sm:w-44" />

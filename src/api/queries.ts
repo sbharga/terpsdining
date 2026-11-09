@@ -4,6 +4,7 @@ import { QueryClient, keepPreviousData, queryOptions, useMutation, useQuery, use
 import { authStorageKey, db, hasAuthState, loadAuth } from '../lib/supabase'
 import type { Meal } from '../lib/hours'
 import type { Database } from '../lib/database.types'
+import { groupByInitial, type DirectoryGroup, type DirectoryItem } from '../lib/directory'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
 export type ItemHistoryRow = { date: string; meal: Meal; station: string; hall: { slug: string; name: string } | null }
 type ItemRow = Database['public']['Tables']['items']['Row']
@@ -56,9 +57,24 @@ export const historyQuery = (id: string) => queryOptions({
     return data
   },
 })
+export const directoryQuery = () => queryOptions({
+  queryKey: ['directory'] as const,
+  staleTime: 6 * 60 * 60_000,
+  queryFn: async (): Promise<DirectoryGroup[]> => {
+    const all: DirectoryItem[] = []
+    const pageSize = 1000
+    for (let start = 0; ; start += pageSize) {
+      const { data, error } = await db.from('items').select('id,name').is('canonical_id', null).order('id').range(start, start + pageSize - 1)
+      if (error) throw error
+      all.push(...data)
+      if (data.length < pageSize) return groupByInitial(all)
+    }
+  },
+})
 export function useHours(from: string, to: string, enabled = true) { return useQuery({ ...hoursQuery(from, to), enabled }) }
 export function useHallMenu(hallId: number, date: string) { return useQuery(hallMenuQuery(hallId, date)) }
 export function usePopular(date: string) { return useQuery(popularQuery(date)) }
+export function useDirectory(enabled: boolean) { return useQuery({ ...directoryQuery(), enabled }) }
 export function useSearch(q: string, page: number, date: string, filters: { diet: string[]; avoid: string[] }) {
   return useQuery({ queryKey: ['search', q, page, date, filters.diet, filters.avoid], enabled: q.trim().length >= 2, placeholderData: keepPreviousData, queryFn: async () => {
     const { data, error } = await db.rpc('search_items', { p_query: q, p_date: date, p_limit: SEARCH_PAGE_SIZE, p_offset: (page - 1) * SEARCH_PAGE_SIZE, p_diet: filters.diet, p_avoid: filters.avoid })

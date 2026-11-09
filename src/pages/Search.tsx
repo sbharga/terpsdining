@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { ChevronLeft, ChevronRight, CircleCheck, Clock, ListFilter, Search as SearchIcon, SearchX } from 'lucide-react'
-import { SEARCH_PAGE_SIZE, useFavoriteIds, useSearch, useSession } from '../api/queries'
+import { ChevronLeft, ChevronRight, CircleCheck, Clock, ListFilter, SearchX } from 'lucide-react'
+import { SEARCH_PAGE_SIZE, useDirectory, useFavoriteIds, useSearch, useSession } from '../api/queries'
 import { FiltersButton, FiltersPanel } from '../components/Filters'
 import { SearchBar } from '../components/Layout'
-import { EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageHeader, PageTitle } from '../components/UI'
+import { Disclosure, EmptyState, ErrorNote, ItemList, ItemRow, Loading, PageHeader, PageTitle, SectionHeading } from '../components/UI'
 import type { Json } from '../lib/database.types'
 import { formatMonthDay, todayET } from '../lib/dates'
 import { useFilterParams } from '../lib/filters'
 import { meals } from '../lib/hours'
 import { pageRange, pageWindow } from '../lib/pagination'
-import { buttonClass, linkClass } from '../lib/theme'
+import { buttonClass, cardClass, linkClass } from '../lib/theme'
 
 const allergens = ['alcohol', 'coconut', 'dairy', 'egg', 'fish', 'gluten', 'nuts', 'pea protein', 'pork', 'sesame', 'shellfish', 'soy']
 
@@ -45,6 +45,7 @@ export default function Search() {
   const query = params.get('q') ?? ''
   const page = Math.max(1, Number.parseInt(params.get('page') ?? '', 10) || 1)
   const results = useSearch(query, page, todayET(), filters)
+  const directory = useDirectory(query.trim().length < 2)
   const total = results.data?.[0]?.total_count ?? 0
   const totalPages = Math.ceil(total / SEARCH_PAGE_SIZE)
   const [from, to] = pageRange(page, SEARCH_PAGE_SIZE, total)
@@ -65,7 +66,20 @@ export default function Search() {
       {filtersOpen && <FiltersPanel allergens={allergens} filters={filters} />}
       {query.trim().length >= 2 && results.data && <p id="search-results" className="mt-3 scroll-mt-20 text-muted">{totalPages > 1 ? <>Showing {from}–{to} of {total} results for “{query.trim()}”</> : <>{total} {total === 1 ? 'result' : 'results'} for “{query.trim()}”</>}</p>}
       {query.trim().length < 2 ? (
-        <EmptyState icon={SearchIcon} title="Find a dish">Type 2+ characters to search every hall's menu.</EmptyState>
+        <section aria-labelledby="directory" className="mt-10">
+          <SectionHeading id="directory" count={directory.data?.reduce((sum, group) => sum + group.items.length, 0)}>All dishes A–Z</SectionHeading>
+          {directory.isError ? <ErrorNote retry={directory.refetch} /> : directory.isPending ? <Loading /> : (
+            <div className={`mt-4 divide-y divide-line px-5 sm:px-6 ${cardClass}`}>
+              {directory.data.map(group => (
+                <Disclosure key={group.letter} summary={`${group.letter} · ${group.items.length} ${group.items.length === 1 ? 'dish' : 'dishes'}`}>
+                  <ul className="grid pb-3 sm:grid-cols-2 sm:gap-x-6">
+                    {group.items.map(item => <li key={item.id}><Link to={`/items/${item.id}`} className="flex min-h-11 items-center text-sm font-semibold hover:text-brand">{item.name}</Link></li>)}
+                  </ul>
+                </Disclosure>
+              ))}
+            </div>
+          )}
+        </section>
       ) : results.isError ? (
         <ErrorNote retry={results.refetch} />
       ) : results.isPending ? (

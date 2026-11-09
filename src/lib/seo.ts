@@ -1,4 +1,6 @@
+import type { Database } from './database.types'
 import { halls } from './halls'
+import { nutritionDetails } from './nutrition'
 
 export const SITE_URL = 'https://terpsdining.app'
 
@@ -30,7 +32,24 @@ function escapeJsonLd(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
 }
 
-export function getPageSeo(pathname: string, title?: string): PageSeo {
+type ItemRow = Database['public']['Tables']['items']['Row']
+
+export function itemDescription(item: Pick<ItemRow, 'name' | 'nutrition' | 'dietary' | 'allergens'>): string {
+  const n = item.nutrition === null ? null : nutritionDetails(item.nutrition)
+  const name = item.name.trim()
+  const protein = n?.nutrients.find(x => x.name === 'Protein')?.amount
+  const facts = [n?.calories != null ? `${n.calories} calories` : null, protein ? `${protein} protein` : null].filter(Boolean).join(', ')
+  const sentences = [facts ? `${name} at UMD dining halls: ${facts}${n?.servingSize ? ` per ${n.servingSize} serving` : ''}.` : `${name} at UMD dining halls.`]
+  if (item.dietary.length) {
+    const diet = item.dietary.join(', ')
+    sentences.push(`${diet.charAt(0).toUpperCase()}${diet.slice(1)}.`)
+  }
+  if (item.allergens.length) sentences.push(`Contains ${item.allergens.join(', ')}.`)
+  sentences.push('Nutrition facts, ingredients, allergens, and serving history.')
+  return sentences.join(' ')
+}
+
+export function getPageSeo(pathname: string, title?: string, customDescription?: string): PageSeo {
   const path = pathname.split(/[?#]/, 1)[0].replace(/\/{2,}/g, '/').replace(/\/$/, '') || '/'
   let pageTitle: string
   let description: string
@@ -44,9 +63,8 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
     pageTitle = 'UMD Dining Hall Menus & Hours Today'
     description = HOME_DESCRIPTION
   } else if (path === '/search') {
-    pageTitle = 'Search Dining Menus'
-    description = 'Search University of Maryland dining hall menus and food information on TerpsDining.'
-    robots = 'noindex,follow'
+    pageTitle = 'UMD Dining Hall Foods A–Z & Search'
+    description = 'Browse every dish served at UMD dining halls (Yahentamitsi, South Campus, 251 North) from A to Z, or search by name, with nutrition facts, allergens, and student ratings.'
   } else if (path === '/account') {
     pageTitle = 'Your Account'
     description = 'Manage your TerpsDining account, ratings, and favorites.'
@@ -83,7 +101,7 @@ export function getPageSeo(pathname: string, title?: string): PageSeo {
   const fullTitle = `${pageTitle} · ${SITE_TITLE}`
   return {
     title: fullTitle,
-    description,
+    description: customDescription ?? description,
     canonical: canonicalPath ? `${SITE_URL}${canonicalPath}` : '',
     robots,
     image: DEFAULT_IMAGE,
