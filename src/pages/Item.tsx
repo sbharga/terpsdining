@@ -52,7 +52,7 @@ function RecipeSwitcher({ recipes, selectedId, todayIds, onSelect }: { recipes: 
           Recipe {index + 1}
           {todayIds.has(recipe.id) && (
             <>
-              <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-success ring-2 ring-surface" />
+              <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-success" />
               <span className="sr-only">, served today</span>
             </>
           )}

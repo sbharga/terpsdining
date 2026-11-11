@@ -3,7 +3,7 @@ import { formatWeekday } from '../lib/dates'
 import type { Hall } from '../lib/halls'
 import { groupDays, hallStatus, hoursLabel, meals, mealStatus, type Hours } from '../lib/hours'
 import { cardClass, hallTone, overlineClass, todayRowClass } from '../lib/theme'
-import { MealIcon, StatusPill } from './UI'
+import { MealIcon, StatusDot } from './UI'
 
 // The three meals as full-width rows: the open meal is highlighted, past meals are muted.
 function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
@@ -34,7 +34,7 @@ export function HoursBoard({ halls, rows, now, heading: Heading = 'h2' }: { hall
           <article key={hall.id} className={`overflow-hidden ${cardClass}`}>
             <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4 text-white ${hallTone(hall.slug).solid}`}>
               <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="after:absolute after:inset-0 hover:underline">{hall.name}</Link></Heading>
-              {hallRows && now !== undefined && <StatusPill status={hallStatus(hallRows, now)} />}
+              {hallRows && now !== undefined && <StatusDot status={hallStatus(hallRows, now)} />}
             </div>
             {hallRows && <MealList rows={hallRows} now={now} />}
           </article>

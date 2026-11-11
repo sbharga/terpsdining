@@ -111,7 +111,8 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 | `Avatar` | Initial circle for the signed-in user, colored by `nameTone`. `size`: `sm` (header) or `lg` (account page). |
 | `Badges` | Dietary badges (`dietTone` colors) and allergen badges (neutral). |
 | `RatingPill` | Average or personal rating. Thresholds: 4 and up success, 3 and up warning, below 3 danger. |
-| `StatusPill` | Hall open state on a hall band. A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
+| `StatusPill` | Hall open state on the hall page band. A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
+| `StatusDot` | Hall open state on the schedule cards: a dot with a white ring in the top right of the hall band, no text. Green open now, amber opening later, gray closed (`statusStyle`). The label is its `aria-label` and tooltip. |
 | `DatePager` | Previous and next day, with a Today button. |
 | `EmptyState` | A list or search with no results. Optional clear-filter action uses `linkClass` with `hit`. |
 | `ErrorNote` | A failed request. Includes a Retry `Button size="sm"`. |
