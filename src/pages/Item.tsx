@@ -273,11 +273,11 @@ export default function Item() {
               <RecipeSwitcher recipes={recipes} selectedId={selected.id} todayIds={new Set(todayRecipes.map(recipe => recipe.id))} onSelect={setPickedRecipe} />
             </div>
           )}
-          <Panel id="item-nutrition" title={multiRecipe ? `Nutrition · Recipe ${recipeNumbers.get(selected.id)}` : 'Nutrition'} icon={Flame} tone={tones.lime}>
+          <Panel id="item-nutrition" title="Nutrition" icon={Flame} tone={tones.lime}>
             <RecipeNutrition recipe={selected} />
           </Panel>
 
-          <Panel id="item-ingredients" title={multiRecipe ? `Ingredients · Recipe ${recipeNumbers.get(selected.id)}` : 'Ingredients'} icon={Wheat} tone={tones.citrus}>
+          <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
             {multiRecipe && <div className="mb-3"><Badges allergens={selected.recipe_allergens} dietary={selected.recipe_dietary} /></div>}
             <RecipeIngredients recipe={selected} />
           </Panel>
