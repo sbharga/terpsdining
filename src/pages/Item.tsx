@@ -207,15 +207,28 @@ export default function Item() {
             <p className={overlineClass}>Today</p>
             <div className="mt-1.5">
               {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : todayHalls.length > 0 ? (
-                <ul className="flex flex-wrap gap-2">
-                  {todayHalls.map(hall => (
-                    <li key={hall.slug}>
-                      <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
-                        {hall.name} · {hall.meals.join(', ')}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="flex flex-wrap gap-2">
+                    {todayHalls.map(hall => (
+                      <li key={hall.slug}>
+                        <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
+                          {hall.name} · {hall.meals.join(', ')}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {todayRecipes.length > 0 && (
+                    <p className="mt-2 text-sm text-muted">
+                      Serving {todayRecipes.map((recipe, index) => (
+                        <Fragment key={recipe.id}>
+                          {index > 0 && (index === todayRecipes.length - 1 ? ' and ' : ', ')}
+                          <a href="#item-recipes" onClick={() => setPickedRecipe(recipe.id)} className={linkClass}>Recipe {recipeNumbers.get(recipe.id)}</a>
+                          {todayRecipes.length > 1 && ` at ${groupHalls(history.filter(row => row.date === today && row.recipe_id === recipe.id)).map(hall => hall.name).join(', ')}`}
+                        </Fragment>
+                      ))} today
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="text-sm text-muted">
                   {item.last_seen
