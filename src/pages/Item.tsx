@@ -270,8 +270,7 @@ export default function Item() {
         <div className="space-y-6 lg:col-span-2">
           {multiRecipe && (
             <div id="item-recipes" className="scroll-mt-20">
-              <p className="text-sm text-muted">UMD lists {recipes.length} recipes under this name. Allergen and diet tags above include every recipe. Numbers in History show which recipe was served.</p>
-              <div className="mt-3"><RecipeSwitcher recipes={recipes} selectedId={selected.id} todayIds={new Set(todayRecipes.map(recipe => recipe.id))} onSelect={setPickedRecipe} /></div>
+              <RecipeSwitcher recipes={recipes} selectedId={selected.id} todayIds={new Set(todayRecipes.map(recipe => recipe.id))} onSelect={setPickedRecipe} />
             </div>
           )}
           <Panel id="item-nutrition" title={multiRecipe ? `Nutrition · Recipe ${recipeNumbers.get(selected.id)}` : 'Nutrition'} icon={Flame} tone={tones.lime}>
