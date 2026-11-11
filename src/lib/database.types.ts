@@ -208,6 +208,7 @@ export type Database = {
           item_id: string
           meal: Database["public"]["Enums"]["meal"]
           portion: string | null
+          recipe_id: string | null
           station: string
         }
         Insert: {
@@ -216,6 +217,7 @@ export type Database = {
           item_id: string
           meal: Database["public"]["Enums"]["meal"]
           portion?: string | null
+          recipe_id?: string | null
           station: string
         }
         Update: {
@@ -224,6 +226,7 @@ export type Database = {
           item_id?: string
           meal?: Database["public"]["Enums"]["meal"]
           portion?: string | null
+          recipe_id?: string | null
           station?: string
         }
         Relationships: [
@@ -237,6 +240,13 @@ export type Database = {
           {
             foreignKeyName: "offerings_item_id_fkey"
             columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_recipe_id_fkey"
+            columns: ["recipe_id"]
             isOneToOne: false
             referencedRelation: "items"
             referencedColumns: ["id"]

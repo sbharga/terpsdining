@@ -38,7 +38,7 @@ Scraper, from `scraper/` (Python 3.13, uv):
 - Pages are prerendered and then hydrated, so render output must be deterministic. Do not read `window`, `localStorage`, or the clock in render paths that affect markup; read them in effects.
 - Database changes go in a new timestamped file in `supabase/migrations/` (`YYYYMMDDHHMMSS_name.sql`). Never edit a migration that has been applied. After a schema change, run `bun run db:types`.
 - Never hand-edit `src/lib/database.types.ts`.
-- `src/lib/halls.ts` must match the hall rows in the database seed. A new hall also needs an entry in `hallTones` in `src/lib/theme.ts`.
+- `src/lib/halls.ts` must match the hall rows inserted in `supabase/migrations/20261003000000_init.sql` (and any later migration that changes halls). A new hall also needs an entry in `hallTones` in `src/lib/theme.ts`.
 
 ## UI rules
 

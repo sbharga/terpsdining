@@ -1,3 +1,4 @@
+import { Fragment, useState } from 'react'
 import { CalendarDays, ExternalLink, Flame, Heart, LoaderCircle, Star, Wheat } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router'
 import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
@@ -14,24 +15,54 @@ import { meals } from '../lib/hours'
 import { itemDescription } from '../lib/seo'
 
 type ItemRow = Database['public']['Tables']['items']['Row']
-type HallMeals = { slug: string; name: string; meals: string[] }
+type HallMeals = { slug: string; name: string; meals: string[]; recipeIds: Record<string, string[]> }
 
 function groupHalls(rows: ItemHistoryRow[]): HallMeals[] {
-  const halls = new Map<string, { name: string; meals: Set<string> }>()
+  const halls = new Map<string, { name: string; meals: Map<string, Set<string>> }>()
   for (const row of rows) {
     if (!row.hall) continue
-    const hall = halls.get(row.hall.slug) ?? { name: row.hall.name, meals: new Set<string>() }
-    hall.meals.add(row.meal)
+    const hall = halls.get(row.hall.slug) ?? { name: row.hall.name, meals: new Map<string, Set<string>>() }
+    const recipeIds = hall.meals.get(row.meal) ?? new Set<string>()
+    if (row.recipe_id) recipeIds.add(row.recipe_id)
+    hall.meals.set(row.meal, recipeIds)
     halls.set(row.hall.slug, hall)
   }
-  return Array.from(halls, ([slug, hall]) => ({
-    slug,
-    name: hall.name,
-    meals: meals.filter(meal => hall.meals.has(meal)),
-  })).sort((a, b) => a.name.localeCompare(b.name))
+  return Array.from(halls, ([slug, hall]) => {
+    const served = meals.filter(meal => hall.meals.has(meal))
+    return {
+      slug,
+      name: hall.name,
+      meals: served,
+      recipeIds: Object.fromEntries(served.map(meal => [meal, Array.from(hall.meals.get(meal) ?? []).sort()])),
+    }
+  }).sort((a, b) => a.name.localeCompare(b.name))
 }
 
-function HistoryList({ dates, byDate }: { dates: string[]; byDate: Map<string, ItemHistoryRow[]> }) {
+function RecipeSwitcher({ recipes, selectedId, todayIds, onSelect }: { recipes: ItemRow[]; selectedId: string; todayIds: Set<string>; onSelect: (id: string) => void }) {
+  return (
+    <div role="group" aria-label="Recipe" className="flex gap-1 rounded-full bg-surface-2 p-1">
+      {recipes.map((recipe, index) => (
+        <button
+          key={recipe.id}
+          type="button"
+          aria-pressed={recipe.id === selectedId}
+          onClick={() => onSelect(recipe.id)}
+          className={`flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold transition ${recipe.id === selectedId ? 'bg-brand text-brand-ink' : 'text-muted hover:text-ink'}`}
+        >
+          Recipe {index + 1}
+          {todayIds.has(recipe.id) && (
+            <>
+              <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-success ring-2 ring-surface" />
+              <span className="sr-only">, served today</span>
+            </>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function HistoryList({ dates, byDate, recipeNumbers }: { dates: string[]; byDate: Map<string, ItemHistoryRow[]>; recipeNumbers: Map<string, number> }) {
   return (
     <ol className="space-y-4 border-l-2 border-line pl-5">
       {dates.map(date => {
@@ -40,7 +71,30 @@ function HistoryList({ dates, byDate }: { dates: string[]; byDate: Map<string, I
           <li key={date} className="relative">
             <span aria-hidden="true" className={`absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-surface ${hallTone(halls[0]?.slug ?? '').dot}`} />
             <time dateTime={date} className="text-sm font-semibold">{formatDay(date)}</time>
-            <p className="text-sm text-muted">{halls.map(hall => `${hall.name} (${hall.meals.join(', ')})`).join(', ')}</p>
+            <p className="text-sm text-muted">
+              {halls.map((hall, hallIndex) => (
+                <Fragment key={hall.slug}>
+                  {hallIndex > 0 && ', '}
+                  {hall.name} (
+                  {hall.meals.map((meal, mealIndex) => (
+                    <Fragment key={meal}>
+                      {mealIndex > 0 && ', '}
+                      {meal}
+                      {hall.recipeIds[meal].flatMap(recipeId => {
+                        const number = recipeNumbers.get(recipeId)
+                        return number === undefined ? [] : [(
+                          <Fragment key={recipeId}>
+                            {' '}
+                            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full border border-line px-1 text-xs font-semibold tabular-nums text-ink"><span className="sr-only">Recipe </span>{number}</span>
+                          </Fragment>
+                        )]
+                      })}
+                    </Fragment>
+                  ))}
+                  )
+                </Fragment>
+              ))}
+            </p>
           </li>
         )
       })}
@@ -105,6 +159,7 @@ export default function Item() {
   const isFavorite = favorites.data?.some(row => row.item_id === id) ?? false
   const toggleFavorite = useToggleFavorite(id, session?.user.id)
   const today = todayET()
+  const [pickedRecipe, setPickedRecipe] = useState<string | null>(null)
 
   if (itemQuery.isError) return <><PageTitle title="Item" /><ErrorNote retry={itemQuery.refetch} /></>
   if (itemQuery.isPending) return <><PageTitle title="Item" /><Loading /></>
@@ -114,7 +169,12 @@ export default function Item() {
 
   const image = imageUrl(item.image_path)
   const history = historyQuery.data ?? []
+  const recipes = [item, ...item.aliases]
+  const multiRecipe = recipes.length > 1
+  const recipeNumbers = new Map(multiRecipe ? recipes.map((recipe, index) => [recipe.id, index + 1] as const) : [])
   const todayHalls = groupHalls(history.filter(row => row.date === today))
+  const todayRecipes = recipes.filter(recipe => recipeNumbers.has(recipe.id) && history.some(row => row.date === today && row.recipe_id === recipe.id))
+  const selected = recipes.find(recipe => recipe.id === pickedRecipe) ?? todayRecipes[0] ?? item
   const lastHalls = groupHalls(history.filter(row => row.date === item.last_seen))
   const byDate = new Map<string, ItemHistoryRow[]>()
   for (const row of history) {
@@ -123,7 +183,6 @@ export default function Item() {
     byDate.set(row.date, rows)
   }
   const dates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a))
-  const recipes = [item, ...item.aliases]
 
   return (
     <article>
@@ -148,15 +207,28 @@ export default function Item() {
             <p className={overlineClass}>Today</p>
             <div className="mt-1.5">
               {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : todayHalls.length > 0 ? (
-                <ul className="flex flex-wrap gap-2">
-                  {todayHalls.map(hall => (
-                    <li key={hall.slug}>
-                      <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
-                        {hall.name} · {hall.meals.join(', ')}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="flex flex-wrap gap-2">
+                    {todayHalls.map(hall => (
+                      <li key={hall.slug}>
+                        <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
+                          {hall.name} · {hall.meals.join(', ')}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {todayRecipes.length > 0 && (
+                    <p className="mt-2 text-sm text-muted">
+                      Serving {todayRecipes.map((recipe, index) => (
+                        <Fragment key={recipe.id}>
+                          {index > 0 && (index === todayRecipes.length - 1 ? ' and ' : ', ')}
+                          <a href="#item-recipes" onClick={() => setPickedRecipe(recipe.id)} className={linkClass}>Recipe {recipeNumbers.get(recipe.id)}</a>
+                          {todayRecipes.length > 1 && ` at ${groupHalls(history.filter(row => row.date === today && row.recipe_id === recipe.id)).map(hall => hall.name).join(', ')}`}
+                        </Fragment>
+                      ))} today
+                    </p>
+                  )}
+                </>
               ) : (
                 <p className="text-sm text-muted">
                   {item.last_seen
@@ -196,29 +268,19 @@ export default function Item() {
         </aside>
 
         <div className="space-y-6 lg:col-span-2">
-          <Panel id="item-nutrition" title="Nutrition" icon={Flame} tone={tones.lime}>
-            {recipes.length === 1 ? <RecipeNutrition recipe={item} /> : (
-              <>
-                <p className="mb-5 text-sm text-muted">UMD lists {recipes.length} recipes under this name. Allergen and diet tags above include every recipe.</p>
-                <div className="space-y-6">
-                  {recipes.map(recipe => <section key={recipe.id}><h3 className={`mb-3 ${overlineClass}`}>Recipe {recipe.id}</h3><RecipeNutrition recipe={recipe} /></section>)}
-                </div>
-              </>
-            )}
+          {multiRecipe && (
+            <div id="item-recipes" className="scroll-mt-20">
+              <p className="text-sm text-muted">UMD lists {recipes.length} recipes under this name. Allergen and diet tags above include every recipe. Numbers in History show which recipe was served.</p>
+              <div className="mt-3"><RecipeSwitcher recipes={recipes} selectedId={selected.id} todayIds={new Set(todayRecipes.map(recipe => recipe.id))} onSelect={setPickedRecipe} /></div>
+            </div>
+          )}
+          <Panel id="item-nutrition" title={multiRecipe ? `Nutrition · Recipe ${recipeNumbers.get(selected.id)}` : 'Nutrition'} icon={Flame} tone={tones.lime}>
+            <RecipeNutrition recipe={selected} />
           </Panel>
 
-          <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
-            {recipes.length === 1 ? <RecipeIngredients recipe={item} /> : (
-              <div className="space-y-6">
-                {recipes.map(recipe => (
-                  <section key={recipe.id}>
-                    <h3 className={`mb-3 ${overlineClass}`}>Recipe {recipe.id}</h3>
-                    <div className="mb-3"><Badges allergens={recipe.recipe_allergens} dietary={recipe.recipe_dietary} /></div>
-                    <RecipeIngredients recipe={recipe} />
-                  </section>
-                ))}
-              </div>
-            )}
+          <Panel id="item-ingredients" title={multiRecipe ? `Ingredients · Recipe ${recipeNumbers.get(selected.id)}` : 'Ingredients'} icon={Wheat} tone={tones.citrus}>
+            {multiRecipe && <div className="mb-3"><Badges allergens={selected.recipe_allergens} dietary={selected.recipe_dietary} /></div>}
+            <RecipeIngredients recipe={selected} />
           </Panel>
 
           <Panel id="item-history" title="History" icon={CalendarDays} tone={tones.grape}>
@@ -229,10 +291,10 @@ export default function Item() {
                 </p>
                 {dates.length ? (
                   <>
-                    <HistoryList dates={dates.slice(0, 7)} byDate={byDate} />
+                    <HistoryList dates={dates.slice(0, 7)} byDate={byDate} recipeNumbers={recipeNumbers} />
                     {dates.length > 7 && (
                       <Disclosure className="mt-4" summary={`Show ${Math.min(dates.length, 30) - 7} more`}>
-                        <div className="mt-4"><HistoryList dates={dates.slice(7, 30)} byDate={byDate} /></div>
+                        <div className="mt-4"><HistoryList dates={dates.slice(7, 30)} byDate={byDate} recipeNumbers={recipeNumbers} /></div>
                       </Disclosure>
                     )}
                   </>

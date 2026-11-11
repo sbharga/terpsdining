@@ -10,7 +10,7 @@ TerpsDining shows menus, hours, nutrition, and ratings for the University of Mar
 
 - Menus by dining hall, meal, and station, with diet and allergen filters.
 - Hours for every hall, with live open status.
-- Search across every dish, including serving history.
+- Search every dish by name, with where it is served today and when it was last served.
 - Nutrition facts and a plate calculator.
 - Google sign-in for 1–5 star ratings and favorites.
 

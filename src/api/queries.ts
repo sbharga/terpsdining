@@ -6,7 +6,7 @@ import type { Meal } from '../lib/hours'
 import type { Database } from '../lib/database.types'
 import { groupByInitial, type DirectoryGroup, type DirectoryItem } from '../lib/directory'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
-export type ItemHistoryRow = { date: string; meal: Meal; station: string; hall: { slug: string; name: string } | null }
+export type ItemHistoryRow = { date: string; meal: Meal; station: string; recipe_id: string | null; hall: { slug: string; name: string } | null }
 type ItemRow = Database['public']['Tables']['items']['Row']
 export type ItemWithAliases = ItemRow & { aliases: ItemRow[] }
 export const SEARCH_PAGE_SIZE = 60
@@ -25,7 +25,7 @@ export const hallMenuQuery = (hallId: number, date: string) => queryOptions({
   queryKey: ['hallMenu', hallId, date] as const,
   staleTime: 30 * 60_000,
   queryFn: async () => {
-    const { data, error } = await db.from('offerings').select('meal,station,portion,item:items(id,name,image_path,allergens,dietary,rating_avg,rating_count,rating_sum)').eq('hall_id', hallId).eq('date', date)
+    const { data, error } = await db.from('offerings').select('meal,station,portion,item:items!offerings_item_id_fkey(id,name,image_path,allergens,dietary,rating_avg,rating_count,rating_sum)').eq('hall_id', hallId).eq('date', date)
     if (error) throw error
     return data
   },
@@ -52,7 +52,7 @@ export const historyQuery = (id: string) => queryOptions({
   queryKey: ['history', id] as const,
   staleTime: 6 * 60 * 60_000,
   queryFn: async (): Promise<ItemHistoryRow[]> => {
-    const { data, error } = await db.from('offerings').select('date,meal,station,hall:halls(slug,name)').eq('item_id', id).order('date', { ascending: false }).limit(300)
+    const { data, error } = await db.from('offerings').select('date,meal,station,recipe_id,hall:halls(slug,name)').eq('item_id', id).order('date', { ascending: false }).limit(300)
     if (error) throw error
     return data
   },

@@ -73,10 +73,11 @@ Point your status page at `https://<your-domain>/api/health` and alert on a non-
 - The build fetches public Supabase data and prerenders pages into `dist/`. It requires the frontend environment variables and network access. Data-fetch errors fail the build rather than generating empty pages.
 - Pages have route-specific metadata, canonical URLs, social previews, and initial HTML content. Item pages get a description built from their calories, protein, diet, and allergens. `/sitemap.xml` lists indexable pages without `<lastmod>`, because the content changes daily and a build-date `lastmod` makes search results show a stale “N days ago” date. `/robots.txt` advertises the sitemap. `/search` with no query is an indexable, prerendered A–Z directory that links to every item page, so no item is an orphan. Account and missing pages are marked `noindex`. Canonicals omit query parameters. The home page marks its date and live hours and ratings with `data-nosnippet` so search snippets use the meta description instead of today’s hours. Search engines determine indexing and rankings.
 - Prerendered content and sitemap entries refresh on deployment. Public query data is embedded in each menu, hours, and item page and restored before the first client render.
-- Embedded query data counts as fresh when the page loads, however old the build is, so landing on a prerendered page makes no data requests. Each query then stays fresh for its own time: hours 15 minutes, menus 30 minutes, history six hours, and other queries five minutes. Ratings shown on first view can be up to one build old; a signed-in user's own rating is fetched live.
+- Embedded query data counts as fresh when the page loads, however old the build is, so landing on a prerendered page makes no data requests. Each query then stays fresh for its own time: hours 15 minutes, menus 30 minutes, history and the A–Z directory six hours, and other queries five minutes. Ratings shown on first view can be up to one build old; a signed-in user's own rating is fetched live.
 - Newly scraped items remain accessible before the next deployment, but they need a rebuild to appear in initial HTML and the sitemap.
 - Hashed `/assets/` files have a one-year immutable cache policy. Food objects use a seven-day cache policy.
 - Only the Latin subsets of the two bundled fonts are shipped.
+- Item pages outside the prerendered set are served by `item-shell.html` (`vercel.json` rewrites `/items/:id` to `/item-shell`), which loads the item in the browser. Merged duplicate items get a static page that redirects to their main item.
 
 ## Deploy order
 
@@ -89,12 +90,13 @@ Point your status page at `https://<your-domain>/api/health` and alert on a non-
 
 3. Deploy the thumbnail-enabled frontend.
 4. Apply `20261007000000_prune_history.sql` before deploying the updated scraper. Without it, the pruning RPC returns 404 and the scrape job fails.
+5. Apply `20261105000000_search_filters_rating_order.sql`, `20261107000000_merge_duplicate_items.sql`, and `20261111000000_offering_recipes.sql`, in that order, before deploying the frontend or scraper that use them. The frontend calls `search_items` with diet and allergen filters and reads `offerings.recipe_id`; the scraper calls `merge_items` and the new `replace_offerings`. After `20261111000000`, deploy the frontend promptly: its `offerings_recipe_id_fkey` makes the old frontend's hall menu query ambiguous.
 
 See [scraper.md](scraper.md) for what each command does and what its output means.
 
 ## Hall metadata
 
-Hall metadata lives in `src/lib/halls.ts`. Update it whenever the database seed adds or renames a hall. Hall colors live in `hallTones` in `src/lib/theme.ts`.
+Hall metadata lives in `src/lib/halls.ts`. Update it whenever a migration adds or renames a hall (hall rows are inserted in `supabase/migrations/20261003000000_init.sql`). Hall colors live in `hallTones` in `src/lib/theme.ts`.
 
 The hall "Top rated" list uses Bayesian ranking within the selected meal and dietary/allergen filters.
 
@@ -118,3 +120,6 @@ Replace project-specific values before publishing your own copy:
 - [ ] Hall metadata in `src/lib/halls.ts`, and `hallTones` in `src/lib/theme.ts`.
 - [ ] Google consent-screen logo `docs/google-oauth-logo.png`, if you use your own branding.
 - [ ] Scraper credentials, configured as GitHub Actions secrets for your own project.
+- [ ] Repository URL in `package.json` (`repository.url`).
+- [ ] Contact address in `README.md` and `docs/SECURITY.md`.
+- [ ] Author name and email in `scraper/pyproject.toml`.

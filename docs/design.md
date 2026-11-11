@@ -1,6 +1,6 @@
 # Design system
 
-The rules for every screen in TerpsDining. Build UI from the primitives in `src/components/UI.tsx` and the recipes in `src/lib/theme.ts`. Enforced in part by `bun run lint` (`scripts/check-design.ts`).
+The rules for every screen in TerpsDining. Build UI from the primitives in `src/components/UI.tsx` and the recipes in `src/lib/theme.ts`. `bun run lint` (`scripts/check-design.ts`) enforces part of it: no raw palette classes and no arbitrary color values outside `src/lib/theme.ts` and `src/lib/database.types.ts`, and no off-scale radii.
 
 ## Principles
 
@@ -21,7 +21,7 @@ Tokens are defined in `src/index.css` and exposed to Tailwind as `bg-canvas`, `t
 | `ink` | `#1c1917` | `#f5efe8` | Primary text |
 | `muted` | `#6b625a` | `#a8a29e` | Secondary text, icons |
 | `line` | `#ece3d8` | `#3a322c` | Card rings, dividers, outline borders |
-| `brand` | `#d63a1a` | `#ff7a5c` | Primary actions, links, single-select selection, favorite heart |
+| `brand` | `#d63a1a` | `#ff7a5c` | Primary actions, links, single-select selection |
 | `brand-ink` | `#ffffff` | `#1a1412` | Text on `brand` |
 | `brand-soft` | 10% brand over surface | 10% brand over surface | Pressed toggle chips, active filter fills |
 | `success` | `#007a55` | `#5ee9b5` | Open, served today, "now" |
@@ -36,14 +36,14 @@ Soft tokens are declared once in `:root` as `color-mix(in oklab, var(--x) 10%, v
 
 Usage rules:
 
-- **Brand** is for primary actions, links, and single-select state: the selected day and the current page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
+- **Brand** is for primary actions, links, and single-select state: the selected day, the current page, and the selected recipe on an item page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
 - **Tones** are the shared accent palette in `theme.ts`: `tomato`, `citrus`, `lime`, `mint`, `sky`, `grape`, `berry`. Each has `solid` (white text), `soft` (tinted fill with text), `text`, `dot`, and `border` classes. Take them from `tones`, `hallTone()`, `mealTones`, `dietTone()`, or `nameTone()`. Never write a tone by hand.
 - **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands, `soft` for hall chips, `dot` for history rows, `text` for the hall hours heading icon. Current hall tones: South Campus `citrus` (`amber-700`), Yahentamitsi `lime` (`lime-700`), 251 North `berry` (`fuchsia-700`), fallback `sky`.
 - **Meals** use `mealTones`: Breakfast `citrus`, Lunch `sky`, Dinner `grape`. `MealIcon` takes its color from them, and the selected meal tab is that meal's `solid` with white text.
 - **Diet** badges and diet filter chips use `dietTone(tag)`: vegan `lime`, vegetarian `mint`, halal `sky`.
 - **Section icons** pick a tone by meaning: favorites `berry` (the favorite heart is also `berry`), ratings and top rated `citrus`, nutrition `lime`, history `grape`, calories `tomato`, protein `berry`, carbs `sky`, fat `citrus`, delete `tomato`.
 - **Stations and food swatches.** Station heading dots, `FoodSwatch`, and `Avatar` use `nameTone(name)`, a stable hash of the name, so the same name always gets the same color.
-- **Status** uses `success` (open, served today, now), `warning` (rating 3 to under 4), and `danger` (errors, destructive actions, avoided allergens, rating under 3). `StatusPill` colors come from `statusStyle`.
+- **Status** uses `success` (open, served today, now; also the green dot on the recipe switcher for the recipe served today), `warning` (rating 3 to under 4), and `danger` (errors, destructive actions, avoided allergens, rating under 3). `StatusPill` colors come from `statusStyle`.
 - **Star** is reserved for rating glyphs.
 - **Icons** are `text-muted` unless they take a tone from the rules above.
 - Raw Tailwind palette classes (for example `bg-emerald-500`) are banned outside `src/lib/theme.ts`. `bun run lint` fails on them, as it does on arbitrary color values such as `bg-[#abc]`. Add a tone or token in `theme.ts` or `src/index.css` instead.
@@ -57,7 +57,7 @@ Usage rules:
 - List titles: `font-semibold leading-snug`.
 - Body: `text-base`. Secondary text: `text-sm text-muted`.
 - Overline labels: `overlineClass` (`text-xs font-semibold uppercase tracking-wider text-muted`).
-- Minimum size is `text-xs`, and only for overlines.
+- Minimum size is `text-xs`, used for overlines, stat labels, badges, pills, counts, and short inline status text.
 - Numbers (times, nutrition, counts) use `tabular-nums`.
 - Copy is sentence case. Ranges use an en dash (`9–11 a.m.`). Separators are `·`. Truncation is `…`, not `...`.
 
@@ -81,7 +81,7 @@ Usage rules:
 - `rounded-xl`: only inside a `rounded-2xl` popover (menu items).
 - Other radii (`rounded`, `rounded-sm`, `rounded-md`, `rounded-lg`) are not used.
 - Cards are flat: `cardClass` is `rounded-3xl bg-surface ring-1 ring-line`.
-- Shadows are used only on floating UI (menus) and the selected meal tab (`shadow-sm`). Do not add shadows to cards.
+- Shadows are used only on floating UI (menus), the selected meal tab and `StatusPill` (`shadow-sm`), and `FoodSwatch` letters (`drop-shadow-sm`). Do not add shadows to cards.
 
 ## Touch and interaction
 
@@ -117,6 +117,10 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 | `ErrorNote` | A failed request. Includes a Retry `Button size="sm"`. |
 | `Loading` | A page or list that is fetching. Use the skeleton list for a whole section and inline text for a single value. |
 | `MealIcon` | Meal glyph, colored by `mealTones`. Pass `className` to override (for example white on the selected tab). |
+| `PageTitle` | Every page. Sets the document title, description, robots, and canonical tags from `src/lib/seo.ts`. |
+| `StarRating` | The 1–5 star rating control on the item page. Tapping the current value clears it; disabled uses `opacity-50`. |
+| `FoodSwatch` | Placeholder for a dish with no image: its initial on a `nameTone` fill. |
+| `DietIcon` | Diet glyph inside `Badges` and diet chips: vegan sprout, halal check, otherwise leaf. |
 
 Text recipes: `overlineClass` for overlines; `linkClass` for standalone text actions (add `hit` when the link stands alone). Inside a sentence, use a plain `<a>` with `linkClass`, and do not add `hit`.
 
@@ -135,7 +139,7 @@ Check every UI change before review:
 - No raw palette classes and no arbitrary color values. `bun run lint` passes.
 - Radii are on the scale above. No shadows on cards.
 - Layout checked at 360px and 390px: no horizontal scroll, no clipped text.
-- Checked in light and dark mode.
+- Checked in light and dark mode. Dark mode follows the OS `prefers-color-scheme` setting (`src/index.css`); there is no in-app toggle.
 - Every interactive target is at least 44×44px, or uses `hit`.
 - Reachable and operable by keyboard; focus visible; icon-only controls labeled.
 - Copy follows the typography rules above.

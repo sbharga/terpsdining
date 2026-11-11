@@ -32,7 +32,7 @@ The rows, as a 2D grid:
 
 - Each hall has three consecutive rows: Breakfast, Lunch, Dinner.
 - Column 0 has the form `{Hall Name} | {Meal}`.
-- A cell is either a free-text time range (`7am-10:30am`), `Closed`, or empty.
+- A cell is a time range (`7am-10:30am`), `Closed` (any case), or empty. Empty cells produce no row; any other text is stored with status `tbd`.
 
 ---
 
@@ -41,7 +41,7 @@ The rows, as a 2D grid:
 **URL**
 
 ```
-http://nutrition.umd.edu/longmenu.aspx?locationNum={locationNum}&dtdate={M/D/YYYY}&mealName={Breakfast|Lunch|Dinner}
+https://nutrition.umd.edu/longmenu.aspx?locationNum={locationNum}&dtdate={M/D/YYYY}&mealName={Breakfast|Lunch|Dinner}
 ```
 
 - **Method:** `GET`, no auth.
@@ -53,7 +53,7 @@ http://nutrition.umd.edu/longmenu.aspx?locationNum={locationNum}&dtdate={M/D/YYY
 | `mealName` | `Breakfast`, `Lunch`, `Dinner` |
 
 - **Data:** Every menu item served at one dining hall for one meal on one date. Items are grouped by station/section, and each item has allergen and dietary icons and a link to its nutrition label.
-- **Format:** Server-rendered HTML (ASP.NET). The menu is a table, and each item or section header is one `<tr>`:
+- **Format:** Server-rendered HTML (ASP.NET). The menu is a table, and each item or section header is one `<td>`:
 
 - **Section header row:** has a `<strong>` with the section name and no label link.
   ```html
@@ -69,7 +69,7 @@ http://nutrition.umd.edu/longmenu.aspx?locationNum={locationNum}&dtdate={M/D/YYY
   <img class='nutri-icon' src=/LegendImages/icons_2016_vegetarian.gif alt='vegetarian'>
   ```
   - Allergens are written `Contains {allergen}`, e.g. `Contains dairy`, `Contains egg`, `Contains pork`.
-  - Dietary tags are bare words, e.g. `vegetarian`, `vegan`.
+  - Dietary tags are the icon `alt` text, lowercased, e.g. `vegetarian`, `vegan`. `HalalFriendly` is stored as `halal`.
 
 ---
 
@@ -82,5 +82,5 @@ https://nutrition.umd.edu/label.aspx?locationNum={locationNum}&locationName=&dtd
 ```
 
 - **Method:** `GET`, no auth.
-- **Data:** The full nutrition facts label for one recipe: serving size, calories, macronutrients, and ingredients.
+- **Data:** The full nutrition facts label for one recipe: servings, serving size, calories, nutrients with % Daily Value, ingredients, and the label's allergen statement.
 - **Format:** Server-rendered HTML page. The full URL for each item is the `href` on that item in the menu page above.
