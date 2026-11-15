@@ -108,7 +108,7 @@ UMD sometimes gives one dish several recipe IDs. After upserting items, every ru
 - Ratings, favorites, and offerings move to the main item. If a user rated several recipes, only their most recently updated rating is kept.
 - The scraper writes each recipe's own tags to `recipe_allergens` and `recipe_dietary`. `merge_items` derives `allergens` (union) and `dietary` (intersection) on the main item. Aliases keep their own tags in `allergens`/`dietary`.
 - `replace_offerings` maps alias IDs to the main item, so menus show a dish once. Each offering keeps the recipe ID that was served in `offerings.recipe_id`, and `merge_items` carries it over when it moves an alias's offerings. Offerings already on a merged dish when the column was added have a null `recipe_id`; all other existing offerings were backfilled with their own item ID. Aliases keep their nutrition fetch but never trigger image searches.
-- The site redirects alias URLs to the main item. Its page numbers the recipes (Recipe 1 is the main item, then aliases by ID), switches Nutrition and Ingredients between them, and marks which recipe was served today and on each History day.
+- The site redirects alias URLs to the main item. Its page shows the recipe served today (else the most recently served) by default and ends the Nutrition panel with a quiet line that cycles through the versions, switching Nutrition and Ingredients together.
 
 ## History pruning
 

@@ -15,54 +15,20 @@ import { meals } from '../lib/hours'
 import { itemDescription } from '../lib/seo'
 
 type ItemRow = Database['public']['Tables']['items']['Row']
-type HallMeals = { slug: string; name: string; meals: string[]; recipeIds: Record<string, string[]> }
+type HallMeals = { slug: string; name: string; meals: string[] }
 
 function groupHalls(rows: ItemHistoryRow[]): HallMeals[] {
-  const halls = new Map<string, { name: string; meals: Map<string, Set<string>> }>()
+  const halls = new Map<string, { name: string; meals: Set<string> }>()
   for (const row of rows) {
     if (!row.hall) continue
-    const hall = halls.get(row.hall.slug) ?? { name: row.hall.name, meals: new Map<string, Set<string>>() }
-    const recipeIds = hall.meals.get(row.meal) ?? new Set<string>()
-    if (row.recipe_id) recipeIds.add(row.recipe_id)
-    hall.meals.set(row.meal, recipeIds)
+    const hall = halls.get(row.hall.slug) ?? { name: row.hall.name, meals: new Set<string>() }
+    hall.meals.add(row.meal)
     halls.set(row.hall.slug, hall)
   }
-  return Array.from(halls, ([slug, hall]) => {
-    const served = meals.filter(meal => hall.meals.has(meal))
-    return {
-      slug,
-      name: hall.name,
-      meals: served,
-      recipeIds: Object.fromEntries(served.map(meal => [meal, Array.from(hall.meals.get(meal) ?? []).sort()])),
-    }
-  }).sort((a, b) => a.name.localeCompare(b.name))
+  return Array.from(halls, ([slug, hall]) => ({ slug, name: hall.name, meals: meals.filter(meal => hall.meals.has(meal)) })).sort((a, b) => a.name.localeCompare(b.name))
 }
 
-function RecipeSwitcher({ recipes, selectedId, todayIds, onSelect }: { recipes: ItemRow[]; selectedId: string; todayIds: Set<string>; onSelect: (id: string) => void }) {
-  return (
-    <div role="group" aria-label="Recipe" className="flex gap-1 rounded-full bg-surface-2 p-1">
-      {recipes.map((recipe, index) => (
-        <button
-          key={recipe.id}
-          type="button"
-          aria-pressed={recipe.id === selectedId}
-          onClick={() => onSelect(recipe.id)}
-          className={`flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold transition ${recipe.id === selectedId ? 'bg-brand text-brand-ink' : 'text-muted hover:text-ink'}`}
-        >
-          Recipe {index + 1}
-          {todayIds.has(recipe.id) && (
-            <>
-              <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-success" />
-              <span className="sr-only">, served today</span>
-            </>
-          )}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function HistoryList({ dates, byDate, recipeNumbers }: { dates: string[]; byDate: Map<string, ItemHistoryRow[]>; recipeNumbers: Map<string, number> }) {
+function HistoryList({ dates, byDate }: { dates: string[]; byDate: Map<string, ItemHistoryRow[]> }) {
   return (
     <ol className="space-y-4 border-l-2 border-line pl-5">
       {dates.map(date => {
@@ -80,15 +46,6 @@ function HistoryList({ dates, byDate, recipeNumbers }: { dates: string[]; byDate
                     <Fragment key={meal}>
                       {mealIndex > 0 && ', '}
                       {meal}
-                      {hall.recipeIds[meal].flatMap(recipeId => {
-                        const number = recipeNumbers.get(recipeId)
-                        return number === undefined ? [] : [(
-                          <Fragment key={recipeId}>
-                            {' '}
-                            <span className="inline-grid h-5 min-w-5 place-items-center rounded-full border border-line px-1 text-xs font-semibold tabular-nums text-ink"><span className="sr-only">Recipe </span>{number}</span>
-                          </Fragment>
-                        )]
-                      })}
                     </Fragment>
                   ))}
                   )
@@ -171,10 +128,14 @@ export default function Item() {
   const history = historyQuery.data ?? []
   const recipes = [item, ...item.aliases]
   const multiRecipe = recipes.length > 1
-  const recipeNumbers = new Map(multiRecipe ? recipes.map((recipe, index) => [recipe.id, index + 1] as const) : [])
+  const recipeIds = new Set(recipes.map(recipe => recipe.id))
+  const servedRecipeId = multiRecipe ? history.find(row => row.recipe_id !== null && recipeIds.has(row.recipe_id))?.recipe_id : undefined
+  const defaultRecipe = recipes.find(recipe => recipe.id === servedRecipeId) ?? item
+  const servedToday = history.some(row => row.date === today && row.recipe_id === defaultRecipe.id)
+  const selected = recipes.find(recipe => recipe.id === pickedRecipe) ?? defaultRecipe
+  const defaultName = servedToday ? "today's version" : servedRecipeId ? 'the latest version' : `version ${recipes.indexOf(defaultRecipe) + 1}`
+  const nextRecipe = recipes[(recipes.indexOf(selected) + 1) % recipes.length]
   const todayHalls = groupHalls(history.filter(row => row.date === today))
-  const todayRecipes = recipes.filter(recipe => recipeNumbers.has(recipe.id) && history.some(row => row.date === today && row.recipe_id === recipe.id))
-  const selected = recipes.find(recipe => recipe.id === pickedRecipe) ?? todayRecipes[0] ?? item
   const lastHalls = groupHalls(history.filter(row => row.date === item.last_seen))
   const byDate = new Map<string, ItemHistoryRow[]>()
   for (const row of history) {
@@ -207,28 +168,15 @@ export default function Item() {
             <p className={overlineClass}>Today</p>
             <div className="mt-1.5">
               {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : todayHalls.length > 0 ? (
-                <>
-                  <ul className="flex flex-wrap gap-2">
-                    {todayHalls.map(hall => (
-                      <li key={hall.slug}>
-                        <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
-                          {hall.name} · {hall.meals.join(', ')}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  {todayRecipes.length > 0 && (
-                    <p className="mt-2 text-sm text-muted">
-                      Serving {todayRecipes.map((recipe, index) => (
-                        <Fragment key={recipe.id}>
-                          {index > 0 && (index === todayRecipes.length - 1 ? ' and ' : ', ')}
-                          <a href="#item-recipes" onClick={() => setPickedRecipe(recipe.id)} className={linkClass}>Recipe {recipeNumbers.get(recipe.id)}</a>
-                          {todayRecipes.length > 1 && ` at ${groupHalls(history.filter(row => row.date === today && row.recipe_id === recipe.id)).map(hall => hall.name).join(', ')}`}
-                        </Fragment>
-                      ))} today
-                    </p>
-                  )}
-                </>
+                <ul className="flex flex-wrap gap-2">
+                  {todayHalls.map(hall => (
+                    <li key={hall.slug}>
+                      <Link to={`/halls/${hall.slug}?meal=${encodeURIComponent(hall.meals[0])}`} className={`hit inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition hover:brightness-95 ${hallTone(hall.slug).soft}`}>
+                        {hall.name} · {hall.meals.join(', ')}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               ) : (
                 <p className="text-sm text-muted">
                   {item.last_seen
@@ -268,13 +216,14 @@ export default function Item() {
         </aside>
 
         <div className="space-y-6 lg:col-span-2">
-          {multiRecipe && (
-            <div id="item-recipes" className="scroll-mt-20">
-              <RecipeSwitcher recipes={recipes} selectedId={selected.id} todayIds={new Set(todayRecipes.map(recipe => recipe.id))} onSelect={setPickedRecipe} />
-            </div>
-          )}
           <Panel id="item-nutrition" title="Nutrition" icon={Flame} tone={tones.lime}>
             <RecipeNutrition recipe={selected} />
+            {multiRecipe && (
+              <p aria-live="polite" className="mt-5 border-t border-line pt-4 text-sm text-muted">
+                UMD lists {recipes.length} versions of this dish. Showing {selected.id === defaultRecipe.id ? defaultName : `version ${recipes.indexOf(selected) + 1}`}.{' '}
+                <button type="button" onClick={() => setPickedRecipe(nextRecipe.id)} className={linkClass}>{nextRecipe.id === defaultRecipe.id ? `Back to ${defaultName}` : 'Show another version'}</button>
+              </p>
+            )}
           </Panel>
 
           <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
@@ -290,10 +239,10 @@ export default function Item() {
                 </p>
                 {dates.length ? (
                   <>
-                    <HistoryList dates={dates.slice(0, 7)} byDate={byDate} recipeNumbers={recipeNumbers} />
+                    <HistoryList dates={dates.slice(0, 7)} byDate={byDate} />
                     {dates.length > 7 && (
                       <Disclosure className="mt-4" summary={`Show ${Math.min(dates.length, 30) - 7} more`}>
-                        <div className="mt-4"><HistoryList dates={dates.slice(7, 30)} byDate={byDate} recipeNumbers={recipeNumbers} /></div>
+                        <div className="mt-4"><HistoryList dates={dates.slice(7, 30)} byDate={byDate} /></div>
                       </Disclosure>
                     )}
                   </>

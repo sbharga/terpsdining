@@ -36,14 +36,14 @@ Soft tokens are declared once in `:root` as `color-mix(in oklab, var(--x) 10%, v
 
 Usage rules:
 
-- **Brand** is for primary actions, links, and single-select state: the selected day, the current page, and the selected recipe on an item page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
+- **Brand** is for primary actions, links, and single-select state: the selected day and the current page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
 - **Tones** are the shared accent palette in `theme.ts`: `tomato`, `citrus`, `lime`, `mint`, `sky`, `grape`, `berry`. Each has `solid` (white text), `soft` (tinted fill with text), `text`, `dot`, and `border` classes. Take them from `tones`, `hallTone()`, `mealTones`, `dietTone()`, or `nameTone()`. Never write a tone by hand.
 - **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands, `soft` for hall chips, `dot` for history rows, `text` for the hall hours heading icon. Current hall tones: South Campus `citrus` (`amber-700`), Yahentamitsi `lime` (`lime-700`), 251 North `berry` (`fuchsia-700`), fallback `sky`.
 - **Meals** use `mealTones`: Breakfast `citrus`, Lunch `sky`, Dinner `grape`. `MealIcon` takes its color from them, and the selected meal tab is that meal's `solid` with white text.
 - **Diet** badges and diet filter chips use `dietTone(tag)`: vegan `lime`, vegetarian `mint`, halal `sky`.
 - **Section icons** pick a tone by meaning: favorites `berry` (the favorite heart is also `berry`), ratings and top rated `citrus`, nutrition `lime`, history `grape`, calories `tomato`, protein `berry`, carbs `sky`, fat `citrus`, delete `tomato`.
 - **Stations and food swatches.** Station heading dots, `FoodSwatch`, and `Avatar` use `nameTone(name)`, a stable hash of the name, so the same name always gets the same color.
-- **Status** uses `success` (open, served today, now; also the green dot on the recipe switcher for the recipe served today), `warning` (rating 3 to under 4), and `danger` (errors, destructive actions, avoided allergens, rating under 3). `StatusPill` colors come from `statusStyle`.
+- **Status** uses `success` (open, served today, now), `warning` (rating 3 to under 4), and `danger` (errors, destructive actions, avoided allergens, rating under 3). `StatusPill` colors come from `statusStyle`.
 - **Star** is reserved for rating glyphs.
 - **Icons** are `text-muted` unless they take a tone from the rules above.
 - Raw Tailwind palette classes (for example `bg-emerald-500`) are banned outside `src/lib/theme.ts`. `bun run lint` fails on them, as it does on arbitrary color values such as `bg-[#abc]`. Add a tone or token in `theme.ts` or `src/index.css` instead.
@@ -112,7 +112,6 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 | `Badges` | Dietary badges (`dietTone` colors) and allergen badges (neutral). |
 | `RatingPill` | Average or personal rating. Thresholds: 4 and up success, 3 and up warning, below 3 danger. |
 | `StatusPill` | Hall open state on the hall page band. A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
-| `StatusDot` | Hall open state on the schedule cards: a dot with a white ring in the top right of the hall band, no text. Green open now, amber opening later, gray closed (`statusStyle`). The label is its `aria-label` and tooltip. |
 | `DatePager` | Previous and next day, with a Today button. |
 | `EmptyState` | A list or search with no results. Optional clear-filter action uses `linkClass` with `hit`. |
 | `ErrorNote` | A failed request. Includes a Retry `Button size="sm"`. |
