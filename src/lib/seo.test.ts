@@ -28,6 +28,22 @@ describe('page SEO metadata', () => {
     expect(getPageSeo('/items/1', 'X', 'custom').description).toBe('custom')
   })
 
+  it('leads hall titles with the menu and includes the nickname', () => {
+    expect(getPageSeo('/halls/yahentamitsi', 'Yahentamitsi').title).toBe('UMD Yahentamitsi (the Y) Dining Hall Menu & Hours Today · TerpsDining')
+    expect(getPageSeo('/halls/251-north', '251 North').title).toBe('UMD 251 North Dining Hall Menu & Hours Today · TerpsDining')
+  })
+
+  it('emits WebSite data only on the home page and breadcrumbs on content pages', () => {
+    expect(JSON.parse(getPageSeo('/').jsonLd)['@type']).toBe('WebSite')
+    const item = JSON.parse(getPageSeo('/items/17', 'Biscuit').jsonLd)
+    expect(item['@type']).toBe('BreadcrumbList')
+    expect(item.itemListElement.map((entry: { item: string }) => entry.item)).toEqual([`${SITE_URL}/`, `${SITE_URL}/search`, `${SITE_URL}/items/17`])
+    expect(JSON.parse(getPageSeo('/halls/south-campus', 'South Campus').jsonLd).itemListElement[1].name).toBe('South Campus Dining Hall')
+    expect(getPageSeo('/account').jsonLd).toBe('')
+    expect(getPageSeo('/item-shell').jsonLd).toBe('')
+    expect(getPageSeo('/halls/x', 'Not found').jsonLd).toBe('')
+  })
+
   it('escapes dynamic metadata before emitting raw HTML', () => {
     const html = renderSeoHead(getPageSeo('/items/17', '<b>Food & "More"</b>'))
     expect(html).toContain('&lt;b&gt;Food &amp; &quot;More&quot;&lt;/b&gt;')

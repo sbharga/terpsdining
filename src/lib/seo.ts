@@ -9,6 +9,7 @@ export type PageSeo = {
   description: string
   canonical: string
   robots: string
+  jsonLd: string
   image: string
   imageAlt: string
 }
@@ -30,6 +31,27 @@ function escapeHtml(value: string): string {
 
 function escapeJsonLd(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+}
+
+const HOME_CRUMB: [string, string] = ['TerpsDining', '/']
+
+function breadcrumbs(trail: Array<[string, string]>): string {
+  return escapeJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map(([name, path], index) => ({ '@type': 'ListItem', position: index + 1, name, item: `${SITE_URL}${path}` })),
+  })
+}
+
+function websiteJsonLd(): string {
+  return escapeJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_TITLE,
+    url: `${SITE_URL}/`,
+    description: HOME_DESCRIPTION,
+    alternateName: ['Terps Dining', 'terpsdining.app'],
+  })
 }
 
 type ItemRow = Database['public']['Tables']['items']['Row']
@@ -55,6 +77,7 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
   let description: string
   let robots = 'index,follow'
   let canonicalPath = path
+  let jsonLd = ''
   if ((/^\/(?:halls|items)\/[^/]+$/.test(path)) && title?.trim() === 'Not found') {
     pageTitle = 'Page Not Found'
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
@@ -62,9 +85,11 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
   } else if (path === '/') {
     pageTitle = 'UMD Dining Hall Menus & Hours Today'
     description = HOME_DESCRIPTION
+    jsonLd = websiteJsonLd()
   } else if (path === '/search') {
     pageTitle = 'UMD Dining Hall Foods A–Z & Search'
     description = 'Browse every dish served at UMD dining halls (Yahentamitsi, South Campus, 251 North) from A to Z, or search by name, with nutrition facts, allergens, and student ratings.'
+    jsonLd = breadcrumbs([HOME_CRUMB, ['Foods A–Z', '/search']])
   } else if (path === '/account') {
     pageTitle = 'Your Account'
     description = 'Manage your TerpsDining account, ratings, and favorites.'
@@ -72,6 +97,7 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
   } else if (path === '/hours') {
     pageTitle = 'UMD Dining Hall Hours Today & This Week'
     description = 'UMD dining hall hours for today and the week ahead: breakfast, lunch, and dinner times at Yahentamitsi, South Campus, and 251 North, updated daily.'
+    jsonLd = breadcrumbs([HOME_CRUMB, ['Dining hall hours', '/hours']])
   } else if (path === '/privacy') {
     pageTitle = 'Privacy Policy'
     description = 'Read the TerpsDining privacy policy and learn how account and service information is handled.'
@@ -86,12 +112,14 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
   } else if (/^\/halls\/[^/]+$/.test(path)) {
     const hall = title?.trim() || 'Dining Hall'
     const nickname = halls.find(entry => entry.slug === path.slice('/halls/'.length))?.nickname
-    pageTitle = `UMD ${hall} Dining Hall Hours & Menu Today`
+    pageTitle = `UMD ${hall}${nickname ? ` (${nickname})` : ''} Dining Hall Menu & Hours Today`
     description = `${hall} Dining Hall${nickname ? ` (${nickname})` : ''} hours and today’s menu at UMD: breakfast, lunch, and dinner by station, with nutrition facts, allergens, and student ratings.`
+    jsonLd = breadcrumbs([HOME_CRUMB, [`${hall} Dining Hall`, path]])
   } else if (/^\/items\/[^/]+$/.test(path)) {
     const item = title?.trim() || 'Dining Menu Item'
     pageTitle = `${item}: UMD Dining Nutrition & Allergens`
     description = `${item} nutrition facts, ingredients, allergens, and recent serving dates at University of Maryland (UMD) dining halls.`
+    jsonLd = breadcrumbs([HOME_CRUMB, ['Foods A–Z', '/search'], [item, path]])
   } else {
     pageTitle = title?.trim() || 'Page Not Found'
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
@@ -104,20 +132,10 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
     description: customDescription ?? description,
     canonical: canonicalPath ? `${SITE_URL}${canonicalPath}` : '',
     robots,
+    jsonLd,
     image: DEFAULT_IMAGE,
     imageAlt: DEFAULT_IMAGE_ALT,
   }
-}
-
-export function renderSeoJsonLd(): string {
-  return escapeJsonLd({
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: SITE_TITLE,
-    url: `${SITE_URL}/`,
-    description: HOME_DESCRIPTION,
-    alternateName: ['Terps Dining', 'terpsdining.app'],
-  })
 }
 
 export function renderSeoHead(seo: PageSeo): string {
@@ -140,6 +158,6 @@ export function renderSeoHead(seo: PageSeo): string {
     `<meta name="twitter:description" content="${escapeHtml(seo.description)}">`,
     `<meta name="twitter:image" content="${escapeHtml(seo.image)}">`,
     `<meta name="twitter:image:alt" content="${escapeHtml(seo.imageAlt)}">`,
-    `<script type="application/ld+json">${renderSeoJsonLd()}</script>`,
+    seo.jsonLd ? `<script type="application/ld+json">${seo.jsonLd}</script>` : '',
   ].join('\n')
 }

@@ -92,11 +92,12 @@ queryClient.setQueryData(directoryQuery().queryKey, groupByInitial(mainItems.map
 await writePage('search.html', '/search', undefined, '/search', [directoryQuery().queryKey])
 await writePage('account.html', '/account')
 
-const sitemap: string[] = [`${SITE_URL}/`, `${SITE_URL}/hours`, `${SITE_URL}/search`, `${SITE_URL}/privacy`, `${SITE_URL}/terms`]
+// Only pages whose content really changes every build (menus and hours) carry <lastmod>; item pages, the directory, and legal pages omit it.
+const sitemap: Array<{ loc: string; lastmod?: string }> = [{ loc: `${SITE_URL}/`, lastmod: today }, { loc: `${SITE_URL}/hours`, lastmod: today }, { loc: `${SITE_URL}/search` }, { loc: `${SITE_URL}/privacy` }, { loc: `${SITE_URL}/terms` }]
 for (const hall of halls) {
   await queryClient.fetchQuery(hallMenuQuery(hall.id, today))
   await writePage(`halls/${encodeURIComponent(hall.slug)}.html`, `/halls/${hall.slug}`, hall.name, `/halls/${hall.slug}`, [hoursQuery(today, endOfWeek).queryKey, hallMenuQuery(hall.id, today).queryKey])
-  sitemap.push(`${SITE_URL}/halls/${encodeURIComponent(hall.slug)}`)
+  sitemap.push({ loc: `${SITE_URL}/halls/${encodeURIComponent(hall.slug)}`, lastmod: today })
   queryClient.removeQueries({ queryKey: ['hallMenu', hall.id, today] })
 }
 
@@ -109,7 +110,7 @@ for (let start = 0; start < mainItems.length; start += 100) {
     queryClient.setQueryData(itemQuery(item.id).queryKey, withAliases(item, aliasesByMain.get(item.id) ?? []))
     queryClient.setQueryData(historyQuery(item.id).queryKey, histories.get(item.id) ?? [])
     await writePage(`items/${encodeURIComponent(item.id)}.html`, `/items/${item.id}`, item.name, `/items/${item.id}`, [itemQuery(item.id).queryKey, historyQuery(item.id).queryKey], undefined, itemDescription(item))
-    sitemap.push(`${SITE_URL}/items/${encodeURIComponent(item.id)}`)
+    sitemap.push({ loc: `${SITE_URL}/items/${encodeURIComponent(item.id)}` })
     queryClient.removeQueries({ queryKey: ['item', item.id] })
     queryClient.removeQueries({ queryKey: ['history', item.id] })
   }
@@ -126,7 +127,7 @@ for (const alias of catalog) {
 queryClient.clear()
 await writePage('item-shell.html', '/items/_pending', 'Food item', '/item-shell')
 await writePage('404.html', '/__prerender_not_found__', 'Not found')
-const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemap.map(loc => `  <url><loc>${loc.replaceAll('&', '&amp;')}</loc></url>`).join('\n')}\n</urlset>\n`
+const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemap.map(({ loc, lastmod }) => `  <url><loc>${loc.replaceAll('&', '&amp;')}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`
 await writeFile(join(process.cwd(), 'dist/sitemap.xml'), xml)
 await writeFile(join(process.cwd(), 'dist/robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`)
 console.log(`Prerendered ${sitemap.length} indexable URLs.`)

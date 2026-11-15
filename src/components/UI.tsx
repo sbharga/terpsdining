@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router'
 import { prefetchItem } from '../api/queries'
 import { addDays, formatDay, todayET } from '../lib/dates'
 import type { CardItem } from '../lib/menu'
-import { getPageSeo, renderSeoJsonLd } from '../lib/seo'
+import { getPageSeo } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
 import { ArrowLeft, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { HallState, Meal } from '../lib/hours'
@@ -51,11 +51,13 @@ export function PageTitle({ title, description }: { title: string; description?:
       }
     }
     const scripts = document.head.querySelectorAll('script[type="application/ld+json"]')
-    const script = scripts[0] ?? document.head.appendChild(document.createElement('script'))
-    for (const duplicate of Array.from(scripts).slice(1)) duplicate.remove()
-    script.setAttribute('type', 'application/ld+json')
-    script.setAttribute('data-terpsdining-seo', '')
-    script.textContent = renderSeoJsonLd()
+    for (const duplicate of Array.from(scripts).slice(seo.jsonLd ? 1 : 0)) duplicate.remove()
+    if (seo.jsonLd) {
+      const script = scripts[0] ?? document.head.appendChild(document.createElement('script'))
+      script.setAttribute('type', 'application/ld+json')
+      script.setAttribute('data-terpsdining-seo', '')
+      script.textContent = seo.jsonLd
+    }
   }, [pathname, search, title, description])
   return null
 }

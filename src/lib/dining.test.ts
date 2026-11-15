@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays, todayET, nowMinutesET } from './dates'
-import { defaultMeal, groupDays, hallStatus, mealStatus, type Hours } from './hours'
+import { defaultMeal, groupDays, hallStatus, mealStatus, mealWithMenu, type Hours } from './hours'
 import { filterItems, pickFavorites, rankTopRated } from './menu'
 import { pageRange, pageWindow } from './pagination'
 const lunch: Hours = { hall_id: 19, date: '2026-10-02', meal: 'Lunch', status: 'open', label: '10:30am-4pm', opens: '10:30:00', closes: '16:00:00' }
@@ -20,6 +20,12 @@ describe('dining hours', () => {
   })
   it('keeps Dinner selected after closing', () => {
     expect(defaultMeal([{ ...lunch, meal: 'Dinner', opens: '16:00:00', closes: '21:00:00' }], 1290, true)).toBe('Dinner')
+  })
+  it('moves the default tab to the next meal with a menu', () => {
+    expect(mealWithMenu('Breakfast', new Set(['Lunch', 'Dinner']))).toBe('Lunch')
+    expect(mealWithMenu('Dinner', new Set(['Breakfast']))).toBe('Breakfast')
+    expect(mealWithMenu('Lunch', new Set(['Lunch', 'Dinner']))).toBe('Lunch')
+    expect(mealWithMenu('Breakfast', new Set())).toBe('Breakfast')
   })
   it('merges consecutive identical days but keeps today and changed days apart', () => {
     const day = (date: string, closes = '16:00:00') => ({ ...lunch, date, closes })

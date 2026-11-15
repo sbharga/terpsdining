@@ -8,7 +8,7 @@ import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
 import { addDays, parseDateParam, todayET, useNowMinutesET } from '../lib/dates'
-import { defaultMeal, hallStatus, hoursLabel, meals } from '../lib/hours'
+import { defaultMeal, hallStatus, hoursLabel, mealWithMenu, meals } from '../lib/hours'
 import { cardClass, hallTone, linkClass, mealTones, nameTone, titleClass, tones } from '../lib/theme'
 import { useFilterParams } from '../lib/filters'
 import { filterItems, groupByStation, pickFavorites, rankTopRated } from '../lib/menu'
@@ -37,7 +37,8 @@ function HallMenu({ hall }: { hall: Hall }) {
   const hours = inWeek ? weekHours : dayHours
   const menu = useHallMenu(hall.id, date)
   const rows = (hours.data ?? []).filter(row => row.hall_id === hall.id && row.date === date)
-  const meal = meals.find(value => value === params.get('meal')) ?? defaultMeal(rows, now ?? 0, date === today)
+  const menuMeals = new Set((menu.data ?? []).flatMap(row => row.item ? [row.meal] : []))
+  const meal = meals.find(value => value === params.get('meal')) ?? mealWithMenu(defaultMeal(rows, now ?? 0, date === today), menuMeals)
   const filters = useFilterParams()
   const mealRows = (menu.data ?? []).flatMap(row => row.meal === meal && row.item ? [{ station: row.station, item: row.item }] : [])
   const allergens = [...new Set(mealRows.flatMap(row => row.item.allergens))].sort((a, b) => a.localeCompare(b))

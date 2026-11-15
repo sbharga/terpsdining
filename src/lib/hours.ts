@@ -50,3 +50,8 @@ export function groupDays(dates: string[], rows: Hours[], today: string): { date
   }
   return groups.map(({ dates, rows }) => ({ dates, rows }))
 }
+// The preferred meal when it has a menu; otherwise the next meal (wrapping) that does, so the default tab is never empty when another meal is posted.
+export function mealWithMenu(preferred: Meal, withMenu: ReadonlySet<Meal>): Meal {
+  const start = meals.indexOf(preferred)
+  return [...meals.slice(start), ...meals.slice(0, start)].find(meal => withMenu.has(meal)) ?? preferred
+}
