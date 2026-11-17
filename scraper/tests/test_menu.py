@@ -56,13 +56,14 @@ def test_station_walk_names_and_tag_normalization():
         <a href="label.aspx?RecNumAndPort=000001*1">Beans &amp; Rice</a>
       </td></tr>
       <tr><td><strong> Sides </strong></td></tr>
-      <tr><td><a href="label.aspx?RecNumAndPort=000002*1">Corn</a></td></tr>
+      <tr><td><a href="label.aspx?RecNumAndPort=000002*1">CORN  ON THE COB</a></td></tr>
     </table>
     """
     entries = parse_menu(html)
     assert [entry.station for entry in entries] == ["Other", "Chef's Corner", "Sides"]
     assert [entry.item_id for entry in entries] == ["000001", "000001", "000002"]
     assert entries[0].name == entries[1].name == "Beans & Rice"
+    assert entries[2].name == "Corn on the Cob"
     assert entries[0].portion == "4 1/2"
     assert entries[0].allergens == ("pea protein", "shellfish")
     assert entries[0].dietary == ("halal", "vegan", "vegetarian")

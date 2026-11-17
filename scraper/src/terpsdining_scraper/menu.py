@@ -7,6 +7,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from .config import LABEL_BASE, MENU_URL
+from .names import normalize_name
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ def parse_menu(html: str) -> list[MenuEntry]:
         entries.append(
             MenuEntry(
                 item_id=item_id,
-                name=unescape(link.get_text(strip=True)),
+                name=normalize_name(unescape(link.get_text(strip=True))),
                 station=station,
                 portion=portion,
                 label_url=urljoin(LABEL_BASE, href),

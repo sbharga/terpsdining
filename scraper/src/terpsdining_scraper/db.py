@@ -118,5 +118,24 @@ def image_paths() -> list[str]:
         start += 1000
 
 
+def item_names() -> list[dict]:
+    rows = []
+    start = 0
+    while True:
+        page = (
+            client()
+            .table("items")
+            .select("id,name")
+            .order("id")
+            .range(start, start + 999)
+            .execute()
+            .data
+        )
+        rows.extend(page)
+        if len(page) < 1000:
+            return rows
+        start += 1000
+
+
 def update_item(id: str, fields: dict) -> None:
     client().table("items").update(fields, returning=ReturnMethod.minimal).eq("id", id).execute()

@@ -126,6 +126,20 @@ cd scraper && uv run --env-file .env terpsdining-thumbnails
 
 The command prints `thumbnails=<count> failures=<count>`, where `thumbnails` is the number of stored images processed, and exits nonzero if any object fails. Resolve the failures and rerun until `failures=0`. Uploads replace existing thumbnails. See [deployment.md](deployment.md) for where this step fits in the deploy order.
 
+## Item names
+
+The scraper title-cases every item name it stores: whitespace runs collapse to one space, and each word is capitalized except small connectors (`and`, `with`, `w`, `de`, `con`, …) after the first word. Mixed-case words such as `McDonald's` are kept, and known acronyms (`BBQ`, `BLT`, `GF`, `RTU`, `VGN`, `FF`, `NY`, `PB`) are uppercased. The rules live in `scraper/src/terpsdining_scraper/names.py`.
+
+### Name backfill
+
+Items that are no longer served keep the name they were stored with. Normalize all stored names once:
+
+```sh
+cd scraper && uv run --env-file .env terpsdining-names
+```
+
+The command prints `renamed=<count>`. It is idempotent, so rerunning prints `renamed=0`.
+
 ## Checks
 
 ```sh
