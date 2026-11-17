@@ -1,10 +1,24 @@
+# Dependencies and build output
 node_modules/
 dist/
+
+# Secrets: only the .env.example templates are tracked
 .env*
 !.env.example
+
+# Python
 scraper/.venv/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+
+# Tooling
 supabase/.temp/
 .vercel
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
