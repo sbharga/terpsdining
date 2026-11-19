@@ -15,7 +15,7 @@ function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
         const status = row && now !== undefined ? mealStatus(row, now) : undefined
         return (
           <div key={meal} className={`flex items-center justify-between gap-3 px-5 py-3 ${status === 'open' ? 'bg-success-soft' : ''}`}>
-            <dt className={`flex items-center gap-2.5 font-medium ${status === 'past' ? 'text-muted' : ''}`}><MealIcon meal={meal} size={18} />{meal}{status === 'open' && <span className="text-xs font-semibold text-success">Now</span>}</dt>
+            <dt className={`flex items-center gap-2.5 font-medium ${status === 'past' ? 'text-muted' : ''}`}><MealIcon meal={meal} size={18} />{meal}</dt>
             <dd className={`whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' || status === 'past' ? 'text-muted' : 'font-semibold text-ink'}`}>{label}</dd>
           </div>
         )

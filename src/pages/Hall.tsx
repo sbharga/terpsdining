@@ -67,10 +67,14 @@ function HallMenu({ hall }: { hall: Hall }) {
     <>
       <PageTitle title={hall.name} />
       <header className={`rounded-3xl p-5 text-white sm:p-8 ${hallTone(hall.slug).solid}`}>
-        <Link to="/" className="hit inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
-        <h1 className={`mt-2 ${titleClass}`}>{`${hall.name} Dining Hall`}</h1>
-        {date === today && hours.isSuccess && now !== undefined && <div className="mt-3"><StatusPill status={hallStatus(rows, now)} /></div>}
-        <div className="mt-4"><DatePager date={date} onChange={date => updateParam('date', date)} /></div>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <Link to="/" className="hit inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
+          {date === today && hours.isSuccess && now !== undefined && <StatusPill status={hallStatus(rows, now)} />}
+        </div>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <h1 className={titleClass}>{`${hall.name} Dining Hall`}</h1>
+          <DatePager date={date} onChange={date => updateParam('date', date)} />
+        </div>
       </header>
 
       {hours.isError && <ErrorNote retry={hours.refetch} />}

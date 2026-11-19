@@ -38,7 +38,7 @@ Usage rules:
 
 - **Brand** is for primary actions, links, and single-select state: the selected day and the current page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
 - **Tones** are the shared accent palette in `theme.ts`: `tomato`, `citrus`, `lime`, `mint`, `sky`, `grape`, `berry`. Each has `solid` (white text), `soft` (tinted fill with text), `text`, `dot`, and `border` classes. Take them from `tones`, `hallTone()`, `mealTones`, `dietTone()`, or `nameTone()`. Never write a tone by hand.
-- **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands, `soft` for hall chips, `dot` for history rows, `text` for the hall hours heading icon. Current hall tones: South Campus `citrus` (`amber-700`), Yahentamitsi `lime` (`lime-700`), 251 North `berry` (`fuchsia-700`), fallback `sky`.
+- **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands and history calendar cells, `soft` for hall chips and history chips, `text` for the hall hours heading icon. Current hall tones: South Campus `citrus` (`amber-700`), Yahentamitsi `lime` (`lime-700`), 251 North `berry` (`fuchsia-700`), fallback `sky`.
 - **Meals** use `mealTones`: Breakfast `citrus`, Lunch `sky`, Dinner `grape`. `MealIcon` takes its color from them, and the selected meal tab is that meal's `solid` with white text.
 - **Diet** badges and diet filter chips use `dietTone(tag)`: vegan `lime`, vegetarian `mint`, halal `sky`.
 - **Section icons** pick a tone by meaning: favorites `berry` (the favorite heart is also `berry`), ratings and top rated `citrus`, nutrition `lime`, history `grape`, calories `tomato`, protein `berry`, carbs `sky`, fat `citrus`, delete `tomato`.
@@ -99,20 +99,20 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 
 | Component | Use when |
 | --- | --- |
-| `Button` | Any button. `variant`: `primary` (main action, one per view), `secondary` (default), `ghost` (toolbar and icon navigation), `danger` (confirm destructive action). `size`: `md` (h-11), `sm` (h-9 with `hit`), `icon` (h-11 w-11), `icon-sm` (h-9 w-9 with `hit`). |
+| `Button` | Any button. `variant`: `primary` (main action, one per view), `secondary` (default), `ghost` (toolbar and icon navigation), `danger` (confirm destructive action), `onColor` (translucent dark button with white text, only on a solid hall-tone band). `size`: `md` (h-11), `sm` (h-9 with `hit`), `icon` (h-11 w-11), `icon-sm` (h-9 w-9 with `hit`). |
 | `buttonClass(variant, size)` | A link that must look like a button, such as `<Link className={buttonClass('primary')}>`. |
 | `Chip` | A filter toggle. `pressed` drives `aria-pressed`. Pass `tone` (a `Tone`, such as `dietTone(tag)`) to tint it, or `tone="danger"` for avoided allergens. |
 | `PageHeader` | The top of every page. Takes `eyebrow`, `title`, `lead` (hidden below `sm`), and `children` (always visible). |
 | `SectionHeading` | An h2 inside a page or card. Takes optional `id` (anchors), `icon` with `tone`, `dot` (a tone `dot` class), and `count` (announced as "items"). |
 | `Panel` | A titled card section with an icon and its `tone`, used on the item and account pages. |
 | `ItemList` / `ItemRow` | A dish list. Each row has a favorite heart (`berry`) and a rating star (`star`). |
-| `StatGrid` | Label, value, and `Tone` tiles for nutrition figures. Two columns on mobile, four from `sm`. |
+| `StatGrid` | Label, value, and `Tone` tiles for nutrition figures and item history. Two columns on mobile, four from `sm` (three when there are exactly three tiles). |
 | `Disclosure` | Progressive reveal (ingredients, full nutrition facts, older history). Summary is at least 44px tall. |
 | `Avatar` | Initial circle for the signed-in user, colored by `nameTone`. `size`: `sm` (header) or `lg` (account page). |
 | `Badges` | Dietary badges (`dietTone` colors) and allergen badges (neutral). |
 | `RatingPill` | Average or personal rating. Thresholds: 4 and up success, 3 and up warning, below 3 danger. |
-| `StatusPill` | Hall open state on the hall page band. A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
-| `DatePager` | Previous and next day, with a Today button. |
+| `StatusPill` | Hall open state on the hall page band, with the meal and time (for example "Open · Lunch until 4pm"). A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
+| `DatePager` | Previous and next day with a Today button, built from `onColor` buttons for the hall page band. The label reads Today, Tomorrow or Yesterday within one day of today, otherwise the weekday, above the month and day. |
 | `EmptyState` | A list or search with no results. Optional clear-filter action uses `linkClass` with `hit`. |
 | `ErrorNote` | A failed request. Includes a Retry `Button size="sm"`. |
 | `Loading` | A page or list that is fetching. Use the skeleton list for a whole section and inline text for a single value. |

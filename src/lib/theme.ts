@@ -29,13 +29,14 @@ export const statusStyle: Record<HallState, { text: string; dot: string }> = {
 }
 export const todayRowClass = 'bg-orange-50/70 dark:bg-orange-400/10'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'onColor'
 export type ButtonSize = 'md' | 'sm' | 'icon' | 'icon-sm'
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-brand-ink hover:brightness-110',
   secondary: 'border border-line bg-surface text-ink hover:bg-surface-2',
   ghost: 'text-muted hover:bg-surface-2 hover:text-ink',
   danger: 'border border-danger text-danger hover:bg-danger-soft',
+  onColor: 'bg-black/20 text-white ring-1 ring-inset ring-white/25 hover:bg-black/30',
 }
 const buttonSizes: Record<ButtonSize, string> = { md: 'h-11 gap-2 px-5 text-sm', sm: 'hit h-9 gap-1.5 px-3.5 text-sm', icon: 'h-11 w-11', 'icon-sm': 'hit h-9 w-9' }
 export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md'): string {

@@ -2,11 +2,11 @@ import { useEffect, useRef, type ComponentProps, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation } from 'react-router'
 import { prefetchItem } from '../api/queries'
-import { addDays, formatDay, todayET } from '../lib/dates'
+import { addDays, diffDays, formatMonthDay, formatWeekday, relativeDay, todayET } from '../lib/dates'
 import type { CardItem } from '../lib/menu'
 import { getPageSeo } from '../lib/seo'
 import { imageUrl } from '../lib/supabase'
-import { ArrowLeft, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Heart, Leaf, LoaderCircle, Moon, RotateCcw, Sprout, Star, Sun, Sunrise, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { HallState, Meal } from '../lib/hours'
 import { buttonClass, cardClass, dietTone, mealTones, nameTone, statusStyle, titleClass, tones, type ButtonSize, type ButtonVariant, type Tone } from '../lib/theme'
 export function PageTitle({ title, description }: { title: string; description?: string }) {
@@ -154,5 +154,6 @@ export function StarRating({ value, onChange, disabled = false }: { value: numbe
 }
 export function DatePager({ date, onChange }: { date: string; onChange: (date: string) => void }) {
   const today = todayET()
-  return <div className="flex flex-wrap items-center gap-2 text-ink"><div className="inline-flex items-center rounded-full bg-surface p-1 ring-1 ring-line"><button type="button" aria-label="Previous day" className={buttonClass('ghost', 'icon')} onClick={() => onChange(addDays(date, -1))}><ChevronLeft size={18} aria-hidden="true" /></button><span aria-live="polite" className="flex min-w-36 items-center justify-center gap-2 px-2 text-sm font-semibold"><CalendarDays size={16} className="text-muted" aria-hidden="true" /><time dateTime={date}>{formatDay(date)}</time></span><button type="button" aria-label="Next day" className={buttonClass('ghost', 'icon')} onClick={() => onChange(addDays(date, 1))}><ChevronRight size={18} aria-hidden="true" /></button></div>{date !== today && <Button onClick={() => onChange(today)}>Today</Button>}</div>
+  const near = Math.abs(diffDays(today, date)) <= 1
+  return <div className="flex flex-wrap items-center gap-2">{date !== today && <Button variant="onColor" size="sm" onClick={() => onChange(today)}>Today</Button>}<button type="button" aria-label="Previous day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, -1))}><ChevronLeft size={18} aria-hidden="true" /></button><time dateTime={date} aria-live="polite" className="flex w-24 flex-col items-center text-center leading-tight"><span className="text-xs font-semibold uppercase tracking-wider text-white/80">{near ? relativeDay(date, today) : formatWeekday(date)}</span><span className="font-semibold tabular-nums">{formatMonthDay(date)}</span></time><button type="button" aria-label="Next day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, 1))}><ChevronRight size={18} aria-hidden="true" /></button></div>
 }

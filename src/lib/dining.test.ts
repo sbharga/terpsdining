@@ -16,7 +16,9 @@ describe('dining hours', () => {
     expect(mealStatus(lunch, 629)).toBe('upcoming')
     expect(mealStatus(lunch, 630)).toBe('open')
     expect(mealStatus(lunch, 960)).toBe('past')
-    expect(hallStatus([lunch], 660).label).toBe('Open now')
+    expect(hallStatus([lunch], 660).label).toBe('Open · Lunch until 4pm')
+    expect(hallStatus([lunch], 600).label).toBe('Opens 10:30am for lunch')
+    expect(hallStatus([lunch], 1000).label).toBe('Closed for today')
   })
   it('keeps Dinner selected after closing', () => {
     expect(defaultMeal([{ ...lunch, meal: 'Dinner', opens: '16:00:00', closes: '21:00:00' }], 1290, true)).toBe('Dinner')

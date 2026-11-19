@@ -1,60 +1,77 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { CalendarDays, ExternalLink, Flame, Heart, LoaderCircle, Star, Wheat } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router'
 import { useFavorites, useItem, useItemHistory, useMyRating, useRateItem, useSession, useToggleFavorite } from '../api/queries'
-import type { ItemHistoryRow } from '../api/queries'
 import { SignInButton } from '../components/AuthButton'
 import { Badges, Chip, Disclosure, ErrorNote, FoodSwatch, Loading, NotFound, PageTitle, Panel, RatingPill, StarRating, StatGrid } from '../components/UI'
 import { nutritionDetails } from '../lib/nutrition'
 import { markAllergens } from '../lib/allergens'
-import { formatDay, relativeDay, todayET } from '../lib/dates'
+import { formatMonthDay, relativeDay, todayET } from '../lib/dates'
 import { imageUrl } from '../lib/supabase'
 import type { Database } from '../lib/database.types'
 import { cardClass, hallTone, linkClass, overlineClass, titleClass, tones } from '../lib/theme'
-import { meals } from '../lib/hours'
+import { calendarDates, groupHalls, historyDays, historyRuns, runDetail, runLabel, topHall, type HistoryDay, type HistoryRun } from '../lib/history'
 import { itemDescription } from '../lib/seo'
 
 type ItemRow = Database['public']['Tables']['items']['Row']
-type HallMeals = { slug: string; name: string; meals: string[] }
 
-function groupHalls(rows: ItemHistoryRow[]): HallMeals[] {
-  const halls = new Map<string, { name: string; meals: Set<string> }>()
-  for (const row of rows) {
-    if (!row.hall) continue
-    const hall = halls.get(row.hall.slug) ?? { name: row.hall.name, meals: new Set<string>() }
-    hall.meals.add(row.meal)
-    halls.set(row.hall.slug, hall)
-  }
-  return Array.from(halls, ([slug, hall]) => ({ slug, name: hall.name, meals: meals.filter(meal => hall.meals.has(meal)) })).sort((a, b) => a.name.localeCompare(b.name))
+function HistoryCalendar({ days, today }: { days: HistoryDay[]; today: string }) {
+  const served = new Map(days.map(day => [day.date, day.halls]))
+  const dates = calendarDates(today, 6)
+  const past = dates.filter(date => date <= today)
+  const count = past.filter(date => served.has(date)).length
+  const legend = Array.from(new Map(dates.flatMap(date => served.get(date) ?? []).map(hall => [hall.slug, hall] as const)).values()).sort((a, b) => a.name.localeCompare(b.name))
+  return (
+    <div className="max-w-sm">
+      <p className="text-sm text-muted tabular-nums">{formatMonthDay(dates[0])} – {formatMonthDay(dates[dates.length - 1])}</p>
+      <div aria-hidden="true" className="mt-2 grid grid-cols-7 gap-1.5 text-center text-xs font-semibold text-muted">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((letter, index) => <span key={index}>{letter}</span>)}
+      </div>
+      <div role="img" aria-label={`Served ${count} of the last ${past.length} days`} className="mt-1.5 grid grid-cols-7 gap-1.5">
+        {dates.map(date => {
+          const halls = served.get(date)
+          const state = date === today ? 'font-extrabold text-brand' : halls ? 'font-semibold text-ink' : date < today ? 'text-muted' : 'text-muted/40'
+          return (
+            <div key={date} className={`relative mx-auto grid h-9 w-9 place-items-center rounded-full text-xs tabular-nums ${state}`}>
+              {Number(date.slice(8))}
+              {halls && <span className="absolute bottom-1 flex gap-0.5">{halls.map(hall => <span key={hall.slug} className={`h-1.5 w-1.5 rounded-full ${hallTone(hall.slug).dot}`} />)}</span>}
+            </div>
+          )
+        })}
+      </div>
+      {legend.length > 1 && (
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+          {legend.map(hall => (
+            <li key={hall.slug} className="inline-flex items-center gap-1.5">
+              <span aria-hidden="true" className={`h-2 w-2 rounded-full ${hallTone(hall.slug).dot}`} />
+              {hall.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
 }
 
-function HistoryList({ dates, byDate }: { dates: string[]; byDate: Map<string, ItemHistoryRow[]> }) {
+function HistoryRunList({ runs, today }: { runs: HistoryRun[]; today: string }) {
   return (
-    <ol className="space-y-4 border-l-2 border-line pl-5">
-      {dates.map(date => {
-        const halls = groupHalls(byDate.get(date) ?? [])
-        return (
-          <li key={date} className="relative">
-            <span aria-hidden="true" className={`absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-surface ${hallTone(halls[0]?.slug ?? '').dot}`} />
-            <time dateTime={date} className="text-sm font-semibold">{formatDay(date)}</time>
-            <p className="text-sm text-muted">
-              {halls.map((hall, hallIndex) => (
-                <Fragment key={hall.slug}>
-                  {hallIndex > 0 && ', '}
-                  {hall.name} (
-                  {hall.meals.map((meal, mealIndex) => (
-                    <Fragment key={meal}>
-                      {mealIndex > 0 && ', '}
-                      {meal}
-                    </Fragment>
-                  ))}
-                  )
-                </Fragment>
-              ))}
-            </p>
-          </li>
-        )
-      })}
+    <ol className="divide-y divide-line">
+      {runs.map(run => (
+        <li key={run.to} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span className="font-semibold tabular-nums">{runLabel(run)}</span>
+            <span className="text-sm text-muted">{runDetail(run, today)}</span>
+          </p>
+          <ul className="flex flex-col gap-0.5 text-sm text-muted sm:items-end">
+            {run.halls.map(hall => (
+              <li key={hall.slug} className="inline-flex items-center gap-1.5">
+                <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${hallTone(hall.slug).dot}`} />
+                {hall.name} · {hall.meals.join(', ')}
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
     </ol>
   )
 }
@@ -137,13 +154,9 @@ export default function Item() {
   const nextRecipe = recipes[(recipes.indexOf(selected) + 1) % recipes.length]
   const todayHalls = groupHalls(history.filter(row => row.date === today))
   const lastHalls = groupHalls(history.filter(row => row.date === item.last_seen))
-  const byDate = new Map<string, ItemHistoryRow[]>()
-  for (const row of history) {
-    const rows = byDate.get(row.date) ?? []
-    rows.push(row)
-    byDate.set(row.date, rows)
-  }
-  const dates = Array.from(byDate.keys()).sort((a, b) => b.localeCompare(a))
+  const days = historyDays(history)
+  const runs = historyRuns(days)
+  const top = topHall(days)
 
   return (
     <article>
@@ -233,21 +246,19 @@ export default function Item() {
 
           <Panel id="item-history" title="History" icon={CalendarDays} tone={tones.grape}>
             {historyQuery.isError ? <ErrorNote retry={historyQuery.refetch} /> : historyQuery.isPending ? <Loading inline /> : (
-              <>
-                <p className="mb-4 text-sm text-muted">
-                  {`Served ${dates.length} ${dates.length === 1 ? 'day' : 'days'} in the last year${item.first_seen ? ` · First served ${formatDay(item.first_seen)}` : ''}`}
-                </p>
-                {dates.length ? (
-                  <>
-                    <HistoryList dates={dates.slice(0, 7)} byDate={byDate} />
-                    {dates.length > 7 && (
-                      <Disclosure className="mt-4" summary={`Show ${Math.min(dates.length, 30) - 7} more`}>
-                        <div className="mt-4"><HistoryList dates={dates.slice(7, 30)} byDate={byDate} /></div>
-                      </Disclosure>
-                    )}
-                  </>
-                ) : <p className="text-muted">Not served yet</p>}
-              </>
+              days.length ? (
+                <>
+                  <p className="text-sm text-muted">
+                    Served <span className="font-semibold text-ink tabular-nums">{days.length} {days.length === 1 ? 'day' : 'days'}</span>
+                    {item.first_seen && ` since ${formatMonthDay(item.first_seen)}`}
+                    {top && ` · ${top.days === days.length ? 'At' : 'Most often at'} ${top.name}`}
+                  </p>
+                  <div className="mt-4"><HistoryCalendar days={days} today={today} /></div>
+                  <Disclosure className="mt-4" summary="Show dates and halls">
+                    <HistoryRunList runs={runs.slice(0, 25)} today={today} />
+                  </Disclosure>
+                </>
+              ) : <p className="text-muted">Not served yet</p>
             )}
           </Panel>
         </div>
