@@ -128,7 +128,7 @@ The command prints `thumbnails=<count> failures=<count>`, where `thumbnails` is 
 
 ## Item names
 
-The scraper title-cases every item name it stores: whitespace runs collapse to one space, and each word is capitalized except small connectors (`and`, `with`, `w`, `de`, `con`, …) after the first word. Mixed-case words such as `McDonald's` are kept, and known acronyms (`BBQ`, `BLT`, `GF`, `RTU`, `VGN`, `FF`, `NY`, `PB`) are uppercased. The rules live in `scraper/src/terpsdining_scraper/names.py`.
+The scraper title-cases every item name it stores: whitespace runs collapse to one space, and each word is capitalized except small connectors (`and`, `with`, `w`, `de`, `con`, …) after the first word. Mixed-case words such as `McDonald's` are kept, and known acronyms (`BBQ`, `BLT`, `GF`, `RTU`, `VGN`, `FF`, `NY`, `PB`) are uppercased. Known misspellings in UMD's menu data (for example `Chikcen`, `Pablano`, `Broccili`) are corrected word by word from the `TYPOS` table, so a corrected name is not overwritten when the item is upserted again. To fix another typo, add it to `TYPOS` (lowercase) and run the name backfill below. The rules live in `scraper/src/terpsdining_scraper/names.py`.
 
 ### Name backfill
 

@@ -22,6 +22,11 @@ CASES = [
     ("BBQ Chicken (8way)", "BBQ Chicken (8way)"),
     ("JALAPEÑO POPPERS", "Jalapeño Poppers"),
     ("Pico de Gallo", "Pico de Gallo"),
+    ("Pablano Chikcen", "Poblano Chicken"),
+    ("Tomato Salad Wth Jicama and Avocado", "Tomato Salad with Jicama and Avocado"),
+    ("Sweet Potato Fritters with Peach Salsa Amd Lime Sour Cream", "Sweet Potato Fritters with Peach Salsa and Lime Sour Cream"),
+    ("CHICKEN PICATTA", "Chicken Piccata"),
+    ("Sheperd's Pie", "Shepherd's Pie"),
 ]
 
 
