@@ -36,7 +36,7 @@ export const hallMaps: Record<string, HallMapPlan> = {
       { id: 'treats', lines: ['Treats'], match: /^treats/i, shape: 'M275 595H530V735H275Z', x: 290, y: 662, anchor: 'start' },
       { id: 'deli-plus', lines: ['Deli+'], match: /^deli\+/i, shape: 'M275 735H530V865H275Z', x: 290, y: 803, anchor: 'start' },
       { id: 'deli', lines: ['Deli'], match: /^deli\b/i, shape: 'M275 865H530V978H275Z', x: 290, y: 931, anchor: 'start' },
-      { id: 'waffles', lines: ['Waffles'], match: /^(waffle|doughnut|bagel bar)/i, shape: 'M535 700H653V835H535Z', x: 594, y: 778, anchor: 'middle', size: 28 },
+      { id: 'waffles', lines: ['Waffles'], match: /^(waffle|doughnut|bagel bar)/i, shape: 'M419 405H545V478H419Z', x: 482, y: 452, anchor: 'middle', size: 28 },
       { id: 'salad-bar', lines: ['Salad', 'Bar'], match: /^(salad bar|soup)/i, shape: 'M535 845H653V1220H535Z', x: 594, y: 1043, anchor: 'middle', size: 32 },
       { id: 'desserts', lines: ['Desserts'], match: /desserts/i, shape: 'M790 1200H920V1330H790Z', x: 862, y: 1272, anchor: 'middle', size: 26 },
       { id: 'mongolian-grill', lines: ['Mongolian', 'Grill'], match: /^mongolian/i, shape: 'M1026 11H1272V311H1026Z', x: 1065, y: 134, anchor: 'start', size: 34 },
