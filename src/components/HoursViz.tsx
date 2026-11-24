@@ -2,10 +2,14 @@ import { Link } from 'react-router'
 import { formatWeekday } from '../lib/dates'
 import type { Hall } from '../lib/halls'
 import { groupDays, hoursLabel, meals, mealStatus, type Hours } from '../lib/hours'
-import { cardClass, hallTone, overlineClass, todayRowClass } from '../lib/theme'
+import { cardClass, hallTone, overlineClass } from '../lib/theme'
 import { MealIcon } from './UI'
 
-// The three meals as full-width rows: the open meal is highlighted, past meals are muted.
+function NowBadge() {
+  return <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">Now</span>
+}
+
+// The three meals as full-width rows: the open meal gets a Now badge, past meals are muted.
 function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
   return (
     <dl className="divide-y divide-line">
@@ -14,9 +18,9 @@ function MealList({ rows, now }: { rows: Hours[]; now?: number }) {
         const label = hoursLabel(row)
         const status = row && now !== undefined ? mealStatus(row, now) : undefined
         return (
-          <div key={meal} className={`flex items-center justify-between gap-3 px-5 py-3 ${status === 'open' ? 'bg-success-soft' : ''}`}>
+          <div key={meal} className="flex items-center justify-between gap-3 px-5 py-3">
             <dt className={`flex items-center gap-2.5 font-medium ${status === 'past' ? 'text-muted' : ''}`}><MealIcon meal={meal} size={18} />{meal}</dt>
-            <dd className={`whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' || status === 'past' ? 'text-muted' : 'font-semibold text-ink'}`}>{label}</dd>
+            <dd className={`inline-flex items-center gap-2 whitespace-nowrap tabular-nums ${label === 'Closed' || label === 'TBD' || status === 'past' ? 'text-muted' : 'font-semibold text-ink'}`}>{status === 'open' && <NowBadge />}{label}</dd>
           </div>
         )
       })}
@@ -59,7 +63,7 @@ export function WeekTable({ rows, dates, today, now }: { rows: Hours[]; dates: s
           const isToday = first === today
           const label = isToday ? 'Today' : group.dates.length === 1 ? formatWeekday(first) : `${formatWeekday(first)}–${formatWeekday(group.dates[group.dates.length - 1])}`
           return (
-            <li key={first} className={`px-5 py-4 sm:grid sm:items-center sm:gap-4 sm:py-3 ${weekColumns} ${isToday ? todayRowClass : ''}`}>
+            <li key={first} className={`px-5 py-4 sm:grid sm:items-center sm:gap-4 sm:py-3 ${weekColumns}`}>
               <p className="font-semibold">{label}</p>
               <dl className="mt-2 space-y-1.5 text-sm sm:mt-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0">
                 {meals.map(meal => {
@@ -68,8 +72,8 @@ export function WeekTable({ rows, dates, today, now }: { rows: Hours[]; dates: s
                   const live = isToday && row !== undefined && now !== undefined && mealStatus(row, now) === 'open'
                   return (
                     <div key={meal} className="flex min-w-0 items-center justify-between gap-3 sm:justify-start sm:gap-2">
-                      <dt className="flex items-center gap-2 text-muted"><MealIcon meal={meal} size={16} /><span className="sm:sr-only">{meal}</span></dt>
-                      <dd className={`whitespace-nowrap tabular-nums ${live ? 'font-semibold text-success' : hours === 'Closed' || hours === 'TBD' ? 'text-muted' : 'font-medium text-ink'}`}>{hours}{live && <span className="ml-1.5 text-xs">· Now</span>}</dd>
+                      <dt className="flex items-center gap-2 text-muted sm:sr-only"><MealIcon meal={meal} size={16} /><span>{meal}</span></dt>
+                      <dd className={`inline-flex items-center gap-2 whitespace-nowrap tabular-nums ${live || !(hours === 'Closed' || hours === 'TBD') ? 'font-semibold text-ink' : 'text-muted'}`}>{live && <NowBadge />}{hours}</dd>
                     </div>
                   )
                 })}

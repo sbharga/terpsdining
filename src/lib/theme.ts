@@ -27,7 +27,6 @@ export const statusStyle: Record<HallState, { text: string; dot: string }> = {
   closed: { text: 'text-stone-600', dot: 'bg-stone-400' },
   tbd: { text: 'text-stone-600', dot: 'bg-stone-400' },
 }
-export const todayRowClass = 'bg-orange-50/70 dark:bg-orange-400/10'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'onColor'
 export type ButtonSize = 'md' | 'sm' | 'icon' | 'icon-sm'

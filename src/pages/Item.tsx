@@ -15,6 +15,8 @@ import { itemDescription } from '../lib/seo'
 
 type ItemRow = Database['public']['Tables']['items']['Row']
 
+function sameTags(a: string[], b: string[]) { return a.length === b.length && a.every(tag => b.includes(tag)) }
+
 function HistoryCalendar({ days, today }: { days: HistoryDay[]; today: string }) {
   const served = new Map(days.map(day => [day.date, day.halls]))
   const dates = calendarDates(today, 6)
@@ -88,10 +90,7 @@ function RecipeNutrition({ recipe }: { recipe: ItemRow }) {
   return (
     <>
       {stats.length > 0 && <StatGrid stats={stats} className="mb-5" />}
-      <p className="text-muted">
-        {[nutrition.servingSize ? `Serving ${nutrition.servingSize}` : null, nutrition.calories !== null ? `${nutrition.calories} cal` : null].filter(Boolean).join(' · ') || 'Serving not available.'}
-      </p>
-      {nutrition.servings && <p className="mt-1 text-sm text-muted">{nutrition.servings}</p>}
+      {nutrition.servingSize && <p className="text-sm text-muted">Serving size {nutrition.servingSize}</p>}
       {nutrition.nutrients.length > 0 && (
         <Disclosure className="mt-4" summary={`All nutrition facts (${nutrition.nutrients.length})`}>
           <dl className="mt-2 grid gap-x-8 sm:grid-cols-2">
@@ -240,7 +239,7 @@ export default function Item() {
           </Panel>
 
           <Panel id="item-ingredients" title="Ingredients" icon={Wheat} tone={tones.citrus}>
-            {multiRecipe && <div className="mb-3"><Badges allergens={selected.recipe_allergens} dietary={selected.recipe_dietary} /></div>}
+            {multiRecipe && !(sameTags(selected.recipe_allergens, item.allergens) && sameTags(selected.recipe_dietary, item.dietary)) && <div className="mb-3"><Badges allergens={selected.recipe_allergens} dietary={selected.recipe_dietary} /></div>}
             <RecipeIngredients recipe={selected} />
           </Panel>
 

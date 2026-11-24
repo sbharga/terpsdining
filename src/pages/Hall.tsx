@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ArrowLeft, ChevronDown, Clock, Heart, ListFilter, Soup, Trophy } from 'lucide-react'
+import { ArrowLeft, Clock, Heart, ListFilter, Soup, Trophy } from 'lucide-react'
 import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
 import { DatePager, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import { FiltersButton, FiltersPanel } from '../components/Filters'
+import { HallMap } from '../components/HallMap'
 import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
@@ -47,11 +48,8 @@ function HallMenu({ hall }: { hall: Hall }) {
   const filteredIds = new Set(filteredItems.map(item => item.id))
   const stations = groupByStation(mealRows.filter(row => filteredIds.has(row.item.id)))
   const topRated = rankTopRated(filteredItems, 5)
-  const jumps = menu.isSuccess && hours.isSuccess ? [
-    ...(favoriteItems.length ? [{ id: 'hall-favorites', label: 'Favorites' }] : []),
-    ...(topRated.length ? [{ id: 'hall-popular', label: 'Top rated' }] : []),
-    ...stations.map(([station], index) => ({ id: `station-${index}`, label: station })),
-  ] : []
+  const mealHours = hoursLabel(rows.find(row => row.meal === meal))
+  const showFilters = mealRows.length > 0 || filters.active > 0
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   function updateParam(key: string, value: string) {
@@ -93,21 +91,17 @@ function HallMenu({ hall }: { hall: Hall }) {
         </div>
       </div>
 
-      {hours.isSuccess && <p className="mt-5 flex items-center gap-2 text-sm text-muted"><MealIcon meal={meal} /><span><span className="font-semibold text-ink">{meal}</span> · {hoursLabel(rows.find(row => row.meal === meal))}</span></p>}
-
-      <div className="mt-3 flex items-center gap-2">
-        {jumps.length > 1 && (
-          <div className="relative min-w-0 flex-1">
-            <select aria-label="Jump to section" value="" onChange={event => { if (event.target.value) jumpTo(event.target.value) }} className="h-11 w-full appearance-none truncate rounded-full border border-line bg-surface pl-4 pr-10 text-base font-medium text-ink sm:text-sm">
-              <option value="" disabled>Jump to station…</option>
-              {jumps.map(jump => <option key={jump.id} value={jump.id}>{jump.label}</option>)}
-            </select>
-            <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
-          </div>
-        )}
-        <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />
+      <div className="mt-5 flex min-h-11 items-center justify-between gap-3">
+        {hours.isSuccess ? <p className="flex items-center gap-2 text-sm text-muted"><Clock size={16} aria-hidden="true" /><span className="sr-only">{meal} hours: </span><span className={mealHours === 'Closed' || mealHours === 'TBD' ? '' : 'font-semibold text-ink tabular-nums'}>{mealHours}</span></p> : <span />}
+        {showFilters && <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />}
       </div>
-      {filtersOpen && <FiltersPanel allergens={allergens} filters={filters} />}
+      {filtersOpen && showFilters && <FiltersPanel allergens={allergens} filters={filters} />}
+      <HallMap
+        slug={hall.slug}
+        title={`${hall.name} floor map`}
+        stations={menu.isSuccess && hours.isSuccess ? stations.map(([station]) => station) : []}
+        onJump={jumpTo}
+      />
 
       {menu.isError ? <div className="mt-10"><ErrorNote retry={menu.refetch} /></div> : menu.isPending || hours.isPending ? <div className="mt-10"><Loading /></div> : (
         <>
@@ -132,7 +126,7 @@ function HallMenu({ hall }: { hall: Hall }) {
       )}
 
       <section className="mt-10" aria-labelledby="hall-hours-heading">
-        <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>{`${hall.name} Dining Hall hours this week`}</SectionHeading>
+        <SectionHeading id="hall-hours-heading" icon={Clock} tone={hallTone(hall.slug)}>Hours this week</SectionHeading>
         {weekHours.isError ? <ErrorNote retry={weekHours.refetch} /> : weekHours.isPending ? <Loading inline /> : <div className={`mt-4 overflow-hidden ${cardClass}`}><WeekTable rows={weekHours.data.filter(row => row.hall_id === hall.id)} dates={weekDates} today={today} now={now} /></div>}
       </section>
       <PlateBar />

@@ -71,7 +71,7 @@ export default function Search() {
           {directory.isError ? <ErrorNote retry={directory.refetch} /> : directory.isPending ? <Loading /> : (
             <div className={`mt-4 divide-y divide-line px-5 sm:px-6 ${cardClass}`}>
               {directory.data.map(group => (
-                <Disclosure key={group.letter} summary={`${group.letter} · ${group.items.length} ${group.items.length === 1 ? 'dish' : 'dishes'}`}>
+                <Disclosure key={group.letter} summary={<><span className="text-ink">{group.letter}</span> <span className="font-normal text-muted">· {group.items.length} {group.items.length === 1 ? 'dish' : 'dishes'}</span></>}>
                   <ul className="grid pb-3 sm:grid-cols-2 sm:gap-x-6">
                     {group.items.map(item => <li key={item.id}><Link to={`/items/${item.id}`} className="flex min-h-11 items-center text-sm font-semibold hover:text-brand">{item.name}</Link></li>)}
                   </ul>
