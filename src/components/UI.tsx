@@ -35,7 +35,7 @@ export function PageTitle({ title, description }: { title: string; description?:
     ]
     for (const [selector, content] of tags) {
       const matches = document.head.querySelectorAll(selector)
-      if (selector.startsWith('link') && !content) {
+      if (!content) {
         for (const match of matches) match.remove()
         continue
       }

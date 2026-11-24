@@ -8,11 +8,16 @@ describe('page SEO metadata', () => {
   })
 
 
-  it('marks missing routes, account, and the item shell noindex', () => {
+  it('marks missing routes, account, and the item shell noindex without a canonical', () => {
     expect(getPageSeo('/account').robots).toBe('noindex,follow')
     expect(getPageSeo('/missing-route').robots).toBe('noindex,follow')
     expect(getPageSeo('/item-shell').robots).toBe('noindex,follow')
     expect(getPageSeo('/item-shell').canonical).toBe('')
+    expect(getPageSeo('/missing-route').canonical).toBe('')
+    expect(getPageSeo('/__prerender_not_found__', 'Not found').canonical).toBe('')
+    expect(getPageSeo('/halls/x', 'Not found').canonical).toBe('')
+    expect(renderSeoHead(getPageSeo('/item-shell'))).not.toContain('og:url')
+    expect(renderSeoHead(getPageSeo('/items/17', 'Biscuit'))).toContain(`<meta property="og:url" content="${SITE_URL}/items/17">`)
   })
 
   it('indexes the search directory page', () => {

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useDeferredValue, useSyncExternalStore } from 'react'
 const zone = 'America/New_York'
 const dateParts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' })
 const timeParts = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' })
@@ -17,9 +17,10 @@ export function nowMinutesET(now = new Date()): number {
   return Number(parts.find(p => p.type === 'hour')!.value) * 60 + Number(parts.find(p => p.type === 'minute')!.value)
 }
 const subscribeNever = () => () => {}
-// undefined in prerender and during hydration, so server HTML and the first client render match
+// undefined in prerender and during hydration, so server HTML and the first client render match.
+// The switch to the real time after hydration is deferred, so re-rendering a hall menu for the current meal is time-sliced instead of blocking.
 export function useNowMinutesET(): number | undefined {
-  const hydrated = useSyncExternalStore(subscribeNever, () => true, () => false)
+  const hydrated = useDeferredValue(useSyncExternalStore(subscribeNever, () => true, () => false))
   return hydrated ? nowMinutesET() : undefined
 }
 export function addDays(iso: string, n: number): string {

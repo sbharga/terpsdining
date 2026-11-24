@@ -82,6 +82,7 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
     pageTitle = 'Page Not Found'
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
     robots = 'noindex,follow'
+    canonicalPath = ''
   } else if (path === '/') {
     pageTitle = 'UMD Dining Hall Menus & Hours Today'
     description = HOME_DESCRIPTION
@@ -124,6 +125,7 @@ export function getPageSeo(pathname: string, title?: string, customDescription?:
     pageTitle = title?.trim() || 'Page Not Found'
     description = 'Find University of Maryland dining hall menus, hours, and food information with TerpsDining.'
     robots = 'noindex,follow'
+    canonicalPath = ''
   }
 
   const fullTitle = `${pageTitle} · ${SITE_TITLE}`
@@ -148,7 +150,7 @@ export function renderSeoHead(seo: PageSeo): string {
     `<meta property="og:site_name" content="${SITE_TITLE}">`,
     `<meta property="og:title" content="${escapeHtml(seo.title)}">`,
     `<meta property="og:description" content="${escapeHtml(seo.description)}">`,
-    `<meta property="og:url" content="${escapeHtml(seo.canonical)}">`,
+    seo.canonical ? `<meta property="og:url" content="${escapeHtml(seo.canonical)}">` : '',
     `<meta property="og:image" content="${escapeHtml(seo.image)}">`,
     `<meta property="og:image:alt" content="${escapeHtml(seo.imageAlt)}">`,
     '<meta property="og:image:width" content="1200">',

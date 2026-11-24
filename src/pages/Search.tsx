@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { memo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { ChevronLeft, ChevronRight, CircleCheck, Clock, ListFilter, SearchX } from 'lucide-react'
 import { SEARCH_PAGE_SIZE, useDirectory, useFavoriteIds, useSearch, useSession } from '../api/queries'
 import { FiltersButton, FiltersPanel } from '../components/Filters'
@@ -10,6 +10,7 @@ import { formatMonthDay, todayET } from '../lib/dates'
 import { useFilterParams } from '../lib/filters'
 import { meals } from '../lib/hours'
 import { pageRange, pageWindow } from '../lib/pagination'
+import type { DirectoryGroup } from '../lib/directory'
 import { buttonClass, cardClass, linkClass } from '../lib/theme'
 
 const allergens = ['alcohol', 'coconut', 'dairy', 'egg', 'fish', 'gluten', 'nuts', 'pea protein', 'pork', 'sesame', 'shellfish', 'soy']
@@ -35,6 +36,27 @@ function todayStatus(value: Json): string | null {
   })
   return `Today: ${labels.join(' · ')}`
 }
+
+// Plain anchors with one delegated click handler: hydrating ~2,300 router <Link>s blocked a throttled phone for ~300 ms.
+const Directory = memo(function Directory({ groups }: { groups: DirectoryGroup[] }) {
+  const navigate = useNavigate()
+  return (
+    <div onClick={event => {
+      const link = event.target instanceof Element ? event.target.closest('a') : null
+      if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      event.preventDefault()
+      navigate(link.getAttribute('href')!)
+    }} className={`mt-4 divide-y divide-line px-5 sm:px-6 ${cardClass}`}>
+      {groups.map(group => (
+        <Disclosure key={group.letter} summary={<><span className="text-ink">{group.letter}</span> <span className="font-normal text-muted">· {group.items.length} {group.items.length === 1 ? 'dish' : 'dishes'}</span></>}>
+          <ul className="grid pb-3 sm:grid-cols-2 sm:gap-x-6">
+            {group.items.map(item => <li key={item.id}><a href={`/items/${item.id}`} className="flex min-h-11 items-center text-sm font-semibold hover:text-brand">{item.name}</a></li>)}
+          </ul>
+        </Disclosure>
+      ))}
+    </div>
+  )
+})
 
 export default function Search() {
   const { session } = useSession()
@@ -69,15 +91,7 @@ export default function Search() {
         <section aria-labelledby="directory" className="mt-10">
           <SectionHeading id="directory" count={directory.data?.reduce((sum, group) => sum + group.items.length, 0)}>All dishes A–Z</SectionHeading>
           {directory.isError ? <ErrorNote retry={directory.refetch} /> : directory.isPending ? <Loading /> : (
-            <div className={`mt-4 divide-y divide-line px-5 sm:px-6 ${cardClass}`}>
-              {directory.data.map(group => (
-                <Disclosure key={group.letter} summary={<><span className="text-ink">{group.letter}</span> <span className="font-normal text-muted">· {group.items.length} {group.items.length === 1 ? 'dish' : 'dishes'}</span></>}>
-                  <ul className="grid pb-3 sm:grid-cols-2 sm:gap-x-6">
-                    {group.items.map(item => <li key={item.id}><Link to={`/items/${item.id}`} className="flex min-h-11 items-center text-sm font-semibold hover:text-brand">{item.name}</Link></li>)}
-                  </ul>
-                </Disclosure>
-              ))}
-            </div>
+            <Directory groups={directory.data} />
           )}
         </section>
       ) : results.isError ? (
