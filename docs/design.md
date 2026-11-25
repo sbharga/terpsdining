@@ -71,7 +71,7 @@ Usage rules:
 - Between page sections: `mt-10`.
 - Card padding: `p-5 sm:p-6`. Dense panels: `p-4`. Pickers: `p-3`.
 - Grids: dish lists go 1 column, then `lg:2`. Hall boards go 1 column, then `lg:3`. The item page uses `lg:3`.
-- Sticky header height is `h-14`. Sticky sub-bars sit at `top-14`. Station anchors use `scroll-mt-36`.
+- The header is a floating, content-sized pill (`h-14`, `rounded-full`, centered, 8px below the viewport top) with the logo mark only. On hall pages the meal switcher (`IslandDock`) docks into the pill once the in-page switcher scrolls above it; on phones the logo and Hours link hide while docked. Station anchors use `scroll-mt-36`.
 - Safe areas: use `px-safe` on horizontal containers and `pb-safe` on bottom-pinned bars. Never hard-code the inset.
 
 ## Shape and elevation
@@ -82,7 +82,7 @@ Usage rules:
 - `rounded-xl`: only inside a `rounded-2xl` popover (menu items).
 - Other radii (`rounded`, `rounded-sm`, `rounded-md`, `rounded-lg`) are not used.
 - Cards are flat: `cardClass` is `rounded-3xl bg-surface ring-1 ring-line`.
-- Shadows are used only on floating UI (menus), the selected meal tab and `StatusPill` (`shadow-sm`), and `FoodSwatch` letters (`drop-shadow-sm`). Do not add shadows to cards.
+- Shadows are used only on floating UI (the header pill, menus), the selected meal tab and `StatusPill` (`shadow-sm`), and `FoodSwatch` letters (`drop-shadow-sm`). Do not add shadows to cards.
 
 ## Touch and interaction
 

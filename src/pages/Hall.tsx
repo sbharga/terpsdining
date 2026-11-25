@@ -4,12 +4,13 @@ import { ArrowLeft, Clock, Heart, ListFilter, Soup, Trophy } from 'lucide-react'
 import { useFavoriteIds, useHallMenu, useHours, useSession } from '../api/queries'
 import { DatePager, EmptyState, ErrorNote, ItemList, ItemRow, Loading, MealIcon, NotFound, PageTitle, SectionHeading, StatusPill } from '../components/UI'
 import { FiltersButton, FiltersPanel } from '../components/Filters'
+import { IslandDock } from '../components/Layout'
 import { HallMap } from '../components/HallMap'
 import { PlateBar, PlateButton } from '../components/Plate'
 import { WeekTable } from '../components/HoursViz'
 import { halls, type Hall } from '../lib/halls'
 import { addDays, parseDateParam, todayET, useNowMinutesET } from '../lib/dates'
-import { defaultMeal, hallStatus, hoursLabel, mealWithMenu, meals } from '../lib/hours'
+import { defaultMeal, hallStatus, hoursLabel, mealWithMenu, meals, type Meal } from '../lib/hours'
 import { cardClass, hallTone, linkClass, mealTones, nameTone, titleClass, tones } from '../lib/theme'
 import { useFilterParams } from '../lib/filters'
 import { filterItems, groupByStation, pickFavorites, rankTopRated } from '../lib/menu'
@@ -22,6 +23,21 @@ export default function Hall() {
 }
 function jumpTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+}
+function MealSwitcher({ meal, onChange, compact = false }: { meal: Meal; onChange: (meal: Meal) => void; compact?: boolean }) {
+  return (
+    <div role="group" aria-label="Meal" className={`grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1 ${compact ? 'w-full sm:w-auto' : 'sm:w-96'}`}>
+      {meals.map(value => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={meal === value}
+          onClick={() => onChange(value)}
+          className={`flex min-w-0 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${compact ? 'hit h-9 px-3' : 'h-11 px-2'} ${meal === value ? `${tones[mealTones[value]].solid} text-on-tone shadow-sm` : 'text-muted hover:text-ink'}`}
+        ><span className={compact ? 'inline-flex' : 'hidden min-[380px]:inline-flex'}><MealIcon meal={value} className={meal === value ? 'text-on-tone' : undefined} /></span><span className={compact ? 'max-sm:sr-only' : undefined}>{value}</span></button>
+      ))}
+    </div>
+  )
 }
 
 function HallMenu({ hall }: { hall: Hall }) {
@@ -77,23 +93,12 @@ function HallMenu({ hall }: { hall: Hall }) {
 
       {hours.isError && <ErrorNote retry={hours.refetch} />}
 
-      <div className="sticky top-14 z-20 -mx-4 mt-4 border-b border-line bg-canvas/90 px-safe py-2 backdrop-blur-md">
-        <div role="group" aria-label="Meal" className="grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1">
-          {meals.map(value => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={meal === value}
-              onClick={() => updateParam('meal', value)}
-              className={`flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold transition ${meal === value ? `${tones[mealTones[value]].solid} text-on-tone shadow-sm` : 'text-muted hover:text-ink'}`}
-            ><span className="hidden min-[380px]:inline-flex"><MealIcon meal={value} className={meal === value ? 'text-on-tone' : undefined} /></span>{value}</button>
-          ))}
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-5">
+        <IslandDock island={<MealSwitcher compact meal={meal} onChange={value => updateParam('meal', value)} />}><MealSwitcher meal={meal} onChange={value => updateParam('meal', value)} /></IslandDock>
+        <div className="flex min-h-11 flex-1 items-center justify-between gap-3">
+          {hours.isSuccess ? <p className="flex items-center gap-2 text-sm text-muted"><Clock size={16} aria-hidden="true" /><span className="sr-only">{meal} hours: </span><span className={mealHours === 'Closed' || mealHours === 'TBD' ? '' : 'font-semibold text-ink tabular-nums'}>{mealHours}</span></p> : <span />}
+          {showFilters && <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />}
         </div>
-      </div>
-
-      <div className="mt-5 flex min-h-11 items-center justify-between gap-3">
-        {hours.isSuccess ? <p className="flex items-center gap-2 text-sm text-muted"><Clock size={16} aria-hidden="true" /><span className="sr-only">{meal} hours: </span><span className={mealHours === 'Closed' || mealHours === 'TBD' ? '' : 'font-semibold text-ink tabular-nums'}>{mealHours}</span></p> : <span />}
-        {showFilters && <FiltersButton open={filtersOpen} active={filters.active} onToggle={() => setFiltersOpen(!filtersOpen)} />}
       </div>
       {filtersOpen && showFilters && <FiltersPanel allergens={allergens} filters={filters} />}
       <HallMap
