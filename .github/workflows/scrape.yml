@@ -7,7 +7,7 @@ on:
         type: string
         required: false
       days:
-        description: Days to scrape (blank: next 14 days)
+        description: "Days to scrape (blank: next 14 days)"
         type: string
 concurrency:
   group: scrape
