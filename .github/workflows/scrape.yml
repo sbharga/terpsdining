@@ -9,7 +9,6 @@ on:
       days:
         description: Days to scrape (blank: next 14 days)
         type: string
-        default: ""
 concurrency:
   group: scrape
   cancel-in-progress: false
