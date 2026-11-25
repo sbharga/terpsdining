@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <>
       <PageTitle title="Today" />
-      <PageHeader eyebrow={<time dateTime={today} data-nosnippet>{formatDay(today)}</time>} title={<>What's cooking at UMD <span className="text-brand">today</span></>} lead="Hours, menus, and top-rated eats across UMD's dining halls." />
+      <PageHeader eyebrow={<time dateTime={today} data-nosnippet>{formatDay(today)}</time>} title={<>What's cooking at UMD <span className="rounded-xl bg-brand px-2 text-brand-ink box-decoration-clone">today</span></>} lead="Hours, menus, and top-rated eats across UMD's dining halls." />
 
       <section aria-label="Dining halls" data-nosnippet>
         {hours.isError && <ErrorNote retry={hours.refetch} />}

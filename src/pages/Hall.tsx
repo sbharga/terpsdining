@@ -64,9 +64,9 @@ function HallMenu({ hall }: { hall: Hall }) {
   return (
     <>
       <PageTitle title={hall.name} />
-      <header className={`rounded-3xl p-5 text-white sm:p-8 ${hallTone(hall.slug).solid}`}>
+      <header className={`rounded-3xl p-5 text-on-tone sm:p-8 ${hallTone(hall.slug).solid}`}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <Link to="/" className="hit inline-flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
+          <Link to="/" className="hit inline-flex items-center gap-1 text-sm font-medium text-on-tone/80 hover:text-on-tone"><ArrowLeft size={16} aria-hidden="true" />All halls</Link>
           {date === today && hours.isSuccess && now !== undefined && <StatusPill status={hallStatus(rows, now)} />}
         </div>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
@@ -85,8 +85,8 @@ function HallMenu({ hall }: { hall: Hall }) {
               type="button"
               aria-pressed={meal === value}
               onClick={() => updateParam('meal', value)}
-              className={`flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold transition ${meal === value ? `${tones[mealTones[value]].solid} text-white shadow-sm` : 'text-muted hover:text-ink'}`}
-            ><span className="hidden min-[380px]:inline-flex"><MealIcon meal={value} className={meal === value ? 'text-white' : undefined} /></span>{value}</button>
+              className={`flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold transition ${meal === value ? `${tones[mealTones[value]].solid} text-on-tone shadow-sm` : 'text-muted hover:text-ink'}`}
+            ><span className="hidden min-[380px]:inline-flex"><MealIcon meal={value} className={meal === value ? 'text-on-tone' : undefined} /></span>{value}</button>
           ))}
         </div>
       </div>

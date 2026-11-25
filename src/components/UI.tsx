@@ -72,7 +72,7 @@ export function PageHeader({ eyebrow, title, lead, children }: { eyebrow?: React
   return <header className="mb-8">{eyebrow && <p className="text-sm font-medium text-muted">{eyebrow}</p>}<h1 className={`${eyebrow ? 'mt-1 ' : ''}${titleClass}`}>{title}</h1>{lead && <p className="mt-2 text-muted max-sm:hidden">{lead}</p>}{children}</header>
 }
 export function Avatar({ name, size = 'sm' }: { name: string; size?: 'sm' | 'lg' }) {
-  return <span aria-hidden="true" className={`grid shrink-0 place-items-center rounded-full font-bold text-white ${nameTone(name).solid} ${size === 'lg' ? 'h-14 w-14 text-xl' : 'h-9 w-9 text-sm'}`}>{name.charAt(0)}</span>
+  return <span aria-hidden="true" className={`grid shrink-0 place-items-center rounded-full font-bold text-on-tone ${nameTone(name).solid} ${size === 'lg' ? 'h-14 w-14 text-xl' : 'h-9 w-9 text-sm'}`}>{name.charAt(0)}</span>
 }
 export function StatGrid({ stats, className = '' }: { stats: ReadonlyArray<readonly [string, string, Tone]>; className?: string }) {
   return <dl className={`grid grid-cols-2 gap-3 sm:grid-cols-4 ${className}`}>{stats.map(([label, value, tone]) => <div key={label} className={`rounded-2xl p-3 ${tone.soft}`}><dt className="text-xs font-semibold uppercase tracking-wider opacity-80">{label}</dt><dd className="mt-1 font-display text-2xl font-extrabold tabular-nums">{value}</dd></div>)}</dl>
@@ -109,7 +109,7 @@ export function DietIcon({ tag, size = 12 }: { tag: string; size?: number }) {
 }
 export function StatusPill({ status }: { status: { label: string; state: HallState } }) {
   const style = statusStyle[status.state]
-  return <span className={`inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-semibold shadow-sm ${style.text}`}><span aria-hidden="true" className="relative flex h-2 w-2">{status.state === 'open' && <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${style.dot}`} />}<span className={`relative inline-flex h-2 w-2 rounded-full ${style.dot}`} /></span>{status.label}</span>
+  return <span className={`inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold shadow-sm ${style.text}`}><span aria-hidden="true" className="relative flex h-2 w-2">{status.state === 'open' && <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping ${style.dot}`} />}<span className={`relative inline-flex h-2 w-2 rounded-full ${style.dot}`} /></span>{status.label}</span>
 }
 export function RatingPill({ avg, count }: { avg: number | null; count: number }) {
   if (!count || avg === null) return null
@@ -121,7 +121,7 @@ export function RatingPill({ avg, count }: { avg: number | null; count: number }
   return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-semibold ${color}`}><Star size={14} fill="currentColor" aria-hidden="true" />{avg.toFixed(1)}<span className="sr-only"> out of 5 stars,</span><span className="font-normal opacity-70">({count})</span></span>
 }
 export function FoodSwatch({ name, className }: { name: string; className: string }) {
-  return <span aria-hidden="true" className={`flex shrink-0 items-center justify-center font-display font-extrabold text-white drop-shadow-sm ${nameTone(name).solid} ${className}`}>{name.charAt(0)}</span>
+  return <span aria-hidden="true" className={`flex shrink-0 items-center justify-center font-display font-extrabold text-on-tone ${nameTone(name).solid} ${className}`}>{name.charAt(0)}</span>
 }
 export function Badges({ allergens, dietary }: { allergens: string[]; dietary: string[] }) {
   return <div className="flex flex-wrap gap-1.5">{dietary.map(tag => <span key={tag} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${dietTone(tag).soft}`}><DietIcon tag={tag} />{tag}</span>)}{allergens.map(tag => <span key={tag} className="rounded-full border border-line px-2 py-0.5 text-xs capitalize text-muted">{tag}</span>)}</div>
@@ -155,5 +155,5 @@ export function StarRating({ value, onChange, disabled = false }: { value: numbe
 export function DatePager({ date, onChange }: { date: string; onChange: (date: string) => void }) {
   const today = todayET()
   const near = Math.abs(diffDays(today, date)) <= 1
-  return <div className="flex flex-wrap items-center gap-2"><button type="button" aria-label="Previous day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, -1))}><ChevronLeft size={18} aria-hidden="true" /></button><time dateTime={date} aria-live="polite" className="flex w-24 flex-col items-center text-center leading-tight"><span className="text-xs font-semibold uppercase tracking-wider text-white/80">{near ? relativeDay(date, today) : formatWeekday(date)}</span><span className="font-semibold tabular-nums">{formatMonthDay(date)}</span></time><button type="button" aria-label="Next day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, 1))}><ChevronRight size={18} aria-hidden="true" /></button>{date !== today && <Button variant="onColor" size="sm" onClick={() => onChange(today)}>Today</Button>}</div>
+  return <div className="flex flex-wrap items-center gap-2"><button type="button" aria-label="Previous day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, -1))}><ChevronLeft size={18} aria-hidden="true" /></button><time dateTime={date} aria-live="polite" className="flex w-24 flex-col items-center text-center leading-tight"><span className="text-xs font-semibold uppercase tracking-wider text-on-tone/80">{near ? relativeDay(date, today) : formatWeekday(date)}</span><span className="font-semibold tabular-nums">{formatMonthDay(date)}</span></time><button type="button" aria-label="Next day" className={buttonClass('onColor', 'icon')} onClick={() => onChange(addDays(date, 1))}><ChevronRight size={18} aria-hidden="true" /></button>{date !== today && <Button variant="onColor" size="sm" onClick={() => onChange(today)}>Today</Button>}</div>
 }

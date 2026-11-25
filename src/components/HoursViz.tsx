@@ -36,7 +36,7 @@ export function HoursBoard({ halls, rows, now, heading: Heading = 'h2' }: { hall
         const hallRows = rows?.filter(row => row.hall_id === hall.id)
         return (
           <article key={hall.id} className={`overflow-hidden ${cardClass}`}>
-            <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4 text-white ${hallTone(hall.slug).solid}`}>
+            <div className={`relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-4 text-on-tone ${hallTone(hall.slug).solid}`}>
               <Heading className="font-display text-xl font-bold"><Link to={`/halls/${hall.slug}`} className="after:absolute after:inset-0 hover:underline">{hall.name}</Link></Heading>
             </div>
             {hallRows && <MealList rows={hallRows} now={now} />}

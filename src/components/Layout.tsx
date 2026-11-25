@@ -31,7 +31,7 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand focus:px-4 focus:py-2 focus:font-semibold focus:text-brand-ink">Skip to content</a>
       <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-safe">
-          <Link to="/" className="mr-auto inline-flex min-h-11 min-w-11 items-center gap-2 font-display text-xl font-extrabold tracking-tight" aria-label="TerpsDining home"><img src="/favicon.svg" alt="" width="28" height="28" className="h-7 w-7" /><span className="max-[379px]:hidden">Terps<span className="text-brand">Dining</span></span></Link>
+          <Link to="/" className="mr-auto inline-flex min-h-11 min-w-11 items-center gap-2 font-display text-xl font-extrabold tracking-tight" aria-label="TerpsDining home"><img src="/favicon.svg" alt="" width="28" height="28" className="h-7 w-7" /><span className="max-[379px]:hidden">TerpsDining</span></Link>
           {pathname !== '/search' && <div className="hidden flex-1 sm:block sm:max-w-xs"><SearchBar /></div>}
           <nav aria-label="Main navigation" className="flex items-center gap-1 sm:gap-2">
             <NavLink to="/search" aria-label="Search" className={({ isActive }) => buttonClass(isActive ? 'secondary' : 'ghost', 'icon') + ' sm:hidden'}><Search size={20} aria-hidden="true" /></NavLink>

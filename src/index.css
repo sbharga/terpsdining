@@ -30,23 +30,53 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-star: var(--star);
+  --color-on-tone: var(--on-tone);
+  --color-tone-tomato: var(--tone-tomato); --color-tone-tomato-ink: var(--tone-tomato-ink); --color-tone-tomato-dot: var(--tone-tomato-dot); --color-tone-tomato-soft: var(--tone-tomato-soft); --color-tone-tomato-line: var(--tone-tomato-line);
+  --color-tone-citrus: var(--tone-citrus); --color-tone-citrus-ink: var(--tone-citrus-ink); --color-tone-citrus-dot: var(--tone-citrus-dot); --color-tone-citrus-soft: var(--tone-citrus-soft); --color-tone-citrus-line: var(--tone-citrus-line);
+  --color-tone-lime: var(--tone-lime); --color-tone-lime-ink: var(--tone-lime-ink); --color-tone-lime-dot: var(--tone-lime-dot); --color-tone-lime-soft: var(--tone-lime-soft); --color-tone-lime-line: var(--tone-lime-line);
+  --color-tone-mint: var(--tone-mint); --color-tone-mint-ink: var(--tone-mint-ink); --color-tone-mint-dot: var(--tone-mint-dot); --color-tone-mint-soft: var(--tone-mint-soft); --color-tone-mint-line: var(--tone-mint-line);
+  --color-tone-sky: var(--tone-sky); --color-tone-sky-ink: var(--tone-sky-ink); --color-tone-sky-dot: var(--tone-sky-dot); --color-tone-sky-soft: var(--tone-sky-soft); --color-tone-sky-line: var(--tone-sky-line);
+  --color-tone-grape: var(--tone-grape); --color-tone-grape-ink: var(--tone-grape-ink); --color-tone-grape-dot: var(--tone-grape-dot); --color-tone-grape-soft: var(--tone-grape-soft); --color-tone-grape-line: var(--tone-grape-line);
+  --color-tone-berry: var(--tone-berry); --color-tone-berry-ink: var(--tone-berry-ink); --color-tone-berry-dot: var(--tone-berry-dot); --color-tone-berry-soft: var(--tone-berry-soft); --color-tone-berry-line: var(--tone-berry-line);
 }
 :root {
   color-scheme: light dark;
-  --canvas: #fffaf3; --surface: #ffffff; --surface-2: #f6efe6; --ink: #1c1917; --muted: #6b625a; --line: #ece3d8;
-  --brand: #d63a1a; --brand-ink: #ffffff;
-  --success: #007a55; --warning: #973c00; --danger: #c10007; --star: #fe9a00;
+  --canvas: #ffffff; --surface: #ffffff; --surface-2: #f4f4f5; --ink: #18181b; --muted: #5f5f68; --line: #e4e4e7;
+  --brand: #e21833; --brand-ink: #ffffff;
+  --success: #1f7a3a; --warning: #a34f00; --danger: #c92a2a; --star: #fab005;
+  --on-tone: #18181b;
+  --tone-tomato: #ff6b6b; --tone-tomato-ink: #c92a2a; --tone-tomato-dot: #fa5252;
+  --tone-citrus: #ffd200; --tone-citrus-ink: #8f5a00; --tone-citrus-dot: #f5b700;
+  --tone-lime: #a9e34b; --tone-lime-ink: #2f7a0f; --tone-lime-dot: #74b816;
+  --tone-mint: #63e6be; --tone-mint-ink: #087f5b; --tone-mint-dot: #20c997;
+  --tone-sky: #74c0fc; --tone-sky-ink: #1864ab; --tone-sky-dot: #339af0;
+  --tone-grape: #b197fc; --tone-grape-ink: #6741d9; --tone-grape-dot: #845ef7;
+  --tone-berry: #f783ac; --tone-berry-ink: #a61e4d; --tone-berry-dot: #f06595;
   --brand-soft: color-mix(in oklab, var(--brand) 10%, var(--surface));
   --success-soft: color-mix(in oklab, var(--success) 10%, var(--surface));
   --warning-soft: color-mix(in oklab, var(--warning) 10%, var(--surface));
   --danger-soft: color-mix(in oklab, var(--danger) 10%, var(--surface));
+  --tone-tomato-soft: color-mix(in oklab, var(--tone-tomato-dot) 14%, var(--surface)); --tone-tomato-line: color-mix(in oklab, var(--tone-tomato-dot) 45%, var(--surface));
+  --tone-citrus-soft: color-mix(in oklab, var(--tone-citrus-dot) 14%, var(--surface)); --tone-citrus-line: color-mix(in oklab, var(--tone-citrus-dot) 45%, var(--surface));
+  --tone-lime-soft: color-mix(in oklab, var(--tone-lime-dot) 14%, var(--surface)); --tone-lime-line: color-mix(in oklab, var(--tone-lime-dot) 45%, var(--surface));
+  --tone-mint-soft: color-mix(in oklab, var(--tone-mint-dot) 14%, var(--surface)); --tone-mint-line: color-mix(in oklab, var(--tone-mint-dot) 45%, var(--surface));
+  --tone-sky-soft: color-mix(in oklab, var(--tone-sky-dot) 14%, var(--surface)); --tone-sky-line: color-mix(in oklab, var(--tone-sky-dot) 45%, var(--surface));
+  --tone-grape-soft: color-mix(in oklab, var(--tone-grape-dot) 14%, var(--surface)); --tone-grape-line: color-mix(in oklab, var(--tone-grape-dot) 45%, var(--surface));
+  --tone-berry-soft: color-mix(in oklab, var(--tone-berry-dot) 14%, var(--surface)); --tone-berry-line: color-mix(in oklab, var(--tone-berry-dot) 45%, var(--surface));
   color: var(--ink); background: var(--canvas); font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --canvas: #14100e; --surface: #1f1a17; --surface-2: #2a2420; --ink: #f5efe8; --muted: #a8a29e; --line: #3a322c;
-    --brand: #ff7a5c; --brand-ink: #1a1412;
-    --success: #5ee9b5; --warning: #ffd230; --danger: #ffa2a2; --star: #ffb900;
+    --canvas: #0f0f11; --surface: #19191c; --surface-2: #242428; --ink: #f4f4f5; --muted: #a1a1aa; --line: #303036;
+    --brand: #ff6370; --brand-ink: #18181b;
+    --success: #69db7c; --warning: #ffc078; --danger: #ff8787; --star: #ffd43b;
+    --tone-tomato-ink: #ffa8a8; --tone-tomato-dot: #ff8787;
+    --tone-citrus-ink: #ffe066; --tone-citrus-dot: #fcc419;
+    --tone-lime-ink: #c0eb75; --tone-lime-dot: #94d82d;
+    --tone-mint-ink: #96f2d7; --tone-mint-dot: #38d9a9;
+    --tone-sky-ink: #a5d8ff; --tone-sky-dot: #4dabf7;
+    --tone-grape-ink: #d0bfff; --tone-grape-dot: #9775fa;
+    --tone-berry-ink: #fcc2d7; --tone-berry-dot: #f783ac;
   }
 }
 body {

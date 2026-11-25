@@ -5,7 +5,7 @@ The rules for every screen in TerpsDining. Build UI from the primitives in `src/
 ## Principles
 
 - **Mobile first.** Design at 360px wide; body text never drops below 320px. Nothing scrolls horizontally.
-- **Warm and colorful, with a system.** The canvas is warm and neutral; color adds personality through one shared palette (`tones` in `src/lib/theme.ts`), plus status colors. Every color has a defined place, and none is picked ad hoc.
+- **Bright and playful, with a system.** The canvas is clean white (near-black in dark mode) and the brand is UMD red; color adds personality through one shared palette (`tones` in `src/lib/theme.ts`) of bright fills with near-black text, plus status colors. Every color has a defined place, and none is picked ad hoc.
 - **One way to do each thing.** Use the shared primitives. Do not hand-write button, card, or heading classes.
 - **Accessible by default.** WCAG AA contrast, 44px touch targets, visible focus, semantic controls.
 
@@ -15,31 +15,32 @@ Tokens are defined in `src/index.css` and exposed to Tailwind as `bg-canvas`, `t
 
 | Token | Light | Dark | Meaning |
 | --- | --- | --- | --- |
-| `canvas` | `#fffaf3` | `#14100e` | Page background |
-| `surface` | `#ffffff` | `#1f1a17` | Cards, menus, inputs |
-| `surface-2` | `#f6efe6` | `#2a2420` | Tiles, hover fills, meal switcher track |
-| `ink` | `#1c1917` | `#f5efe8` | Primary text |
-| `muted` | `#6b625a` | `#a8a29e` | Secondary text, icons |
-| `line` | `#ece3d8` | `#3a322c` | Card rings, dividers, outline borders |
-| `brand` | `#d63a1a` | `#ff7a5c` | Primary actions, links, single-select selection |
-| `brand-ink` | `#ffffff` | `#1a1412` | Text on `brand` |
+| `canvas` | `#ffffff` | `#0f0f11` | Page background |
+| `surface` | `#ffffff` | `#19191c` | Cards, menus, inputs |
+| `surface-2` | `#f4f4f5` | `#242428` | Tiles, hover fills, meal switcher track |
+| `ink` | `#18181b` | `#f4f4f5` | Primary text |
+| `muted` | `#5f5f68` | `#a1a1aa` | Secondary text, icons |
+| `line` | `#e4e4e7` | `#303036` | Card rings, dividers, outline borders |
+| `brand` | `#e21833` | `#ff6370` | Primary actions, links, single-select selection, the app icon tile |
+| `brand-ink` | `#ffffff` | `#18181b` | Text on `brand` |
 | `brand-soft` | 10% brand over surface | 10% brand over surface | Pressed toggle chips, active filter fills |
-| `success` | `#007a55` | `#5ee9b5` | Open, served today, "now" |
+| `on-tone` | `#18181b` | `#18181b` | Text on a tone `solid` fill; the same in both modes |
+| `success` | `#1f7a3a` | `#69db7c` | Open, served today, "now" |
 | `success-soft` | 10% success over surface | 10% success over surface | Open-row fill, high rating pill |
-| `warning` | `#973c00` | `#ffd230` | Rating 3 to under 4 |
+| `warning` | `#a34f00` | `#ffc078` | Rating 3 to under 4 |
 | `warning-soft` | 10% warning over surface | 10% warning over surface | Mid rating pill |
-| `danger` | `#c10007` | `#ffa2a2` | Errors, destructive actions, avoided allergens, rating under 3 |
+| `danger` | `#c92a2a` | `#ff8787` | Errors, destructive actions, avoided allergens, rating under 3 |
 | `danger-soft` | 10% danger over surface | 10% danger over surface | Error panels, avoided chips, low rating pill |
-| `star` | `#fe9a00` | `#ffb900` | Filled rating stars |
+| `star` | `#fab005` | `#ffd43b` | Filled rating stars |
 
 Soft tokens are declared once in `:root` as `color-mix(in oklab, var(--x) 10%, var(--surface))`, so they follow the dark overrides automatically.
 
 Usage rules:
 
 - **Brand** is for primary actions, links, and single-select state: the selected day and the current page. A pressed toggle chip with no tone uses `bg-brand-soft` with `border-brand`.
-- **Tones** are the shared accent palette in `theme.ts`: `tomato`, `citrus`, `lime`, `mint`, `sky`, `grape`, `berry`. Each has `solid` (white text), `soft` (tinted fill with text), `text`, `dot`, and `border` classes. Take them from `tones`, `hallTone()`, `mealTones`, `dietTone()`, or `nameTone()`. Never write a tone by hand.
-- **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands and history calendar cells, `soft` for hall chips and history chips, `text` for the hall hours heading icon. Current hall tones: South Campus `citrus` (`amber-700`), Yahentamitsi `lime` (`lime-700`), 251 North `berry` (`fuchsia-700`), fallback `sky`.
-- **Meals** use `mealTones`: Breakfast `citrus`, Lunch `sky`, Dinner `grape`. `MealIcon` takes its color from them, and the selected meal tab is that meal's `solid` with white text.
+- **Tones** are the shared accent palette in `theme.ts`: `tomato`, `citrus`, `lime`, `mint`, `sky`, `grape`, `berry`. Each has `solid` (a bright fill that is the same in light and dark mode; put `text-on-tone` on it, never white), `soft` (tinted fill with text), `text`, `dot`, and `border` classes. Take them from `tones`, `hallTone()`, `mealTones`, `dietTone()`, or `nameTone()`. Never write a tone by hand.
+- **Hall identity** comes from `hallTone(slug)`: `solid` for the hero and board bands and history calendar cells, `soft` for hall chips and history chips, `text` for the hall hours heading icon. Current hall tones: South Campus `tomato`, Yahentamitsi `sky`, 251 North `citrus`, fallback `mint`.
+- **Meals** use `mealTones`: Breakfast `citrus`, Lunch `sky`, Dinner `grape`. `MealIcon` takes its color from them, and the selected meal tab is that meal's `solid` with `text-on-tone`.
 - **Diet** badges and diet filter chips use `dietTone(tag)`: vegan `lime`, vegetarian `mint`, halal `sky`.
 - **Section icons** pick a tone by meaning: favorites `berry` (the favorite heart is also `berry`), ratings and top rated `citrus`, nutrition `lime`, history `grape`, calories `tomato`, protein `berry`, carbs `sky`, fat `citrus`, delete `tomato`.
 - **Stations and food swatches.** Station heading dots, `FoodSwatch`, and `Avatar` use `nameTone(name)`, a stable hash of the name, so the same name always gets the same color.
@@ -47,7 +48,7 @@ Usage rules:
 - **Star** is reserved for rating glyphs.
 - **Icons** are `text-muted` unless they take a tone from the rules above.
 - Raw Tailwind palette classes (for example `bg-emerald-500`) are banned outside `src/lib/theme.ts`. `bun run lint` fails on them, as it does on arbitrary color values such as `bg-[#abc]`. Add a tone or token in `theme.ts` or `src/index.css` instead.
-- **Contrast.** Text is at least 4.5:1 against its background. Large text (18.66px bold or 24px and up) and UI component boundaries are at least 3:1. Every `solid` tone is at least 4.5:1 with white text; `citrus` uses `amber-700` (5.05:1), not `amber-600` (3.19:1). Verified pairs: `success` on `success-soft` 4.68:1, `warning` on `warning-soft` 6.09:1, `danger` on `danger-soft` 5.53:1; all soft pairs exceed 7:1 in dark mode. `brand` on `canvas` is 4.51:1 in light and 7.38:1 in dark. `muted` is 5.74:1 in light and 7.5:1 in dark.
+- **Contrast.** Text is at least 4.5:1 against its background. Large text (18.66px bold or 24px and up) and UI component boundaries are at least 3:1. `on-tone` is at least 6.38:1 on every `solid` tone (tomato is the lowest) and at least 4.69:1 at 80% opacity. Tone ink on its soft fill is at least 4.55:1 in light (mint is the lowest) and 7.74:1 in dark. `brand` on `canvas` is 4.76:1 in light and 6.63:1 in dark; `brand-ink` on `brand` is 4.76:1 and 6.13:1. `success`, `warning` and `danger` on their soft fills are 4.67, 4.96 and 4.74:1 in light and at least 6.57:1 in dark. `muted` on `surface-2` is 5.75:1 in light and 6.03:1 in dark.
 
 ## Typography
 
@@ -99,7 +100,7 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 
 | Component | Use when |
 | --- | --- |
-| `Button` | Any button. `variant`: `primary` (main action, one per view), `secondary` (default), `ghost` (toolbar and icon navigation), `danger` (confirm destructive action), `onColor` (translucent dark button with white text, only on a solid hall-tone band). `size`: `md` (h-11), `sm` (h-9 with `hit`), `icon` (h-11 w-11), `icon-sm` (h-9 w-9 with `hit`). |
+| `Button` | Any button. `variant`: `primary` (main action, one per view), `secondary` (default), `ghost` (toolbar and icon navigation), `danger` (confirm destructive action), `onColor` (translucent light button with dark text, only on a solid hall-tone band). `size`: `md` (h-11), `sm` (h-9 with `hit`), `icon` (h-11 w-11), `icon-sm` (h-9 w-9 with `hit`). |
 | `buttonClass(variant, size)` | A link that must look like a button, such as `<Link className={buttonClass('primary')}>`. |
 | `Chip` | A filter toggle. `pressed` drives `aria-pressed`. Pass `tone` (a `Tone`, such as `dietTone(tag)`) to tint it, or `tone="danger"` for avoided allergens. |
 | `PageHeader` | The top of every page. Takes `eyebrow`, `title`, `lead` (hidden below `sm`), and `children` (always visible). |
@@ -111,12 +112,12 @@ Import primitives from `src/components/UI.tsx` and recipes from `src/lib/theme.t
 | `Avatar` | Initial circle for the signed-in user, colored by `nameTone`. `size`: `sm` (header) or `lg` (account page). |
 | `Badges` | Dietary badges (`dietTone` colors) and allergen badges (neutral). |
 | `RatingPill` | Average or personal rating. Thresholds: 4 and up success, 3 and up warning, below 3 danger. |
-| `StatusPill` | Hall open state on the hall page band, with the meal and time (for example "Open · Lunch until 4pm"). A white pill with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
+| `StatusPill` | Hall open state on the hall page band, with the meal and time (for example "Open · Lunch until 4pm"). A `surface` pill (white in light, near-black in dark) with state-colored text and dot (`statusStyle`), because it sits on a solid color. |
 | `DatePager` | Previous and next day with a Today button, built from `onColor` buttons for the hall page band. The label reads Today, Tomorrow or Yesterday within one day of today, otherwise the weekday, above the month and day. |
 | `EmptyState` | A list or search with no results. Optional clear-filter action uses `linkClass` with `hit`. |
 | `ErrorNote` | A failed request. Includes a Retry `Button size="sm"`. |
 | `Loading` | A page or list that is fetching. Use the skeleton list for a whole section and inline text for a single value. |
-| `MealIcon` | Meal glyph, colored by `mealTones`. Pass `className` to override (for example white on the selected tab). |
+| `MealIcon` | Meal glyph, colored by `mealTones`. Pass `className` to override (for example `text-on-tone` on the selected tab). |
 | `PageTitle` | Every page. Sets the document title, description, robots, and canonical tags from `src/lib/seo.ts`. |
 | `StarRating` | The 1–5 star rating control on the item page. Tapping the current value clears it; disabled uses `opacity-50`. |
 | `FoodSwatch` | Placeholder for a dish with no image: its initial on a `nameTone` fill. |
