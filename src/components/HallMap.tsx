@@ -93,10 +93,9 @@ const decors: Record<string, { under: ReactNode; over: ReactNode }> = {
         <path d="M1104 1388.5V1524" fill="none" stroke="currentColor" strokeWidth={2} />
         <path d="M0 0L21 51 0 34-21 51Z" fill="currentColor" transform="translate(1104 1551.5) rotate(180) scale(.88)" />
       </g>
-      <Label lines={['Peanut', 'Butter']} x={381} y={370} size={30} anchor="start" />
       <Label lines={['Breakfast', 'Bar']} x={381} y={517} size={30} anchor="start" />
       <Label lines={['Beverages']} x={310} y={1244} size={30} anchor="start" />
-      <Label lines={['Soft Serve', 'Ice Cream']} x={841} y={1160} size={30} anchor="middle" />
+      <Label lines={['Soft Serve', 'Ice Cream']} x={594} y={1160} size={30} anchor="middle" />
       <Label lines={['Condiments']} x={1047} y={1184} size={30} anchor="middle" />
       <Label lines={['Plate Return']} x={625} y={47} size={30} anchor="middle" />
       <Label lines={['Beverages']} x={1292} y={554} size={26} anchor="start" />
