@@ -13,7 +13,15 @@ from storage3.exceptions import StorageException
 from supabase import Client
 
 from . import db
-from .config import BUCKET, HALL_IDS, MEALS, SHEET_URL, TZ, USER_AGENT
+from .config import (
+    BUCKET,
+    HALL_IDS,
+    MAX_MENU_DAYS,
+    MEALS,
+    SHEET_URL,
+    TZ,
+    USER_AGENT,
+)
 from .hours import count_changed_hours, parse_sheet
 from .images import fetch_and_store_image
 from .label import parse_label
@@ -31,7 +39,11 @@ def _arguments() -> argparse.Namespace:
         metavar="YYYY-MM-DD",
     )
     parser.add_argument(
-        "--days", type=int, default=os.environ.get("SCRAPE_DAYS") or "1", metavar="N"
+        "--days",
+        type=int,
+        default=os.environ.get("SCRAPE_DAYS") or None,
+        metavar="N",
+        help="Scrape exactly N days; default: the next 14 days",
     )
     parser.add_argument("--image-limit", type=int, default=150)
     parser.add_argument("--skip-images", action="store_true")
@@ -166,7 +178,7 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     sb = db.client()
     counts = dict.fromkeys(
-        ("hours", "items", "merged", "offerings", "nutrition", "images", "pruned", "failures"), 0
+        ("hours", "days", "items", "merged", "offerings", "nutrition", "images", "pruned", "failures"), 0
     )
     menu_failed = False
 
@@ -194,8 +206,9 @@ def main() -> int:
 
         items = {}
         slots = []
-        for offset in range(args.days):
+        for offset in range(args.days or MAX_MENU_DAYS):
             day = args.date + timedelta(days=offset)
+            day_failures = 0
             for hall_id in HALL_IDS:
                 for meal in MEALS:
                     try:
@@ -207,6 +220,7 @@ def main() -> int:
                         )
                         menu_failed = True
                         counts["failures"] += 1
+                        day_failures += 1
                         continue
 
                     entries = parse_menu(html)
@@ -228,6 +242,11 @@ def main() -> int:
                     # Only successfully fetched slots are buffered. An empty
                     # menu still has a slot, so its stale offerings are cleared.
                     slots.append((hall_id, day.isoformat(), meal, list(offerings.values())))
+
+            counts["days"] += 1
+            if args.days is None and day_failures == len(HALL_IDS) * len(MEALS):
+                logger.error("All menu requests failed for %s; stopping menu scan", day.isoformat())
+                break
 
         item_rows = [
             {

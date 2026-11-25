@@ -7,9 +7,9 @@ on:
         type: string
         required: false
       days:
-        description: Days to scrape
+        description: Days to scrape (blank: next 14 days)
         type: string
-        default: "1"
+        default: ""
 concurrency:
   group: scrape
   cancel-in-progress: false

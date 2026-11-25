@@ -22,7 +22,7 @@ SUPABASE_SECRET_KEY=<secret key>
 | `SUPABASE_URL` | Yes | Supabase project URL. |
 | `SUPABASE_SECRET_KEY` | Yes | Secret key for the database and storage. |
 | `SCRAPE_DATE` | No | Default for `--date`. |
-| `SCRAPE_DAYS` | No | Default for `--days`. |
+| `SCRAPE_DAYS` | No | Default for `--days`. Blank means the next 14 days. |
 
 The secret key has write access to the database and storage. Keep `.env` private (it is ignored by Git), and never expose it through a `VITE_` variable or any browser code.
 
@@ -37,7 +37,7 @@ Run commands from `scraper/`. Without `--date`, the scraper uses today's date in
 The run prints one summary line (plus a `Bing rate limited; stopping image phase` line if the image phase is rate limited):
 
 ```text
-hours=<n> items=<n> merged=<n> offerings=<n> nutrition=<n> images=<n> pruned=<n> failures=<n>
+hours=<n> days=<n> items=<n> merged=<n> offerings=<n> nutrition=<n> images=<n> pruned=<n> failures=<n>
 ```
 
 The process exits nonzero when a menu request failed, or when an unhandled error stops the run (for example a failed hours-sheet request, which happens before any menu is scraped).
@@ -47,7 +47,7 @@ The process exits nonzero when a menu request failed, or when an unhandled error
 | Option | Effect |
 | --- | --- |
 | `--date YYYY-MM-DD` | First date to scrape. Default: `SCRAPE_DATE` if set, else today (America/New_York). |
-| `--days N` | Number of consecutive days from `--date`. Default: `SCRAPE_DAYS` if set, else 1. |
+| `--days N` | Scrape exactly N consecutive days from `--date`. Default: `SCRAPE_DAYS` if set, else the next 14 days (`MAX_MENU_DAYS`), stopping early if every request for a day fails. Future slots are re-fetched and replaced on each run. `items.first_seen`/`last_seen` and item history only count dates up to today. |
 | `--image-limit N` | Maximum number of items to search for images in one run. Default: 150. |
 | `--skip-images` | Skip the image phase. |
 | `--skip-hours` | Skip the hours sheet. |

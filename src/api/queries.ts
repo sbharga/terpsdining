@@ -5,6 +5,7 @@ import { authStorageKey, db, hasAuthState, loadAuth } from '../lib/supabase'
 import type { Meal } from '../lib/hours'
 import type { Database } from '../lib/database.types'
 import { groupByInitial, type DirectoryGroup, type DirectoryItem } from '../lib/directory'
+import { todayET } from '../lib/dates'
 export const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60_000 } } })
 export type ItemHistoryRow = { date: string; meal: Meal; station: string; recipe_id: string | null; hall: { slug: string; name: string } | null }
 type ItemRow = Database['public']['Tables']['items']['Row']
@@ -52,7 +53,7 @@ export const historyQuery = (id: string) => queryOptions({
   queryKey: ['history', id] as const,
   staleTime: 6 * 60 * 60_000,
   queryFn: async (): Promise<ItemHistoryRow[]> => {
-    const { data, error } = await db.from('offerings').select('date,meal,station,recipe_id,hall:halls(slug,name)').eq('item_id', id).order('date', { ascending: false }).limit(300)
+    const { data, error } = await db.from('offerings').select('date,meal,station,recipe_id,hall:halls(slug,name)').eq('item_id', id).lte('date', todayET()).order('date', { ascending: false }).limit(300)
     if (error) throw error
     return data
   },

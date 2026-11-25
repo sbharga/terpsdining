@@ -6,6 +6,8 @@ import pytest
 from ddgs.exceptions import RatelimitException
 
 from terpsdining_scraper import main
+from terpsdining_scraper.config import LABEL_BASE
+from terpsdining_scraper.menu import MenuEntry
 
 
 class ItemStore:
@@ -110,14 +112,22 @@ def test_rate_limit_counts_unprocessed_ids_and_preserves_them(store, monkeypatch
     assert capsys.readouterr().out == "images=1 failures=3\n"
 
 
-def test_daily_scrape_prunes_history_with_images_skipped(monkeypatch, capsys):
-    prunes = []
+@pytest.fixture
+def daily_db(monkeypatch):
+    replaced = []
     monkeypatch.setattr(main.db, "client", lambda: None)
     monkeypatch.setattr(main.db, "upsert_hours", lambda rows: None)
     monkeypatch.setattr(main.db, "upsert_items", lambda rows: None)
     monkeypatch.setattr(main.db, "merge_items", lambda: 0)
-    monkeypatch.setattr(main.db, "replace_offerings", lambda *args: None)
+    monkeypatch.setattr(main.db, "replace_offerings", lambda *args: replaced.append(args))
     monkeypatch.setattr(main.db, "items_needing_nutrition", lambda limit: [])
+    monkeypatch.setattr(main.db, "prune_history", lambda: 0)
+    monkeypatch.delenv("SCRAPE_DAYS", raising=False)
+    return replaced
+
+
+def test_daily_scrape_prunes_history_with_images_skipped(daily_db, monkeypatch, capsys):
+    prunes = []
     monkeypatch.setattr(main, "fetch_menu", lambda *args: "")
     monkeypatch.setattr(main, "parse_menu", lambda html: [])
 
@@ -130,6 +140,51 @@ def test_daily_scrape_prunes_history_with_images_skipped(monkeypatch, capsys):
     assert main.main() == 0
     assert prunes == [True]
     assert capsys.readouterr().out.endswith("pruned=7 failures=0\n")
+
+
+def test_auto_horizon_scans_max_days_across_gaps(daily_db, monkeypatch, capsys):
+    published = {"2026-11-25", "2026-11-30", "2026-12-01"}
+    entry = MenuEntry("000001", "Rice", "Grill", "1", LABEL_BASE + "label.aspx", (), ())
+    monkeypatch.setattr(main, "fetch_menu", lambda http, hall_id, day, meal: day.isoformat())
+    monkeypatch.setattr(main, "parse_menu", lambda html: [entry] if html in published else [])
+    monkeypatch.setattr(
+        sys, "argv", ["scraper", "--skip-hours", "--skip-images", "--date", "2026-11-25"]
+    )
+    assert main.main() == 0
+    dates = sorted({call[1] for call in daily_db})
+    assert len(daily_db) == 14 * 9
+    assert dates[0] == "2026-11-25"
+    assert dates[-1] == "2026-12-08"
+    assert len(dates) == 14
+    assert " days=14 " in capsys.readouterr().out
+
+
+def test_explicit_days_ignores_stop_rule(daily_db, monkeypatch, capsys):
+    monkeypatch.setattr(main, "fetch_menu", lambda *args: "")
+    monkeypatch.setattr(main, "parse_menu", lambda html: [])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["scraper", "--skip-hours", "--skip-images", "--date", "2026-11-25", "--days", "20"],
+    )
+    assert main.main() == 0
+    assert len({call[1] for call in daily_db}) == 20
+    assert " days=20 " in capsys.readouterr().out
+
+
+def test_auto_horizon_stops_when_a_whole_day_fails(daily_db, monkeypatch, capsys):
+    def down(*args):
+        raise httpx.ConnectError("down")
+
+    monkeypatch.setattr(main, "fetch_menu", down)
+    monkeypatch.setattr(
+        sys, "argv", ["scraper", "--skip-hours", "--skip-images", "--date", "2026-11-25"]
+    )
+    assert main.main() == 1
+    assert daily_db == []
+    out = capsys.readouterr().out
+    assert " days=1 " in out
+    assert out.endswith("failures=9\n")
 
 
 def test_regeneration_does_not_prune_history(store, monkeypatch):
