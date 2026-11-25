@@ -4,15 +4,55 @@
 
 TerpsDining shows menus, hours, nutrition, and ratings for the University of Maryland's dining halls. Visit [terpsdining.app](https://terpsdining.app).
 
-![TerpsDining home page showing today's hours and top-rated items for the three UMD dining halls](docs/screenshot.png)
+![TerpsDining home page with today's hours for the three UMD dining halls](docs/screenshots/home.png)
 
 ## Features
 
-- Menus by dining hall, meal, and station, with diet and allergen filters.
-- Hours for every hall, with live open status.
-- Search every dish by name, with where it is served today and when it was last served.
-- Nutrition facts and a plate calculator.
-- Google sign-in for 1–5 star ratings and favorites.
+### Hours with live open status
+
+Breakfast, lunch, and dinner hours for every hall, a week at a time. The home page and each hall show whether it is open right now.
+
+![Hours page with a week picker and meal times for each dining hall](docs/screenshots/hours.png)
+
+### Menus by hall, meal, and station
+
+Browse any day's menu by meal and station. Each hall has top-rated picks and a station list with food photos.
+
+![South Campus lunch menu with top-rated items and stations](docs/screenshots/hall-menu.png)
+
+### Diet and allergen filters
+
+Filter by vegan, vegetarian, or halal, and hide dishes with the allergens you avoid. Each hall's floor map highlights the stations serving what is left, and tapping a station jumps to its menu.
+
+![South Campus lunch menu with the vegetarian filter on and the floor map highlighting serving stations](docs/screenshots/hall-filters.png)
+
+### Search every dish
+
+Search by name across all halls. Results show ratings and when each dish was last served.
+
+![Search results for pizza with ratings and last-served dates](docs/screenshots/search.png)
+
+### Nutrition, ingredients, and history
+
+Every dish has calories and macros, the full nutrition facts, ingredients and allergens, a link to the official label, and a calendar of when and where it has been served.
+
+![Waffle dish page with nutrition facts and a rating prompt](docs/screenshots/item.png)
+
+### Plate calculator
+
+Add dishes to a plate and adjust servings to see running calories, protein, carbs, and fat.
+
+![Plate calculator with four items and their combined nutrition](docs/screenshots/plate.png)
+
+### Ratings and favorites
+
+Sign in with Google to give dishes 1–5 stars and favorite them with the heart. Ratings feed each hall's and the home page's top-rated lists, and your favorites appear at the top of hall menus. The account page lists your favorites and ratings and lets you delete your account. Signed-in screens are not pictured.
+
+### Mobile
+
+The layout adapts to phones, and the nav floats at the top with the meal switcher built in.
+
+<img src="docs/screenshots/mobile-hall.png" alt="South Campus lunch menu on a phone" width="320">
 
 ## Quick start
 
